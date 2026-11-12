@@ -1,0 +1,10 @@
+{
+  "apiKey": "YOUR_GROQ_API_KEY",
+  "language": "auto",
+  "autoStart": true,
+  "voiceAssistant": true,
+  "model": "whisper-large-v3",
+  "deviceId": "default",
+  "posX": null,
+  "posY": null
+}

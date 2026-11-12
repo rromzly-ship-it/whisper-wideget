@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan Whisper Agent (Wis)</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div class="settings-card">
+    <!-- Draggable Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="header-icon">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </div>
+        <h1>Pengaturan Whisper Agent (Wis)</h1>
+      </div>
+      <button type="button" id="btn-close-window" class="btn-close-window" title="Tutup">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="6" y1="6" x2="18" y2="18"/>
+          <line x1="18" y1="6" x2="6" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar" role="tablist">
+      <button type="button" id="tab-btn-settings" class="tab-btn is-active" role="tab" aria-selected="true">Pengaturan</button>
+      <button type="button" id="tab-btn-log" class="tab-btn" role="tab" aria-selected="false">
+        <span>Log</span>
+        <span id="log-tab-badge" class="tab-badge hidden">0</span>
+      </button>
+      <button type="button" id="tab-btn-usage" class="tab-btn" role="tab" aria-selected="false">Token &amp; Kuota</button>
+      <button type="button" id="tab-btn-guide" class="tab-btn" role="tab" aria-selected="false">Panduan</button>
+    </div>
+
+    <!-- Tab 1: Form Body -->
+    <div id="panel-settings" class="form-body tab-panel">
+      <!-- Kunci API -->
+      <div class="form-group">
+        <div class="label-row">
+          <label for="api-key">Kunci API</label>
+          <a href="#" id="link-groq" class="link-subtle">Ambil kunci gratis (Groq) ↗</a>
+        </div>
+        <div class="input-wrapper">
+          <input type="password" id="api-key" placeholder="Masukkan kunci API" autocomplete="off">
+          <button type="button" id="toggle-key-visibility" class="btn-eye" title="Lihat / Sembunyikan Kunci">
+            <!-- Eye SVG -->
+            <svg id="icon-eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <!-- Eye-off SVG -->
+            <svg id="icon-eye-off" class="hidden" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bahasa Ucapan -->
+      <div class="form-group">
+        <label for="language">Bahasa Ucapan (Multibahasa)</label>
+        <select id="language">
+          <option value="auto">Otomatis / Multibahasa (Indonesia &amp; Inggris)</option>
+          <option value="id">Bahasa Indonesia</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
+      <!-- Saran Tambahan: Mikrofon & Model -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="mic-select">Perangkat Mikrofon</label>
+          <select id="mic-select">
+            <option value="default">Default Sistem</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="model">Model Whisper</label>
+          <select id="model">
+            <option value="whisper-large-v3">Large-v3 (Akurasi Maksimal)</option>
+            <option value="whisper-large-v3-turbo">Large-v3 Turbo (Super Kilat)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Voice Assistant (Piper TTS) -->
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <span class="toggle-title">Suara Asisten Wis (Piper Indonesia)</span>
+          <span class="toggle-desc">Wis menyapa dan membalas perintah lewat suara offline.</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="voice-assistant" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Auto-Startup -->
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <span class="toggle-title">Jalankan saat Windows dimulai</span>
+          <span class="toggle-desc">Buka aplikasi secara otomatis saat masuk ke Windows.</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="auto-start">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Tab 2: Live Command Activity Log -->
+    <div id="panel-log" class="log-panel tab-panel hidden">
+      <div class="log-toolbar">
+        <span id="log-summary-text" class="log-summary">Belum ada perintah</span>
+        <button type="button" id="btn-clear-logs" class="btn-clear-logs" title="Bersihkan perintah yang sudah selesai">Bersihkan</button>
+      </div>
+      <div id="log-list" class="log-list">
+        <div class="log-empty">
+          Belum ada perintah suara.<br>
+          Klik ikon Wis lalu ucapkan perintah untuk memantau antrean &amp; status pengerjaan di sini.
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: API Token & Daily Task Capacity Calculator -->
+    <div id="panel-usage" class="usage-panel tab-panel hidden">
+      <div class="usage-toolbar">
+        <span id="usage-key-pill" class="usage-key-pill">API: -</span>
+        <div class="usage-actions">
+          <button type="button" id="btn-probe-quota" class="btn-mini-accent" title="Ambil data kuota RPD/TPM langsung dari API key aktif">Cek Data API</button>
+          <button type="button" id="btn-reset-usage" class="btn-clear-logs" title="Reset hitungan statistik lokal hari ini">Reset</button>
+        </div>
+      </div>
+
+      <div class="usage-scroll">
+        <!-- Card 1: API Quota & Live Consumption -->
+        <div class="usage-card">
+          <div class="usage-card-head">
+            <span class="usage-card-title">Kuota &amp; Pemakaian Hari Ini</span>
+            <span id="usage-pct-label" class="usage-pct-label">0%</span>
+          </div>
+          <div class="usage-progress-track">
+            <div id="usage-progress-fill" class="usage-progress-fill" style="width: 0%;"></div>
+          </div>
+          <div class="usage-grid">
+            <div class="usage-metric">
+              <span class="metric-label">Token Terpakai</span>
+              <span id="metric-used-tokens" class="metric-value">0</span>
+            </div>
+            <div class="usage-metric">
+              <span class="metric-label">Sisa Kuota (TPD)</span>
+              <span id="metric-rem-tokens" class="metric-value">-</span>
+            </div>
+            <div class="usage-metric">
+              <span class="metric-label">Req Harian (RPD API)</span>
+              <span id="metric-rpd" class="metric-value">-</span>
+            </div>
+            <div class="usage-metric">
+              <span class="metric-label">Token/Menit (TPM API)</span>
+              <span id="metric-tpm" class="metric-value">-</span>
+            </div>
+          </div>
+          <div class="usage-limit-row">
+            <label for="input-custom-limit">Batas TPD Model:</label>
+            <input type="number" id="input-custom-limit" min="1000" step="10000" placeholder="200000">
+            <button type="button" id="btn-set-limit" class="btn-clear-logs">Terapkan</button>
+          </div>
+        </div>
+
+        <!-- Card 2: Daily Task Capacity Calculator -->
+        <div class="usage-card usage-calc-card">
+          <div class="usage-card-head">
+            <span class="usage-card-title">Kalkulasi Kapasitas Tugas Harian</span>
+            <span id="usage-avg-source" class="usage-sub-tag">Estimasi awal</span>
+          </div>
+          <div class="usage-grid usage-grid-3">
+            <div class="usage-metric">
+              <span class="metric-label">Rata-rata / Tugas</span>
+              <span id="metric-avg-task" class="metric-value">1.350 tkn</span>
+            </div>
+            <div class="usage-metric">
+              <span class="metric-label">Kapasitas / Hari</span>
+              <span id="metric-day-cap" class="metric-value metric-blue">-</span>
+            </div>
+            <div class="usage-metric">
+              <span class="metric-label">Sisa Hari Ini</span>
+              <span id="metric-day-rem" class="metric-value metric-green">-</span>
+            </div>
+          </div>
+          <div class="usage-sim-row">
+            <label for="usage-sim-tokens">Simulasi Token / Tugas:</label>
+            <input type="number" id="usage-sim-tokens" min="100" step="100" placeholder="Otomatis">
+            <span id="usage-sim-result" class="usage-sim-result"></span>
+          </div>
+        </div>
+
+        <!-- Card 3: Per-Model & Per-Task API Breakdown -->
+        <div class="usage-card">
+          <div class="usage-card-head">
+            <span class="usage-card-title">Rincian Model &amp; Token per Tugas</span>
+            <span id="usage-whisper-info" class="usage-sub-tag">Whisper: 0 call</span>
+          </div>
+          <div id="usage-models-list" class="usage-mini-list"></div>
+          <div id="usage-tasks-list" class="usage-mini-list usage-tasks-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Manual Book & Learning Modules -->
+    <div id="panel-guide" class="guide-panel tab-panel hidden">
+      <div class="guide-toolbar">
+        <div class="guide-search-wrap">
+          <input type="text" id="guide-search" placeholder="Cari modul / perintah (mis: youtube, minimize, belajar, word)..." autocomplete="off">
+        </div>
+        <span id="guide-status-toast" class="guide-toast hidden"></span>
+      </div>
+      <div id="guide-list" class="guide-scroll"></div>
+    </div>
+
+    <!-- Footer -->
+    <div id="settings-footer" class="footer">
+      <span class="shortcut-hint"><code>Alt+Shift+V</code> Ketik · <code>Alt+Shift+C</code> AI</span>
+      <div class="footer-actions">
+        <button type="button" id="btn-restart-app" class="btn-secondary" title="Muat ulang aplikasi Whisper">Restart</button>
+        <button type="button" id="btn-quit-app" class="btn-danger" title="Tutup aplikasi Whisper">Keluar</button>
+        <button type="button" id="btn-save" class="btn-save">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

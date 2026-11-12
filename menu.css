@@ -1,0 +1,167 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  outline: none;
+}
+
+*:focus, *:active {
+  outline: none !important;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.radial-menu {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  touch-action: none;
+  /* Cut out the 58px microphone circle at center (90, 90) with 2px smooth anti-aliased edge */
+  -webkit-mask-image: radial-gradient(circle 29px at 90px 90px, transparent 27.5px, black 29.5px);
+  mask-image: radial-gradient(circle 29px at 90px 90px, transparent 27.5px, black 29.5px);
+}
+
+.mic-hotspot {
+  position: absolute;
+  left: 61px;
+  top: 61px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* Outer slot handles pop-out/in trajectory from exact mic center (90, 90) */
+.btn-slot {
+  position: absolute;
+  left: 74px; /* 90 - 16 */
+  top: 74px;  /* 90 - 16 */
+  width: 32px;
+  height: 32px;
+  opacity: 0;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Inner circular button handles background + SVG scaling as ONE cohesive unit */
+.action-btn {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  cursor: pointer;
+  outline: none;
+  touch-action: manipulation;
+  box-shadow: none;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.15s ease;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+  filter: brightness(1.1);
+  box-shadow: none;
+}
+
+.action-btn:active {
+  transform: scale(0.94);
+}
+
+.btn-settings {
+  background: #2E2E2E;
+}
+
+.btn-close {
+  background: #EF1919;
+}
+
+/* Exact equal radial distance = 54.0px from mic center (9.0px gap from mic rim for ALL 32x32 buttons) */
+/* Positioned symmetrically at -32° and +24° beside the dead-center 32x32 eye above the mic */
+.slot-settings {
+  --tx: 45.8px;
+  --ty: -28.6px;
+  --rot: -140deg;
+}
+
+.slot-close {
+  --tx: 49.3px;
+  --ty: 22.0px;
+  --rot: -140deg;
+}
+
+/* Edge-adaptive directional offsets (maintaining exact 54.0px distance) */
+.radial-menu.flipped-x .slot-settings {
+  --tx: -45.8px;
+  --rot: 140deg;
+}
+.radial-menu.flipped-x .slot-close {
+  --tx: -49.3px;
+  --rot: 140deg;
+}
+
+.radial-menu.flipped-y .slot-settings {
+  --ty: 28.6px;
+  --rot: 140deg;
+}
+.radial-menu.flipped-y .slot-close {
+  --ty: -22.0px;
+  --rot: 140deg;
+}
+
+/* Open state: Staggered bubble emergence one-by-one with gentle rotation */
+.radial-menu.is-open .slot-settings {
+  animation: bubble-out 0.28s cubic-bezier(0.22, 1, 0.36, 1) 0ms both;
+}
+
+.radial-menu.is-open .slot-close {
+  animation: bubble-out 0.28s cubic-bezier(0.22, 1, 0.36, 1) 95ms both;
+}
+
+/* Close state: Reverse staggered retraction back into microphone center */
+.radial-menu.is-closing .slot-close {
+  animation: bubble-in 0.22s cubic-bezier(0.4, 0, 1, 1) 0ms both;
+}
+
+.radial-menu.is-closing .slot-settings {
+  animation: bubble-in 0.22s cubic-bezier(0.4, 0, 1, 1) 80ms both;
+}
+
+@keyframes bubble-out {
+  0% {
+    opacity: 0;
+    transform: translate(0px, 0px) scale(0.15) rotate(var(--rot));
+  }
+  68% {
+    opacity: 1;
+    transform: translate(calc(var(--tx) * 1.07), calc(var(--ty) * 1.07)) scale(1.07) rotate(6deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(var(--tx), var(--ty)) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes bubble-in {
+  0% {
+    opacity: 1;
+    transform: translate(var(--tx), var(--ty)) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0px, 0px) scale(0.15) rotate(var(--rot));
+  }
+}

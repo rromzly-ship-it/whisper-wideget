@@ -1,0 +1,203 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none;
+  outline: none !important;
+}
+
+*:focus, *:active {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  touch-action: none;
+}
+
+#btn-container {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transform-origin: center center;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent !important;
+  animation: mic-pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+#hold-ring {
+  position: absolute;
+  inset: 2px;
+  width: 72px;
+  height: 72px;
+  pointer-events: none;
+  transform: rotate(-90deg);
+  opacity: 0;
+  transition: opacity 0.14s ease;
+  z-index: 4;
+}
+
+#hold-ring circle {
+  fill: none;
+  stroke-width: 3;
+}
+
+#hold-ring .hold-ring-bg {
+  stroke: rgba(255, 255, 255, 0.25);
+}
+
+#hold-ring .hold-ring-fill {
+  stroke: #FFFFFF;
+  stroke-linecap: round;
+  stroke-dasharray: 201.06;
+  stroke-dashoffset: 201.06;
+}
+
+#btn-container.holding #hold-ring {
+  opacity: 1;
+}
+
+#btn-container.holding #hold-ring .hold-ring-fill {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1.65s linear;
+}
+
+#btn-container.closing {
+  pointer-events: none;
+  animation: mic-shrink-out 0.28s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes mic-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mic-shrink-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.08) rotate(6deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(-40deg);
+  }
+}
+
+#btn-circle {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: none;
+  position: relative;
+  will-change: transform;
+  backface-visibility: hidden;
+  touch-action: none;
+}
+
+#btn-circle:hover {
+  transform: scale(1.06);
+  box-shadow: none;
+}
+
+#btn-circle:active {
+  transform: scale(0.96);
+}
+
+.widget-icon {
+  width: 28px;
+  height: 28px;
+  display: none;
+  stroke-width: 2.2;
+}
+
+/* State 1: Idle (Blue circle + White Mic) */
+.state-idle {
+  background: #2563EB; /* Clean vibrant blue */
+  color: #FFFFFF;
+}
+.state-idle #icon-mic {
+  display: block;
+}
+
+/* State 2: Active / Recording (Red circle + White Square) */
+.state-recording {
+  background: #DC2626; /* Vibrant red */
+  color: #FFFFFF;
+  animation: pulse-ring 1.3s infinite ease-out;
+}
+.state-recording #icon-stop {
+  display: block;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.65);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+/* State 3: Processing (Whisper Transcribing) */
+.state-processing {
+  background: #1D4ED8;
+  color: #FFFFFF;
+}
+.state-processing #icon-spinner {
+  display: block;
+}
+
+.spin {
+  animation: spin-anim 0.85s linear infinite;
+}
+
+@keyframes spin-anim {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* State 4: Error */
+.state-error {
+  background: #B91C1C;
+  color: #FFFFFF;
+}
+.state-error #icon-stop {
+  display: block;
+}
+

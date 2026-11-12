@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whisper Agent (Wis)</title>
+  <link rel="stylesheet" href="eye.css">
+</head>
+<body>
+  <div id="eye-container">
+    <!-- Orbiting blue cursor pointer arrow (visible when Wis glides to a screen target) -->
+    <div id="pointer-orbit">
+      <svg id="pointer-arrow" viewBox="0 0 24 24" width="15" height="15">
+        <path d="M12 1.5 L20.5 20.5 L12 16 L3.5 20.5 Z" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div id="eye-circle" class="state-idle" title="Whisper Agent (Wis) — Klik sekali untuk ngobrol atau perintah langsung">
+      <canvas id="eye-canvas" width="168" height="168"></canvas>
+    </div>
+  </div>
+  <script src="eye.js"></script>
+</body>
+</html>

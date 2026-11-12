@@ -1,0 +1,33 @@
+{
+  "name": "whisper-floating-widget",
+  "version": "1.0.0",
+  "description": "Floating Voice-to-Text widget powered by Whisper & Groq API",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.whisper.floatingwidget",
+    "productName": "WhisperWidget",
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable.exe"
+    }
+  },
+  "keywords": [
+    "whisper",
+    "speech-to-text",
+    "floating-widget",
+    "dictation",
+    "groq"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.1"
+  }
+}

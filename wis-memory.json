@@ -1,0 +1,185 @@
+{
+  "facts": [],
+  "history": [
+    {
+      "ts": "2026-11-12T13:09:48.860Z",
+      "user": "Ya tolong buka",
+      "summary": "Buka YouTube",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-12T13:09:51.471Z",
+      "user": "Chrome",
+      "summary": "buka Chrome",
+      "app": "Chrome",
+      "action": "open_app"
+    },
+    {
+      "ts": "2026-11-12T13:09:56.715Z",
+      "user": "Hello!",
+      "summary": "Hai, ada yang bisa saya bantu?",
+      "app": "chrome ((351) YouTube - Google Chrome)",
+      "action": "chat_reply"
+    },
+    {
+      "ts": "2026-11-12T13:10:09.635Z",
+      "user": "klik 420 argumentasi dimensi",
+      "summary": "klik 420",
+      "app": "chrome ((351) YouTube - Google Chrome)",
+      "action": "vision_click"
+    },
+    {
+      "ts": "2026-11-12T13:10:27.773Z",
+      "user": "klik argumentasi dimensi",
+      "summary": "klik argumentasi dimensi",
+      "app": "chrome ((351) YouTube - Google Chrome)",
+      "action": "vision_click"
+    },
+    {
+      "ts": "2026-11-12T13:10:40.746Z",
+      "user": "klik payung teduh untuk perempuan",
+      "summary": "klik link",
+      "app": "chrome ((351) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
+      "action": "vision_click"
+    },
+    {
+      "ts": "2026-11-12T13:10:42.508Z",
+      "user": "Subtitles by the Amara.org community",
+      "summary": "Oke",
+      "app": "chrome ((351) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
+      "action": "chat_reply"
+    },
+    {
+      "ts": "2026-11-12T13:10:56.843Z",
+      "user": "Hello!",
+      "summary": "Hai, ada yang bisa saya bantu?",
+      "app": "chrome ((351) Payung Teduh Untuk Perempuan - YouTube - Google Chrome)",
+      "action": "chat_reply"
+    },
+    {
+      "ts": "2026-11-12T13:11:03.008Z",
+      "user": "Kembali ke halaman sebelumnya.",
+      "summary": "Kembali ke halaman sebelumnya",
+      "app": "chrome ((351) Payung Teduh Untuk Perempuan - YouTube - Google Chrome)",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-12T13:11:13.742Z",
+      "user": "Tolong buka aplikasi yang sedang berjalan",
+      "summary": "buka Chrome",
+      "app": "Chrome",
+      "action": "open_app"
+    },
+    {
+      "ts": "2026-11-12T13:11:43.812Z",
+      "user": "Gimana cara ngebuka",
+      "summary": "Untuk membuka sesuatu, sebutkan nama aplikasi atau file yang ingin dibuka, misalnya \"buka Chrome\" atau \"buka dokumen lap",
+      "app": "chrome ((351) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
+      "action": "chat_reply"
+    },
+    {
+      "ts": "2026-11-12T13:11:45.040Z",
+      "user": "ALT",
+      "summary": "Buka alt‑tab",
+      "app": "chrome ((351) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
+      "action": "open_alt_tab"
+    },
+    {
+      "ts": "2026-11-12T13:11:45.871Z",
+      "user": "Tem",
+      "summary": "Ada yang bisa saya bantu?",
+      "app": "chrome ((351) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
+      "action": "chat_reply"
+    },
+    {
+      "ts": "2026-11-12T13:11:54.109Z",
+      "user": "Buka Powder Whisper",
+      "summary": "buka pencarian",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-12T13:12:03.484Z",
+      "user": "Tidak, maksud saya adalah buka",
+      "summary": "buka pencarian",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-12T13:12:06.365Z",
+      "user": "folder, whisper",
+      "summary": "Oke",
+      "app": "Browser",
+      "action": "chat_reply"
+    },
+    {
+      "ts": "2026-11-12T13:12:11.369Z",
+      "user": "Start",
+      "summary": "Oke",
+      "app": "Browser",
+      "action": "chat_reply"
+    },
+    {
+      "ts": "2026-11-12T13:12:25.719Z",
+      "user": "tolong gulir ke bawah sampai saya suruh henti",
+      "summary": "Gulir ke bawah",
+      "app": "Browser",
+      "action": "scroll_auto"
+    },
+    {
+      "ts": "2026-11-12T13:12:45.696Z",
+      "user": "gulir keatas",
+      "summary": "gulir ke atas",
+      "app": "Browser",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-12T13:12:52.725Z",
+      "user": "tolong scroll ke atas sampai",
+      "summary": "scroll ke atas",
+      "app": "Browser",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-12T13:12:56.787Z",
+      "user": "lagi",
+      "summary": "Gulir ke bawah",
+      "app": "Browser",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-12T14:03:24.943Z",
+      "user": "tolong pause musik ini",
+      "summary": "Pause/Play video",
+      "app": "",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-12T14:03:32.473Z",
+      "user": "Kecilkan volume",
+      "summary": "volume mute",
+      "app": "chrome ((351) eńau feat. Ari Lesmana - Sesi Potret (Official Music Video) - YouTube - Google Chrome)",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-12T14:03:58.418Z",
+      "user": "Kurangi volume",
+      "summary": "volume mute",
+      "app": "chrome ((351) eńau feat. Ari Lesmana - Sesi Potret (Official Music Video) - YouTube - Google Chrome)",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-12T14:04:08.607Z",
+      "user": "kurangi volume",
+      "summary": "volume mute",
+      "app": "chrome ((351) eńau feat. Ari Lesmana - Sesi Potret (Official Music Video) - YouTube - Google Chrome)",
+      "action": "hotkey"
+    }
+  ],
+  "activeApp": {
+    "process": "chrome",
+    "title": "(351) eńau feat. Ari Lesmana - Sesi Potret (Official Music Video) - YouTube - G",
+    "updatedAt": "2026-11-12T14:03:39.109Z"
+  }
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whisper Widget</title>
+  <link rel="stylesheet" href="widget.css">
+</head>
+<body>
+  <div id="btn-container">
+    <svg id="hold-ring" viewBox="0 0 72 72" aria-hidden="true">
+      <circle class="hold-ring-bg" cx="36" cy="36" r="32" />
+      <circle class="hold-ring-fill" cx="36" cy="36" r="32" />
+    </svg>
+    <div id="btn-circle" class="state-idle" title="Klik untuk bicara">
+      <!-- Microphone Icon (Idle) -->
+      <svg id="icon-mic" class="widget-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+
+      <!-- Square Stop / Pause Icon (Active/Recording) -->
+      <svg id="icon-stop" class="widget-icon" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="6" y="6" width="12" height="12" rx="2" />
+      </svg>
+
+      <!-- Spinner Icon (Processing) -->
+      <svg id="icon-spinner" class="widget-icon spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="9" stroke-opacity="0.25"/>
+        <path d="M12 3a9 9 0 0 1 9 9" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <script src="widget.js"></script>
+</body>
+</html>
+

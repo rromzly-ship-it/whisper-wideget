@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment & Sensitive Configs
+config.json
+*.env
+*.env.local
+
+# Logs and runtime databases
+*.log
+wis-usage.json
+assistant.log
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build artifacts & temp
+dist/
+out/
+scratch/
+*.tmp

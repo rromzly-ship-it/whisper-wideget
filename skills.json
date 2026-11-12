@@ -1,0 +1,231 @@
+{
+  "version": 1,
+  "updatedAt": "2026-11-12T14:04:08.607Z",
+  "syncUrl": "",
+  "aliases": {
+    "420": "Fourtwnty",
+    "air trade": "iTrade ARSS Pro",
+    "itrend": "iTrade ARSS Pro",
+    "i train": "iTrade ARSS Pro",
+    "i trade": "iTrade ARSS Pro",
+    "esterawan": "EsteraOne",
+    "pt estera": "EsteraOne",
+    "buka.com": "Google Chrome",
+    "buka kom": "Google Chrome",
+    "kom": "Google Chrome",
+    "koreldraw": "CorelDRAW 2024",
+    "corel": "CorelDRAW 2024",
+    "empat dua puluh": "Fourtwnty",
+    "four twenty": "Fourtwnty",
+    "for twenty": "Fourtwnty",
+    "fourtwnty": "Fourtwnty",
+    "post video": "pause video",
+    "misterbis": "MrBeast",
+    "mister bis": "MrBeast",
+    "mr beast": "MrBeast",
+    "mrbeast": "MrBeast",
+    "high wish": "Hai Wis",
+    "hi wish": "Hai Wis",
+    "hai wish": "Hai Wis",
+    "halo wish": "Halo Wis"
+  },
+  "skills": [
+    {
+      "id": "tampilkan-desktop",
+      "trigger": "tampilkan desktop",
+      "synonyms": [
+        "bersihkan layar",
+        "ke desktop",
+        "sembunyikan semua jendela"
+      ],
+      "category": "jendela",
+      "description": "Minimalkan semua jendela & tampilkan desktop (Win+D)",
+      "steps": [
+        {
+          "action": "hotkey",
+          "keys": "win+d"
+        }
+      ],
+      "builtin": true
+    },
+    {
+      "id": "ambil-screenshot",
+      "trigger": "ambil screenshot",
+      "synonyms": [
+        "tangkap layar",
+        "screenshot layar",
+        "crop layar"
+      ],
+      "category": "sistem",
+      "description": "Buka Snipping Tool untuk screenshot area layar (Win+Shift+S)",
+      "steps": [
+        {
+          "action": "hotkey",
+          "keys": "win+shift+s"
+        }
+      ],
+      "builtin": true
+    },
+    {
+      "id": "naikkan-volume",
+      "trigger": "naikkan volume",
+      "synonyms": [
+        "keraskan suara",
+        "besarkan volume",
+        "volume up"
+      ],
+      "category": "audio",
+      "description": "Naikkan volume suara laptop (+3 langkah)",
+      "steps": [
+        {
+          "action": "hotkey",
+          "keys": "volume_up"
+        },
+        {
+          "action": "hotkey",
+          "keys": "volume_up"
+        },
+        {
+          "action": "hotkey",
+          "keys": "volume_up"
+        }
+      ],
+      "builtin": true
+    },
+    {
+      "id": "turunkan-volume",
+      "trigger": "turunkan volume",
+      "synonyms": [
+        "kecilkan suara",
+        "pelankan suara",
+        "volume down"
+      ],
+      "category": "audio",
+      "description": "Turunkan volume suara laptop (-3 langkah)",
+      "steps": [
+        {
+          "action": "hotkey",
+          "keys": "volume_down"
+        },
+        {
+          "action": "hotkey",
+          "keys": "volume_down"
+        },
+        {
+          "action": "hotkey",
+          "keys": "volume_down"
+        }
+      ],
+      "builtin": true
+    },
+    {
+      "id": "bisukan-suara",
+      "trigger": "bisukan suara",
+      "synonyms": [
+        "matikan suara laptop",
+        "mute laptop",
+        "mute suara"
+      ],
+      "category": "audio",
+      "description": "Mute / unmute suara sistem Windows",
+      "steps": [
+        {
+          "action": "hotkey",
+          "keys": "volume_mute"
+        }
+      ],
+      "builtin": true
+    },
+    {
+      "id": "belah-layar-kiri",
+      "trigger": "belah layar kiri",
+      "synonyms": [
+        "geser jendela ke kiri",
+        "snap kiri"
+      ],
+      "category": "jendela",
+      "description": "Tempel jendela aktif di separuh kiri layar (Win+Left)",
+      "steps": [
+        {
+          "action": "hotkey",
+          "keys": "win+left"
+        }
+      ],
+      "builtin": true
+    },
+    {
+      "id": "belah-layar-kanan",
+      "trigger": "belah layar kanan",
+      "synonyms": [
+        "geser jendela ke kanan",
+        "snap kanan"
+      ],
+      "category": "jendela",
+      "description": "Tempel jendela aktif di separuh kanan layar (Win+Right)",
+      "steps": [
+        {
+          "action": "hotkey",
+          "keys": "win+right"
+        }
+      ],
+      "builtin": true
+    },
+    {
+      "id": "buka-clipboard",
+      "trigger": "buka clipboard",
+      "synonyms": [
+        "riwayat copy",
+        "riwayat tempel",
+        "clipboard windows"
+      ],
+      "category": "produktivitas",
+      "description": "Buka riwayat clipboard Windows (Win+V)",
+      "steps": [
+        {
+          "action": "hotkey",
+          "keys": "win+v"
+        }
+      ],
+      "builtin": true
+    },
+    {
+      "id": "salin-semua",
+      "trigger": "salin semua",
+      "synonyms": [
+        "copy semua",
+        "kopi semua"
+      ],
+      "category": "produktivitas",
+      "description": "Pilih semua lalu copy teks (Ctrl+A lalu Ctrl+C)",
+      "steps": [
+        {
+          "action": "hotkey",
+          "keys": "ctrl+a"
+        },
+        {
+          "action": "hotkey",
+          "keys": "ctrl+c"
+        }
+      ],
+      "builtin": true
+    },
+    {
+      "id": "buka-task-manager",
+      "trigger": "buka task manager",
+      "synonyms": [
+        "cek task manager",
+        "lihat proses berjalan"
+      ],
+      "category": "sistem",
+      "description": "Buka Windows Task Manager",
+      "steps": [
+        {
+          "action": "open_app",
+          "appName": "Task Manager",
+          "forceNew": false
+        }
+      ],
+      "builtin": true
+    }
+  ]
+}
