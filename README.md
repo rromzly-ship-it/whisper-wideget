@@ -34,7 +34,7 @@ Aplikasi desktop Windows berupa **Floating Widget** interaktif dan cerdas yang m
 ### Langkah Instalasi
 1. Clone repositori ini:
    ```bash
-   git clone https://github.com/rromzly/whisper-wideget.git
+   git clone https://github.com/rromzly-ship-it/whisper-wideget.git
    cd whisper-wideget
    ```
 2. Pasang dependensi:

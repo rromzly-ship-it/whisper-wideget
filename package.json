@@ -5,7 +5,9 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win portable"
+    "build": "electron-builder --win portable",
+    "sync": "node sync.js",
+    "check-update": "node sync.js --check"
   },
   "build": {
     "appId": "com.whisper.floatingwidget",
