@@ -13,11 +13,21 @@ const windowSkill = require('./window');
 const visionSkill = require('./vision');
 const wordSkill = require('./word');
 const memorySkill = require('./memory');
+const brightnessSkill = require('./brightness');
+const whatsappSkill = require('./whatsapp');
+const telegramSkill = require('./telegram');
+const filesSkill = require('./files');
+const macroSkill = require('./macro');
 
 const SKILL_MODULES = [
   greetingSkill,
   browserSkill,
   mediaSkill,
+  brightnessSkill,
+  whatsappSkill,
+  telegramSkill,
+  filesSkill,
+  macroSkill,
   scrollZoomSkill,
   windowSkill,
   visionSkill,
@@ -33,7 +43,7 @@ function tryMatchFastSkill(transcript) {
 
   const rawLow = raw.toLowerCase().replace(/[.!?]+$/g, '').trim();
   const clean = rawLow
-    .replace(/^(?:hai|halo|hei|hi|hey|high|oke|coba|tolong|wis|hai wis|halo wis)\s*[,.!]?\s*/i, '')
+    .replace(/^(?:(?:hai|halo|hei|hi|hey|high|oke|coba|tolong|wis|kawan|bro|sis)\s*[,.!]?\s*)+/i, '')
     .replace(/[.!?]+$/g, '')
     .trim();
 

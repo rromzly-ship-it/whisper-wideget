@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wis Speech Bubble</title>
+  <link rel="stylesheet" href="bubble.css">
+</head>
+<body>
+  <div id="bubble-container" class="bubble-container">
+    <div class="bubble-header">
+      <div class="bubble-title-group">
+        <span class="bubble-avatar">👁️</span>
+        <span id="bubble-title" class="bubble-title">Wis</span>
+      </div>
+      <button id="btn-close-bubble" class="bubble-close-btn" title="Tutup">✕</button>
+    </div>
+
+    <!-- Progress State (Visible during thinking, vision analysis, or web search) -->
+    <div id="bubble-progress" class="bubble-progress hidden">
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <div id="progress-text" class="progress-text">🔍 Sedang menganalisis...</div>
+    </div>
+
+    <!-- Main Message Content -->
+    <div id="bubble-content" class="bubble-content">
+      Halo! Ada yang bisa saya bantu?
+    </div>
+
+    <!-- Interactive Action Buttons -->
+    <div id="bubble-actions" class="bubble-actions hidden"></div>
+
+    <!-- Tail pointing to Wis below -->
+    <div class="bubble-tail"></div>
+  </div>
+  <script src="bubble.js"></script>
+</body>
+</html>

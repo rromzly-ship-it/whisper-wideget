@@ -248,6 +248,108 @@ function createEyeWindow() {
   startCursorTracker();
 }
 
+let bubbleWindow = null;
+
+function createBubbleWindow() {
+  if (bubbleWindow && !bubbleWindow.isDestroyed()) return;
+
+  bubbleWindow = new BrowserWindow({
+    width: 330,
+    height: 190,
+    show: false,
+    frame: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    alwaysOnTop: true,
+    resizable: false,
+    skipTaskbar: true,
+    hasShadow: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+
+  bubbleWindow.setAlwaysOnTop(true, 'screen-saver', 3);
+  bubbleWindow.loadFile('bubble.html');
+
+  bubbleWindow.on('closed', () => {
+    bubbleWindow = null;
+  });
+}
+
+function updateBubblePlacement() {
+  if (!bubbleWindow || bubbleWindow.isDestroyed() || !bubbleWindow.isVisible()) return;
+  if (!eyeWindow || eyeWindow.isDestroyed()) return;
+
+  const [ex, ey] = eyeWindow.getPosition();
+  const display = screen.getDisplayNearestPoint({ x: ex, y: ey });
+  const { x: areaX, y: areaY, width: areaW, height: areaH } = display.workArea;
+
+  const bw = 330;
+  const bh = 190;
+  let bx = Math.round(ex + 32 - bw / 2);
+  let by = Math.round(ey - bh - 8);
+
+  if (by < areaY) {
+    by = ey + 64 + 8;
+  }
+  bx = Math.max(areaX + 8, Math.min(areaX + areaW - bw - 8, bx));
+  bubbleWindow.setBounds({ x: bx, y: by, width: bw, height: bh });
+}
+
+function showSpeechBubble(payload = {}) {
+  if (!bubbleWindow || bubbleWindow.isDestroyed()) createBubbleWindow();
+  updateBubblePlacement();
+  if (bubbleWindow && bubbleWindow.webContents) {
+    bubbleWindow.webContents.send('bubble-update', payload);
+  }
+  bubbleWindow.show();
+}
+
+function hideSpeechBubble() {
+  if (bubbleWindow && !bubbleWindow.isDestroyed() && bubbleWindow.isVisible()) {
+    bubbleWindow.webContents.send('bubble-close-request');
+  }
+}
+
+async function checkForGitHubUpdates() {
+  try {
+    const https = require('https');
+    const localCommit = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+    const options = {
+      hostname: 'api.github.com',
+      path: '/repos/rromzly-ship-it/whisper-wideget/commits/main',
+      headers: { 'User-Agent': 'Whisper-Floating-Widget' }
+    };
+    https.get(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          if (res.statusCode === 200) {
+            const json = JSON.parse(data);
+            const remoteSha = json.sha;
+            if (remoteSha && remoteSha !== localCommit) {
+              const msg = (json.commit && json.commit.message) ? json.commit.message.split('\n')[0] : 'Pembaruan terbaru';
+              showSpeechBubble({
+                title: '🎉 Update Baru di GitHub!',
+                text: `Tersedia versi baru: "${msg}". Mau update sekarang?`,
+                duration: 25000,
+                actions: [
+                  { label: '⚡ Update Sekarang (Git Pull)', type: 'run-sync', autoClose: true },
+                  { label: '🌐 Buka GitHub', type: 'open-url', url: 'https://github.com/rromzly-ship-it/whisper-wideget', autoClose: false },
+                  { label: 'Nanti', type: 'dismiss', autoClose: true }
+                ]
+              });
+            }
+          }
+        } catch (_) {}
+      });
+    }).on('error', () => {});
+  } catch (_) {}
+}
+
 function sendEyeGazePoint(dipPt) {
   if (!eyeWindow || eyeWindow.isDestroyed() || !eyeWindow.isVisible()) return;
   const b = eyeWindow.getBounds();
@@ -276,6 +378,9 @@ function moveWidgetTo(nx, ny) {
   widgetWindow.setBounds({ x: rx, y: ry, width: 80, height: 80 });
   if (eyeWindow && !eyeWindow.isDestroyed()) {
     eyeWindow.setBounds({ x: rx + EYE_OFFSET_X, y: ry + EYE_OFFSET_Y, width: 64, height: 64 });
+  }
+  if (bubbleWindow && !bubbleWindow.isDestroyed() && bubbleWindow.isVisible()) {
+    updateBubblePlacement();
   }
   if (menuWindow && !menuWindow.isDestroyed() && menuWindow.isVisible()) {
     const { mx, my, flippedX, flippedY } = getMenuPlacement(rx, ry);
@@ -809,6 +914,38 @@ ipcMain.on('settings-closed-done', () => {
   }
 });
 
+ipcMain.on('show-speech-bubble', (event, payload) => {
+  showSpeechBubble(payload);
+});
+
+ipcMain.on('hide-speech-bubble', () => {
+  hideSpeechBubble();
+});
+
+ipcMain.on('hide-speech-bubble-done', () => {
+  if (bubbleWindow && !bubbleWindow.isDestroyed()) {
+    bubbleWindow.hide();
+  }
+});
+
+ipcMain.on('bubble-action-click', (event, action) => {
+  if (!action) return;
+  if (action.type === 'open-url' && action.url) {
+    shell.openExternal(action.url);
+  } else if (action.type === 'copy-text' && action.text) {
+    clipboard.writeText(action.text);
+  } else if (action.type === 'run-sync') {
+    try {
+      showSpeechBubble({ title: 'Wis', text: '⚡ Menarik pembaruan dari GitHub...', duration: 4000 });
+      execSync('node sync.js', { stdio: 'ignore' });
+      showSpeechBubble({ title: 'Wis', text: '✓ Selesai di-update! Memulai ulang aplikasi...', duration: 3000 });
+      setTimeout(() => { restartApp(); }, 1800);
+    } catch (e) {
+      showSpeechBubble({ title: 'Wis (Error)', text: `Gagal update: ${e.message}`, duration: 5000 });
+    }
+  }
+});
+
 ipcMain.on('widget-shrink-done', () => {
   app.isQuitting = true;
   app.quit();
@@ -956,23 +1093,46 @@ async function runSingleCommandEntry(entry) {
   broadcastCommandLogs();
 
   if (!appConfig || !appConfig.apiKey) {
-    entry.status = 'error';
-    entry.finishedAt = Date.now();
-    entry.durationMs = entry.finishedAt - entry.createdAt;
-    entry.summary = 'API Key Groq belum diisi';
-    entry.reply = 'API Key Groq belum diisi di pengaturan.';
-    entry.stage = entry.summary;
-    broadcastCommandLogs();
-    return { ok: false, message: entry.summary, reply: entry.reply, wavBase64: null };
+    const { tryMatchFastSkill } = require('./skills');
+    const fastPlan = tryMatchFastSkill(entry.transcript);
+    if (!fastPlan) {
+      entry.status = 'error';
+      entry.finishedAt = Date.now();
+      entry.durationMs = entry.finishedAt - entry.createdAt;
+      entry.summary = 'API Key Groq belum diisi';
+      entry.reply = 'API Key Groq belum diisi di pengaturan.';
+      entry.stage = entry.summary;
+      broadcastCommandLogs();
+      return { ok: false, message: entry.summary, reply: entry.reply, wavBase64: null };
+    }
   }
 
+  const lagWatchTimer = setTimeout(() => {
+    if (entry.status === 'running') {
+      if (eyeWindow && !eyeWindow.isDestroyed() && eyeWindow.webContents) {
+        eyeWindow.webContents.send('wis-angry-event', { reason: 'lag', message: 'Koneksi lambat / server antre' });
+      }
+      showSpeechBubble({
+        title: 'Wis (Kesal 💢)',
+        progress: '⚠️ Server sedang tersendat...',
+        text: 'Aduh, respon internet atau server agak lama nih!',
+        duration: 4000
+      });
+    }
+  }, 3200);
+
   try {
+    let spokeImmediate = false;
     const res = await routeCommandWithGroq(entry.transcript, appConfig.apiKey, {
       eyeWindow,
       widgetWindow,
       eyeOffsetX: EYE_OFFSET_X,
       eyeOffsetY: EYE_OFFSET_Y,
       scrollController,
+      onImmediateSpeech: (immediateReply, immediateLang) => {
+        spokeImmediate = true;
+        dispatchTtsNonBlocking(immediateReply, immediateLang || 'id', true);
+      },
       onStage: (stageMsg) => {
         entry.stage = String(stageMsg || '').trim() || 'Memproses...';
         broadcastCommandLogs();
@@ -992,6 +1152,8 @@ async function runSingleCommandEntry(entry) {
         broadcastCommandLogs();
       }
     });
+
+    clearTimeout(lagWatchTimer);
 
     entry.status = res && res.ok ? 'done' : 'error';
     entry.finishedAt = Date.now();
@@ -1014,15 +1176,37 @@ async function runSingleCommandEntry(entry) {
     const spokenText = entry.reply;
     const replyLang = (res && res.replyLang) || 'id';
     logApp(`[main] Wis result ok=${res?.ok} lang=${replyLang} ms=${entry.durationMs} tokens=${taskUsage.totalTokens} reply="${spokenText}"`);
+
+    if (spokenText) {
+      showSpeechBubble({
+        title: 'Wis',
+        text: spokenText,
+        duration: 5500
+      });
+    }
+
     return {
       ...res,
+      spokeImmediate: spokeImmediate || Boolean(res?.spokeImmediate),
       reply: spokenText,
       replyLang
     };
   } catch (err) {
+    clearTimeout(lagWatchTimer);
     console.error('Command execution error:', err);
     logApp(`[main] command ERROR: ${err && err.stack ? err.stack : err}`);
     const formatted = formatErrorForUiAndSpeech(err && err.message);
+
+    if (formatted.speechReply.includes('Kuota API') || (err && err.status === 429)) {
+      if (eyeWindow && !eyeWindow.isDestroyed() && eyeWindow.webContents) {
+        eyeWindow.webContents.send('wis-angry-event', { reason: 'quota' });
+      }
+      showSpeechBubble({
+        title: 'Wis (Kesal 💢)',
+        text: 'Aduh, kuota API kamu sedang limit atau penuh nih!',
+        duration: 7000
+      });
+    }
     entry.status = 'error';
     entry.finishedAt = Date.now();
     entry.durationMs = entry.finishedAt - entry.createdAt;
@@ -1055,7 +1239,7 @@ async function processCommandQueue() {
 
       const res = await runSingleCommandEntry(entry);
       const hasMoreQueued = commandQueue.length > 0;
-      const shouldSpeak = !hasMoreQueued && res?.reply && (res.speakReply || !res.ok);
+      const shouldSpeak = !hasMoreQueued && res?.reply && (res.speakReply || !res.ok) && !res.spokeImmediate;
       if (shouldSpeak) {
         dispatchTtsNonBlocking(res.reply, res.replyLang || 'id', Boolean(res?.ok));
       }
@@ -1162,6 +1346,7 @@ ipcMain.handle('execute-voice-command', async (event, transcript) => {
     summary: '',
     reply: '',
     queuePos: 0,
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0, visionTokens: 0, llmModel: '' },
     createdAt: Date.now(),
     startedAt: Date.now(),
     finishedAt: null,
@@ -1241,10 +1426,17 @@ if (!gotTheLock) {
     createWidget();
     createEyeWindow();
     createMenuWindow();
+    createBubbleWindow();
     createSettingsWindow();
     createTray();
     memory.loadMemory();
     tts.warmup('id');
+    tts.prewarmCache();
+
+    // Check for new updates on GitHub after 5s
+    setTimeout(() => {
+      checkForGitHubUpdates();
+    }, 5000);
 
     try {
       globalShortcut.register('Alt+Shift+V', () => {

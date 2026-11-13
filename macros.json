@@ -1,0 +1,19 @@
+[
+  {
+    "trigger": "mode kerja",
+    "description": "Buka VS Code, buka Chrome, dan set volume 30%",
+    "steps": [
+      { "action": "open_app", "appName": "code" },
+      { "action": "open_app", "appName": "chrome" }
+    ],
+    "reply": "Mode kerja diaktifkan!"
+  },
+  {
+    "trigger": "mode santai",
+    "description": "Buka YouTube dan atur volume 50%",
+    "steps": [
+      { "action": "open_url", "url": "https://www.youtube.com" }
+    ],
+    "reply": "Mode santai diaktifkan, selamat bersenang-senang!"
+  }
+]

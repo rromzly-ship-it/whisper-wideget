@@ -397,8 +397,31 @@ const MANUAL_MODULES = [
     ]
   },
   {
-    id: 'monitor',
+    id: 'brightness',
     badge: 'Modul 8',
+    title: 'Kontrol Kecerahan Layar (0 Token)',
+    desc: 'Atur tingkat pencahayaan / brightness monitor ke persentase kustom secara instan dan akurat.',
+    examples: [
+      { say: 'Turunkan brightness jadi 20%', note: 'Mengatur kecerahan monitor ke 20%', runnable: true },
+      { say: 'Atur brightness ke 50%', note: 'Mengatur kecerahan monitor ke 50%', runnable: true },
+      { say: 'Kecerahan 70%', note: 'Mengatur kecerahan monitor ke 70%', runnable: true },
+      { say: 'Redupkan layar', note: 'Mengatur kecerahan ke mode malam/redup (25%)', runnable: true },
+      { say: 'Terangkan layar', note: 'Mengatur kecerahan ke mode terang (85%)', runnable: true }
+    ]
+  },
+  {
+    id: 'communication',
+    badge: 'Modul 9',
+    title: 'Aplikasi Komunikasi (WhatsApp, Telegram)',
+    desc: 'Buka dan fokus ke aplikasi perpesanan WhatsApp Desktop atau Telegram langsung dalam 1 perintah cepat.',
+    examples: [
+      { say: 'Buka aplikasi WhatsApp', note: 'Membuka atau berpindah ke jendela WhatsApp', runnable: true },
+      { say: 'Buka Telegram', note: 'Membuka atau berpindah ke Telegram Desktop', runnable: true }
+    ]
+  },
+  {
+    id: 'monitor',
+    badge: 'Modul 10',
     title: 'Pantau Antrean (Log) & Kapasitas (Token & Kuota)',
     desc: 'Tab Log menampilkan antrean perintah real-time (spinner biru/amber -> checklist hijau saat selesai, plus biaya tokennya). Tab Token & Kuota menghitung sisa RPD/TPM API Key aktif dan perkiraan kapasitas tugas per hari.',
     examples: []
@@ -484,9 +507,27 @@ function renderGuideModules() {
       const cmd = btn.getAttribute('data-cmd');
       if (!cmd) return;
       btn.disabled = true;
-      await ipcRenderer.invoke('enqueue-voice-command', { transcript: cmd }).catch(() => {});
-      btn.disabled = false;
-      showGuideToast(`Dikirim: "${cmd.slice(0, 22)}${cmd.length > 22 ? '...' : ''}"`);
+      const originalText = btn.textContent;
+      btn.textContent = '⏳ Menguji...';
+      showGuideToast(`Sedang menguji: "${cmd.slice(0, 24)}${cmd.length > 24 ? '...' : ''}"...`);
+      try {
+        const res = await ipcRenderer.invoke('execute-voice-command', cmd);
+        btn.disabled = false;
+        if (res && res.ok) {
+          btn.textContent = '✓ Sukses';
+          showGuideToast(`✓ Sukses: ${res.message || res.reply || 'Selesai dieksekusi'}`);
+        } else {
+          btn.textContent = '✕ Gagal';
+          showGuideToast(`✕ Gagal: ${res?.message || 'Tidak dapat menjalankan perintah'}`);
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = '✕ Error';
+        showGuideToast(`✕ Error: ${err.message || 'Gagal'}`);
+      }
+      setTimeout(() => {
+        btn.textContent = originalText;
+      }, 2400);
     });
   });
 }

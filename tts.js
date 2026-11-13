@@ -207,15 +207,35 @@ function getWorker(lang) {
   return workers[key];
 }
 
-function synthesizeWavBase64(rawText, langHint = 'auto') {
+const ttsCache = new Map();
+
+async function synthesizeWavBase64(rawText, langHint = 'auto') {
   const clean = sanitizeForSpeech(rawText);
-  if (!clean || !isAvailable()) return Promise.resolve(null);
+  if (!clean || !isAvailable()) return null;
 
   const chosenLang = detectSpeechLang(clean, langHint);
   const spokenText = normalizePronunciationForLang(clean, chosenLang);
+  const cacheKey = `${chosenLang}:${spokenText.toLowerCase()}`;
+
+  if (ttsCache.has(cacheKey)) {
+    return ttsCache.get(cacheKey);
+  }
+
   const tempDir = app ? app.getPath('temp') : os.tmpdir();
   const wavPath = path.join(tempDir, `wis-tts-${chosenLang}-${Date.now()}-${Math.floor(Math.random() * 10000)}.wav`);
-  return getWorker(chosenLang).synthesize(spokenText, wavPath);
+  const b64 = await getWorker(chosenLang).synthesize(spokenText, wavPath);
+
+  if (b64 && clean.length < 50) {
+    ttsCache.set(cacheKey, b64);
+  }
+  return b64;
+}
+
+function prewarmCache() {
+  const commonPhrases = ['Oke', 'Siap', 'Baik', 'Halo', 'Hai'];
+  for (const p of commonPhrases) {
+    synthesizeWavBase64(p, 'id').catch(() => {});
+  }
 }
 
 function warmup(lang = 'id') {
@@ -237,6 +257,7 @@ module.exports = {
   detectSpeechLang,
   normalizePronunciationForLang,
   warmup,
+  prewarmCache,
   synthesizeWavBase64,
   shutdown
 };

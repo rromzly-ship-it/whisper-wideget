@@ -113,6 +113,7 @@ const poses = {
   curiga:    { height: .55,  width: 1.15, tilt: .26,  lift: 0,    arch: 0 },
   mengantuk: { height: .43,  width: 1.05, tilt: -.12, lift: .06,  arch: 0 },
   tidur:     { height: .10,  width: 1.28, tilt: 0,    lift: .08,  arch: -.06 },
+  marah:     { height: .58,  width: 1.25, tilt: -.32, lift: .04,  arch: .16 },
   zoomin:    { height: 1.56, width: 1.48, tilt: 0,    lift: -.02, arch: 0 },
   zoomout:   { height: .44,  width: .48,  tilt: 0,    lift: .04,  arch: 0 }
 };
@@ -122,6 +123,46 @@ let continuousScroll = null;
 let zoomOverride = null;
 let lastSegMaxRms = 0;
 let currentAudioCancel = null;
+let activeTtsAnalyser = null;
+let lastInteractionTime = performance.now();
+let isAngry = false;
+let angryTimer = null;
+
+function triggerAngry(reason, durationMs = 3800) {
+  if (angryTimer) clearTimeout(angryTimer);
+  isAngry = true;
+  currentState = 'marah';
+  expression = 'marah';
+  eyeCircle.className = 'state-marah';
+  container.classList.add('is-angry');
+
+  angryTimer = setTimeout(() => {
+    isAngry = false;
+    container.classList.remove('is-angry');
+    currentState = 'idle';
+    expression = 'normal';
+    eyeCircle.className = 'state-idle';
+    angryTimer = null;
+  }, durationMs);
+}
+
+ipcRenderer.on('wis-angry-event', (event, { reason }) => {
+  triggerAngry(reason);
+});
+
+function markInteraction() {
+  lastInteractionTime = performance.now();
+  if (expression === 'tidur' || expression === 'mengantuk') {
+    container.classList.remove('is-sleeping');
+    expression = 'senang';
+    setTimeout(() => {
+      if (expression === 'senang') expression = 'normal';
+    }, 850);
+  }
+}
+
+window.addEventListener('pointerdown', markInteraction);
+window.addEventListener('pointermove', markInteraction);
 
 const pose = { ...poses.normal };
 const gaze = { x: 0, y: 0 };
@@ -255,6 +296,104 @@ function drawEye(side, open, rotation) {
   ctx.fill();
 }
 
+function drawMouth(rotation, open, now) {
+  const mouthProj = projectSphere(0, 0.32, rotation);
+  if (mouthProj.fz <= -0.32) return;
+
+  const mx = center + radius * mouthProj.tx;
+  const my = center + radius * mouthProj.ty;
+
+  let mouthOpen = 0;
+  let vowelShape = 'smile';
+
+  if (activeTtsAnalyser && isSpeaking) {
+    const fData = new Uint8Array(activeTtsAnalyser.frequencyBinCount);
+    activeTtsAnalyser.getByteFrequencyData(fData);
+    let sum = 0;
+    for (let i = 0; i < fData.length; i++) sum += fData[i];
+    const avg = sum / fData.length;
+    mouthOpen = clamp(avg / 28, 0, 1.4);
+
+    const low = (fData[1] + fData[2] + fData[3] + fData[4]) / 4;
+    const mid = (fData[8] + fData[9] + fData[10] + fData[11]) / 4;
+    const high = (fData[16] + fData[17] + fData[18] + fData[19]) / 4;
+
+    if (low > mid && low > high) vowelShape = 'A';
+    else if (mid > low) vowelShape = 'I';
+    else if (high > mid) vowelShape = 'U';
+  }
+
+  ctx.save();
+  ctx.translate(mx, my);
+
+  if (expression === 'marah') {
+    ctx.beginPath();
+    ctx.arc(0, 4, 6, 1.1 * Math.PI, 1.9 * Math.PI);
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  } else if (expression === 'tidur') {
+    ctx.beginPath();
+    ctx.arc(0, -2, 5, 0.2 * Math.PI, 0.8 * Math.PI);
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  } else if (isSpeaking && mouthOpen > 0.10) {
+    ctx.fillStyle = '#0F172A';
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2.0;
+
+    let mw = 7;
+    let mh = 5;
+    if (vowelShape === 'A') {
+      mw = 7 * mouthOpen + 3;
+      mh = 6 * mouthOpen + 4;
+    } else if (vowelShape === 'I') {
+      mw = 10 * mouthOpen + 4;
+      mh = 3 * mouthOpen + 2;
+    } else if (vowelShape === 'U') {
+      mw = 4 * mouthOpen + 3;
+      mh = 4 * mouthOpen + 3;
+    }
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, Math.min(13, mw), Math.min(9, mh), 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.arc(0, -3, 6, 0.2 * Math.PI, 0.8 * Math.PI);
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawSleepingZ(now, center) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+  ctx.font = 'bold 13px sans-serif';
+
+  const phase1 = ((now / 1500) % 1);
+  const phase2 = (((now + 750) / 1500) % 1);
+
+  const z1X = center + 22 + Math.sin(phase1 * Math.PI) * 4;
+  const z1Y = center - 16 - phase1 * 26;
+  ctx.globalAlpha = 1 - phase1;
+  ctx.fillText('z', z1X, z1Y);
+
+  const z2X = center + 32 + Math.sin(phase2 * Math.PI) * 5;
+  const z2Y = center - 24 - phase2 * 30;
+  ctx.globalAlpha = 1 - phase2;
+  ctx.fillText('Z', z2X, z2Y);
+
+  ctx.restore();
+}
+
 function frame(now) {
   const dt = Math.min(now - lastFrame, 48);
   lastFrame = now;
@@ -263,10 +402,12 @@ function frame(now) {
   let aim;
   if (isGliding) {
     aim = { x: 0, y: -0.08 };
+  } else if (isAngry) {
+    aim = { x: Math.sin(now / 45) * 0.35, y: 0.10 };
   } else if (currentState === 'listening') {
     aim = { x: 0, y: -0.04 };
   } else if (currentState === 'thinking') {
-    aim = { x: Math.sin(now / 240) * 0.40, y: -0.24 };
+    aim = { x: Math.sin(now / 150) * 0.45, y: Math.cos(now / 150) * 0.28 };
   } else if (currentState === 'speaking' || currentState === 'success') {
     aim = { x: Math.sin(now / 320) * 0.12, y: -0.06 };
   } else if (currentState === 'error') {
@@ -274,6 +415,21 @@ function frame(now) {
   } else {
     const drift = Math.sin(now / 1900) * .035;
     aim = desktopPointer.active ? desktopPointer : { x: drift, y: 0 };
+  }
+
+  // Auto-Sleep / Inactivity check
+  if (!isSpeaking && currentState === 'idle' && !isGliding && !isAngry) {
+    const idleSeconds = (now - lastInteractionTime) / 1000;
+    if (idleSeconds > 35) {
+      if (expression !== 'tidur') {
+        expression = 'tidur';
+        container.classList.add('is-sleeping');
+      }
+    } else if (idleSeconds > 22) {
+      if (expression !== 'mengantuk') {
+        expression = 'mengantuk';
+      }
+    }
   }
 
   gaze.x += (aim.x - gaze.x) * ease;
@@ -290,6 +446,10 @@ function frame(now) {
 
   let extraYaw = 0;
   let extraPitch = 0;
+
+  if (isAngry) {
+    extraYaw += Math.sin(now / 45) * 0.42; // Fast angry head shake!
+  }
 
   if (continuousScroll) {
     const stepRad = (continuousScroll.rate * dt) / 1000;
@@ -321,6 +481,11 @@ function frame(now) {
   const open = openness(now);
   drawEye(-1, open, rotation);
   drawEye(1, open, rotation);
+  drawMouth(rotation, open, now);
+
+  if (expression === 'tidur') {
+    drawSleepingZ(now, center);
+  }
 
   requestAnimationFrame(frame);
 }
@@ -362,6 +527,7 @@ async function playPiperWavBase64(wavBase64, mood = 'speaking', message = '') {
         if (settled) return;
         settled = true;
         clearTimeout(guardTimer);
+        activeTtsAnalyser = null;
         if (currentAudioCancel === cancelAudio) currentAudioCancel = null;
         if (currentAudioSource === source) currentAudioSource = null;
         resolve();
@@ -372,7 +538,15 @@ async function playPiperWavBase64(wavBase64, mood = 'speaking', message = '') {
       };
       const source = ctxAudio.createBufferSource();
       source.buffer = audioBuffer;
-      source.connect(ctxAudio.destination);
+      try {
+        const ana = ctxAudio.createAnalyser();
+        ana.fftSize = 256;
+        source.connect(ana);
+        ana.connect(ctxAudio.destination);
+        activeTtsAnalyser = ana;
+      } catch (_) {
+        source.connect(ctxAudio.destination);
+      }
       currentAudioSource = source;
       currentAudioCancel = cancelAudio;
       const guardTimer = setTimeout(() => {

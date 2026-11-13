@@ -4,7 +4,35 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.0.2] - 2026-11-13 (Pembaruan Terkini)
+## [v1.0.3] - 2026-11-13 (Pembaruan Terkini)
+
+### 🚀 Penyelesaian Penuh Roadmap Fase 1 - 4 & Fitur Baru:
+- **Sinkronisasi Respon Cepat & Eliminasi Delay Suara:**
+  - Perbaikan regex wake-word & prefix bertumpuk (`hey wis tolong buka aplikasi whatsapp`).
+  - Penambahan WhatsApp, Telegram, Spotify, dan VS Code ke registri *Fast Plan* lokal tanpa jeda LLM (eksekusi instant <1ms).
+  - Mekanisme `ttsCache` prewarm konfirmasi instan (*"Oke"*, *"Siap"*, *"Baik"*) dan pengiriman suara sinkron paralel via `onImmediateSpeech` sebelum aksi selesai.
+- **Speech Bubble Mengambang Dinamis (`bubble.html` / `bubble.js`):**
+  - Jendela mengambang transparan di atas kepala Wis untuk menampilkan progress pencarian (*"🔍 Membaca konteks..."*), ringkasan jawaban, dan tombol aksi interaktif (`[🌐 Buka di Chrome]`, `[Salin Jawaban]`).
+- **Indikator Kemarahan / Frustrasi Saat Lag atau Kuota Habis:**
+  - Deteksi otomatis latency cloud request (>3.2 detik) atau error 429 quota exhaustion.
+  - Wis berubah warna menjadi merah kemarahan (`#EF4444`), urat anime kemarahan (`💢`) berdenyut di dahi, micro-stomp loncat kecil di tempat, geleng-geleng kepala cepat (*extraYaw*), diiringi peringatan Speech Bubble.
+- **Kontrol Kecerahan Layar Kustom (Brightness Control):**
+  - Modul skill baru `skills/brightness.js` untuk atur persentase (*"turunkan brightness jadi 20%"*, *"kecerahan 50%"*) dan preset (*"redupkan layar"*, *"terangkan layar"*) via Windows CIM/WMI tanpa dependensi eksternal.
+- **Mulut Dinamis Berartikulasi (Lip-Sync A-I-U-E-O) & Mode Idle Sleep:**
+  - Formant audio Piper TTS diolah secara real-time via `AnalyserNode` ke proyeksi viseme mulut (A/O terbuka lebar, I/E melebar, U/M mengerucut, senyum santai).
+  - Mode tidur otomatis (22 detik mengantuk, 35 detik tertidur lelap dengan efek menyusut 0.72 dan partikel melayang `z z Z`). Bangun seketika saat kursor/sentuhan mendekat.
+- **Modular Skills Baru & Voice Macros:**
+  - Ditambahkan modul `skills/whatsapp.js`, `skills/telegram.js`, `skills/files.js` (Everything CLI), dan `skills/macro.js` (`macros.json`).
+- **Perbaikan Menu Panduan / Manual Book ("▶ Coba"):**
+  - Penambahan Modul 8 (Brightness) dan Modul 9 (Komunikasi WhatsApp & Telegram) di `settings.js`.
+  - Tombol "▶ Coba" kini mengeksekusi langsung aksi suara dengan feedback visual toast `⏳ Menguji...` ➔ `✓ Sukses`.
+- **CI/CD GitHub Actions & In-App Auto-Update Notifier:**
+  - Workflow `.github/workflows/build.yml` untuk build installer otomatis setiap ada tag rilis.
+  - Pengecekan versi otomatis saat aplikasi dijalankan via GitHub Releases API.
+
+---
+
+## [v1.0.2] - 2026-11-13
 
 ### 🐛 Perbaikan Bug Interaksi & Peta Jalan:
 - **Perbaikan Menu Klik Kanan (Setting & Close):**

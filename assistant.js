@@ -743,6 +743,13 @@ async function routeCommandWithGroq(transcript, apiKey, runtimeCtx = {}) {
   let lastResult = { ok: false, message: 'Perintah tidak dikenali' };
   let activeApp = sessionMemory.lastApp;
 
+  // Trigger immediate parallel voice feedback (e.g. "Oke", "Siap") so action & voice are synchronized with zero delay!
+  let spokeImmediate = false;
+  if (plan.reply && runtimeCtx.onImmediateSpeech && (plan.speakReply !== false)) {
+    runtimeCtx.onImmediateSpeech(plan.reply, plan.replyLang || 'id');
+    spokeImmediate = true;
+  }
+
   for (let idx = 0; idx < steps.length; idx++) {
     const step = steps[idx];
     runtimeCtx.onStage?.(`Menjalankan (${idx + 1}/${steps.length}): ${plan.summary || step.action}`);
@@ -800,7 +807,7 @@ async function routeCommandWithGroq(transcript, apiKey, runtimeCtx = {}) {
   );
 
   recordSession(transcript, finalMessage, activeApp, steps[0]?.action || '');
-  return { ok: true, speakReply, message: finalMessage, reply: replyText, replyLang: plan.replyLang || 'auto', steps };
+  return { ok: true, speakReply, spokeImmediate, message: finalMessage, reply: replyText, replyLang: plan.replyLang || 'auto', steps };
 }
 
 async function executeStep(step, visibleWindows, installedApps, chromeTabs, apiKey, runtimeCtx = {}) {
@@ -1114,6 +1121,33 @@ async function executeStep(step, visibleWindows, installedApps, chromeTabs, apiK
       return res.stdout === 'OK'
         ? { ok: true, message: `Menjalankan ${keys}` }
         : { ok: false, message: `Pintasan '${keys}' tidak didukung` };
+    }
+
+    case 'set_brightness': {
+      const target = Math.max(0, Math.min(100, Math.round(Number(step.percent !== undefined ? step.percent : (step.value || 50)))));
+      const psCmd = `(Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightnessMethods).WmiSetBrightness(1, ${target})`;
+      try {
+        execSync(`powershell -NoProfile -Command "${psCmd}"`, { timeout: 1500 });
+        return { ok: true, message: `Kecerahan layar diatur ke ${target}%` };
+      } catch (err) {
+        return { ok: false, message: `Gagal mengatur kecerahan layar: ${err.message}` };
+      }
+    }
+
+    case 'search_open_file': {
+      const q = String(step.query || '').trim();
+      const matched = findBestDocument(q, false);
+      if (matched) {
+        const errMsg = await shell.openPath(matched.path);
+        return errMsg ? { ok: false, message: errMsg } : { ok: true, message: `Membuka file ${matched.name}` };
+      }
+      return { ok: false, message: `File '${q}' tidak ditemukan` };
+    }
+
+    case 'whatsapp_send': {
+      const text = encodeURIComponent(step.message || '');
+      shell.openExternal(`whatsapp://send?text=${text}`).catch(() => {});
+      return { ok: true, message: `Pesan WhatsApp disiapkan untuk ${step.recipient}` };
     }
 
     case 'word_new_doc': {

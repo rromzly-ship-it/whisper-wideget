@@ -28,7 +28,14 @@ const QUICK_APPS = {
   'paint': 'paint',
   'corel': 'CorelDRAW 2024',
   'coreldraw': 'CorelDRAW 2024',
-  'koreldraw': 'CorelDRAW 2024'
+  'koreldraw': 'CorelDRAW 2024',
+  'whatsapp': 'whatsapp',
+  'wa': 'whatsapp',
+  'telegram': 'telegram',
+  'spotify': 'spotify',
+  'vscode': 'code',
+  'vs code': 'code',
+  'discord': 'discord'
 };
 
 const QUICK_FOLDERS = {
@@ -87,7 +94,7 @@ module.exports = {
       return { steps: [{ action: 'window_control', op: 'close' }], summary: 'Tutup jendela', replyLang: 'id', reply: 'Oke' };
     }
 
-    const folderMatch = clean.match(/^buka\s+(?:folder\s+)?([a-z\s]+)$/i);
+    const folderMatch = clean.match(/^buka\s+(?:folder\s+|aplikasi\s+|program\s+|app\s+)?([a-z0-9\s._+-]+)$/i);
     if (folderMatch && folderMatch[1]) {
       const key = folderMatch[1].trim().toLowerCase();
       if (QUICK_FOLDERS[key]) {
