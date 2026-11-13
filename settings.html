@@ -1,291 +1,443 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pengaturan Whisper Agent (Wis)</title>
   <link rel="stylesheet" href="settings.css">
 </head>
 <body>
-  <div class="settings-card">
-    <!-- Draggable Header -->
-    <div class="header">
-      <div class="header-left">
-        <div class="header-icon">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
-            <line x1="8" y1="23" x2="16" y2="23"/>
-          </svg>
-        </div>
-        <h1>Pengaturan Whisper Agent (Wis)</h1>
+  <!-- Embedded SVG Icons -->
+  <svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3m-3 0h6"/></symbol>
+    <symbol id="settings" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle fill="#242424" cx="8" cy="6" r="2"/><circle fill="#242424" cx="15" cy="12" r="2"/><circle fill="#242424" cx="10" cy="18" r="2"/></symbol>
+    <symbol id="voice-id" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3M8 22h8"/><path d="M2 12h2M20 12h2M5 8a12 12 0 0 1 0 8M19 8a12 12 0 0 0 0 8"/></symbol>
+    <symbol id="folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10h18"/></symbol>
+    <symbol id="log-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="quota-icon" viewBox="0 0 24 24"><path d="M4 20h16M6 16v-4m6 4V8m6 8V4"/></symbol>
+    <symbol id="help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4.4 1.6c-1.2 1-1.9 1.5-1.9 2.9m0 3h.01"/></symbol>
+    <symbol id="panel-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 5v14"/></symbol>
+    <symbol id="close-icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  </svg>
+
+  <div class="shell">
+    <!-- Left Sidebar Menu -->
+    <aside>
+      <div class="brand">
+        <span class="mark"><svg aria-hidden="true"><use href="#mic"/></svg></span>
+        <span class="brand-text">Whisper Agent</span>
       </div>
-      <button type="button" id="btn-close-window" class="btn-close-window" title="Tutup">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="6" y1="6" x2="18" y2="18"/>
-          <line x1="18" y1="6" x2="6" y2="18"/>
-        </svg>
-      </button>
-    </div>
+      <div class="nav-label">Menu Utama</div>
+      <nav aria-label="Menu Navigasi Whisper">
+        <button type="button" data-page="settings-page" aria-current="page" aria-label="Pengaturan" title="Pengaturan">
+          <svg aria-hidden="true"><use href="#settings"/></svg>
+          <span>Pengaturan</span>
+        </button>
+        <button type="button" data-page="voice-profile-page" aria-label="Profil Suara Pemilik" title="Profil Suara Pemilik (Voice Identity)">
+          <svg aria-hidden="true"><use href="#voice-id"/></svg>
+          <span>Profil Suara Pemilik</span>
+          <span id="badge-voice-locked" class="nav-badge hidden">Terkunci</span>
+        </button>
+        <button type="button" data-page="library-page" aria-label="Library App &amp; Web" title="Library App &amp; Web">
+          <svg aria-hidden="true"><use href="#folder"/></svg>
+          <span>Library App &amp; Web</span>
+        </button>
+        <button type="button" data-page="log-page" aria-label="Log" title="Log Aktivitas Perintah">
+          <svg aria-hidden="true"><use href="#log-icon"/></svg>
+          <span>Log</span>
+          <span id="log-tab-badge" class="nav-badge hidden">0</span>
+        </button>
+        <button type="button" data-page="quota-page" aria-label="Token &amp; Kuota" title="Token &amp; Kuota Groq API">
+          <svg aria-hidden="true"><use href="#quota-icon"/></svg>
+          <span>Token &amp; Kuota</span>
+        </button>
+        <button type="button" data-page="guide-page" aria-label="Panduan" title="Panduan Perintah &amp; Tutorial">
+          <svg aria-hidden="true"><use href="#help"/></svg>
+          <span>Panduan</span>
+        </button>
+      </nav>
+      <footer>Whisper Agent (Wis) · v1.0.7</footer>
+    </aside>
 
-    <!-- Tabs -->
-    <div class="tab-bar" role="tablist">
-      <button type="button" id="tab-btn-settings" class="tab-btn is-active" role="tab" aria-selected="true">Pengaturan</button>
-      <button type="button" id="tab-btn-knowledge" class="tab-btn" role="tab" aria-selected="false">Library App &amp; Web</button>
-      <button type="button" id="tab-btn-log" class="tab-btn" role="tab" aria-selected="false">
-        <span>Log</span>
-        <span id="log-tab-badge" class="tab-badge hidden">0</span>
-      </button>
-      <button type="button" id="tab-btn-usage" class="tab-btn" role="tab" aria-selected="false">Token &amp; Kuota</button>
-      <button type="button" id="tab-btn-guide" class="tab-btn" role="tab" aria-selected="false">Panduan</button>
-    </div>
-
-    <!-- Tab 1: Form Body -->
-    <div id="panel-settings" class="form-body tab-panel">
-      <!-- Kunci API -->
-      <div class="form-group">
-        <div class="label-row">
-          <label for="api-key">Kunci API</label>
-          <a href="#" id="link-groq" class="link-subtle">Ambil kunci gratis (Groq) ↗</a>
-        </div>
-        <div class="input-wrapper">
-          <input type="password" id="api-key" placeholder="Masukkan kunci API" autocomplete="off">
-          <button type="button" id="toggle-key-visibility" class="btn-eye" title="Lihat / Sembunyikan Kunci">
-            <!-- Eye SVG -->
-            <svg id="icon-eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-            <!-- Eye-off SVG -->
-            <svg id="icon-eye-off" class="hidden" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-              <line x1="1" y1="1" x2="23" y2="23"/>
-            </svg>
+    <!-- Main Content Area -->
+    <main>
+      <!-- Draggable Window Header -->
+      <header>
+        <button type="button" id="toggle" class="icon-button" aria-label="Ringkas sidebar" aria-expanded="true" title="Ringkas / Lebarkan Sidebar">
+          <svg aria-hidden="true"><use href="#panel-icon"/></svg>
+        </button>
+        <span id="section-name">Pengaturan</span>
+        <div class="header-right">
+          <button type="button" id="btn-close-window" class="icon-button btn-close-win" title="Tutup Jendela (Esc)">
+            <svg aria-hidden="true"><use href="#close-icon"/></svg>
           </button>
         </div>
-      </div>
+      </header>
 
-      <!-- Bahasa Ucapan -->
-      <div class="form-group">
-        <label for="language">Bahasa Ucapan (Multibahasa)</label>
-        <select id="language">
-          <option value="auto">Otomatis / Multibahasa (Indonesia &amp; Inggris)</option>
-          <option value="id">Bahasa Indonesia</option>
-          <option value="en">English</option>
-        </select>
-      </div>
+      <div class="content">
+        <!-- 1. PENGATURAN UMUM & NOISE GATE (TAHAP 1) -->
+        <section id="settings-page">
+          <h1>Pengaturan Sistem</h1>
+          <p>Konfigurasi kunci API, model Whisper, mikrofon, dan filter kebisingan latar belakang.</p>
 
-      <!-- Saran Tambahan: Mikrofon & Model -->
-      <div class="form-row">
-        <div class="form-group">
-          <label for="mic-select">Perangkat Mikrofon</label>
-          <select id="mic-select">
-            <option value="default">Default Sistem</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="model">Model Whisper</label>
-          <select id="model">
-            <option value="whisper-large-v3">Large-v3 (Akurasi Maksimal)</option>
-            <option value="whisper-large-v3-turbo">Large-v3 Turbo (Super Kilat)</option>
-          </select>
-        </div>
-      </div>
+          <div class="card">
+            <h2>Kunci API &amp; Model</h2>
+            <div class="grid">
+              <label class="full">
+                <div class="label-with-link">
+                  <span>Kunci API Groq</span>
+                  <a href="#" id="link-groq" class="link-subtle">Ambil kunci gratis ↗</a>
+                </div>
+                <div class="input-password-wrap">
+                  <input type="password" id="api-key" placeholder="gsk_..." autocomplete="off">
+                  <button type="button" id="toggle-key-visibility" class="btn-subtle-icon" title="Lihat/Sembunyikan Kunci">👁</button>
+                </div>
+              </label>
 
-      <!-- Voice Assistant (Piper TTS) -->
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <span class="toggle-title">Suara Asisten Wis (Piper Indonesia)</span>
-          <span class="toggle-desc">Wis menyapa dan membalas perintah lewat suara offline.</span>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="voice-assistant" checked>
-          <span class="slider"></span>
-        </label>
-      </div>
+              <label>
+                Bahasa Ucapan
+                <select id="language">
+                  <option value="auto">Otomatis (Indonesia &amp; Inggris)</option>
+                  <option value="id">Bahasa Indonesia</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
 
-      <!-- Auto-Startup -->
-      <div class="toggle-row">
-        <div class="toggle-info">
-          <span class="toggle-title">Jalankan saat Windows dimulai</span>
-          <span class="toggle-desc">Buka aplikasi secara otomatis saat masuk ke Windows.</span>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="auto-start">
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
+              <label>
+                Model Whisper
+                <select id="model">
+                  <option value="whisper-large-v3-turbo">Large-v3 Turbo (Super Cepat)</option>
+                  <option value="whisper-large-v3">Large-v3 (Akurasi Maksimal)</option>
+                </select>
+              </label>
 
-    <!-- Tab Knowledge: Library Aplikasi & Web Kustom -->
-    <div id="panel-knowledge" class="knowledge-panel tab-panel hidden">
-      <div class="knowledge-header-box">
-        <span class="knowledge-title">Library Aplikasi &amp; Website Kustom</span>
-        <span class="knowledge-subtitle">Daftarkan aplikasi internal atau link website (misal: Artax) beserta variasi cara pengucapannya agar Wis dapat langsung membukanya dalam 0ms tanpa buang token.</span>
-      </div>
-
-      <!-- Form Tambah / Edit -->
-      <div class="knowledge-form-card">
-        <input type="hidden" id="k-edit-id" value="">
-        <div class="form-row">
-          <div class="form-group" style="flex: 1.2;">
-            <label for="k-name">Nama Aplikasi / Web</label>
-            <input type="text" id="k-name" placeholder="Misal: Artax" autocomplete="off">
-          </div>
-          <div class="form-group" style="flex: 0.8;">
-            <label for="k-type">Tipe</label>
-            <select id="k-type">
-              <option value="web">Website / URL</option>
-              <option value="app">Aplikasi Lokal (.exe)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="k-target">Target (URL Link / Path Aplikasi)</label>
-          <input type="text" id="k-target" placeholder="Misal: https://artax.id atau C:\App\Artax.exe" autocomplete="off">
-        </div>
-
-        <div class="form-group">
-          <label for="k-aliases">Variasi Penyebutan Suara (Pisahkan dengan koma)</label>
-          <input type="text" id="k-aliases" placeholder="Misal: artax, air tax, r tax, web artax, aplikasi artax" autocomplete="off">
-          <span class="input-hint">Penyebutan yang mungkin tertangkap saat Anda bicara lewat mic.</span>
-        </div>
-
-        <div class="knowledge-form-actions">
-          <button type="button" id="btn-cancel-knowledge" class="btn-secondary hidden">Batal</button>
-          <button type="button" id="btn-save-knowledge" class="btn-save-k">+ Simpan ke Library</button>
-        </div>
-      </div>
-
-      <!-- Daftar Item Tersimpan -->
-      <div class="knowledge-list-header">
-        <span class="k-count-label">Daftar Tersimpan (<span id="k-total-count">0</span>)</span>
-      </div>
-      <div id="knowledge-items-container" class="knowledge-items-scroll">
-        <!-- Dynamically rendered -->
-      </div>
-    </div>
-
-    <!-- Tab 2: Live Command Activity Log -->
-    <div id="panel-log" class="log-panel tab-panel hidden">
-      <div class="log-toolbar">
-        <span id="log-summary-text" class="log-summary">Belum ada perintah</span>
-        <button type="button" id="btn-clear-logs" class="btn-clear-logs" title="Bersihkan perintah yang sudah selesai">Bersihkan</button>
-      </div>
-      <div id="log-list" class="log-list">
-        <div class="log-empty">
-          Belum ada perintah suara.<br>
-          Klik ikon Wis lalu ucapkan perintah untuk memantau antrean &amp; status pengerjaan di sini.
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab 3: API Token & Daily Task Capacity Calculator -->
-    <div id="panel-usage" class="usage-panel tab-panel hidden">
-      <div class="usage-toolbar">
-        <span id="usage-key-pill" class="usage-key-pill">API: -</span>
-        <div class="usage-actions">
-          <button type="button" id="btn-probe-quota" class="btn-mini-accent" title="Ambil data kuota RPD/TPM langsung dari API key aktif">Cek Data API</button>
-          <button type="button" id="btn-reset-usage" class="btn-clear-logs" title="Reset hitungan statistik lokal hari ini">Reset</button>
-        </div>
-      </div>
-
-      <div class="usage-scroll">
-        <!-- Card 1: API Quota & Live Consumption -->
-        <div class="usage-card">
-          <div class="usage-card-head">
-            <span class="usage-card-title">Kuota &amp; Pemakaian Hari Ini</span>
-            <span id="usage-pct-label" class="usage-pct-label">0%</span>
-          </div>
-          <div class="usage-progress-track">
-            <div id="usage-progress-fill" class="usage-progress-fill" style="width: 0%;"></div>
-          </div>
-          <div class="usage-grid">
-            <div class="usage-metric">
-              <span class="metric-label">Token Terpakai</span>
-              <span id="metric-used-tokens" class="metric-value">0</span>
-            </div>
-            <div class="usage-metric">
-              <span class="metric-label">Sisa Kuota (TPD)</span>
-              <span id="metric-rem-tokens" class="metric-value">-</span>
-            </div>
-            <div class="usage-metric">
-              <span class="metric-label">Req Harian (RPD API)</span>
-              <span id="metric-rpd" class="metric-value">-</span>
-            </div>
-            <div class="usage-metric">
-              <span class="metric-label">Token/Menit (TPM API)</span>
-              <span id="metric-tpm" class="metric-value">-</span>
+              <label class="full">
+                Perangkat Mikrofon
+                <select id="mic-select">
+                  <option value="default">Default Sistem</option>
+                </select>
+              </label>
             </div>
           </div>
-          <div class="usage-limit-row">
-            <label for="input-custom-limit">Batas TPD Model:</label>
-            <input type="number" id="input-custom-limit" min="1000" step="10000" placeholder="200000">
-            <button type="button" id="btn-set-limit" class="btn-clear-logs">Terapkan</button>
-          </div>
-        </div>
 
-        <!-- Card 2: Daily Task Capacity Calculator -->
-        <div class="usage-card usage-calc-card">
-          <div class="usage-card-head">
-            <span class="usage-card-title">Kalkulasi Kapasitas Tugas Harian</span>
-            <span id="usage-avg-source" class="usage-sub-tag">Estimasi awal</span>
-          </div>
-          <div class="usage-grid usage-grid-3">
-            <div class="usage-metric">
-              <span class="metric-label">Rata-rata / Tugas</span>
-              <span id="metric-avg-task" class="metric-value">1.350 tkn</span>
+          <!-- TAHAP 1: Noise Gate & Sensitivitas Jarak -->
+          <div class="card">
+            <h2>Penyaringan Noise &amp; Sensitivitas Mikrofon (Tahap 1)</h2>
+            <p>Mencegah mikrofon menangkap obrolan orang lain di ruangan atau dengungan kipas/AC.</p>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-title">Aktifkan Noise Gate (Potong Suara Jauh &amp; Noise)</span>
+                <span class="toggle-desc">Hanya merekam suara yang melampaui ambang batas volume bicara dekat (< 60 cm).</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="noise-gate-toggle" checked>
+                <span class="slider"></span>
+              </label>
             </div>
-            <div class="usage-metric">
-              <span class="metric-label">Kapasitas / Hari</span>
-              <span id="metric-day-cap" class="metric-value metric-blue">-</span>
+
+            <div class="slider-row" id="noise-gate-slider-box">
+              <div class="slider-label-row">
+                <label for="noise-gate-threshold">Ambang Batas Suara (Threshold): <strong id="noise-gate-val">-38 dB</strong></label>
+                <small>Geser ke kanan jika ruangan berisik; geser ke kiri jika suara Anda lembut.</small>
+              </div>
+              <input type="range" id="noise-gate-threshold" min="-50" max="-20" step="1" value="-38">
+              <div class="range-labels">
+                <span>Lebih Sensitif (-50 dB)</span>
+                <span>Standar (-38 dB)</span>
+                <span>Ketat Dekat Mulut (-20 dB)</span>
+              </div>
             </div>
-            <div class="usage-metric">
-              <span class="metric-label">Sisa Hari Ini</span>
-              <span id="metric-day-rem" class="metric-value metric-green">-</span>
+
+            <div class="toggle-row" style="margin-top: 15px;">
+              <div class="toggle-info">
+                <span class="toggle-title">Matikan Auto Gain Control (AGC)</span>
+                <span class="toggle-desc">Disarankan matikan AGC agar laptop tidak otomatis menaikkan sensitivitas saat Anda hening.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="disable-agc-toggle" checked>
+                <span class="slider"></span>
+              </label>
             </div>
           </div>
-          <div class="usage-sim-row">
-            <label for="usage-sim-tokens">Simulasi Token / Tugas:</label>
-            <input type="number" id="usage-sim-tokens" min="100" step="100" placeholder="Otomatis">
-            <span id="usage-sim-result" class="usage-sim-result"></span>
+
+          <!-- Opsi Lainnya -->
+          <div class="card">
+            <h2>Asisten Suara &amp; Sistem</h2>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-title">Suara Asisten Wis (Piper Indonesia)</span>
+                <span class="toggle-desc">Wis menjawab dan mengonfirmasi perintah dengan suara offline yang ramah dan santai.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="voice-assistant" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-title">Jalankan saat Windows dimulai</span>
+                <span class="toggle-desc">Membuka widget Whisper secara otomatis saat laptop dinyalakan.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="auto-start">
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
-        </div>
 
-        <!-- Card 3: Per-Model & Per-Task API Breakdown -->
-        <div class="usage-card">
-          <div class="usage-card-head">
-            <span class="usage-card-title">Rincian Model &amp; Token per Tugas</span>
-            <span id="usage-whisper-info" class="usage-sub-tag">Whisper: 0 call</span>
+          <div class="actions-sticky">
+            <span class="shortcut-tip">Pintasan: <code>Alt+Shift+V</code> Dikte · <code>Alt+Shift+C</code> Asisten Wis</span>
+            <div class="actions-right">
+              <button type="button" id="btn-restart-app" class="secondary">Restart</button>
+              <button type="button" id="btn-quit-app" class="danger">Keluar</button>
+              <button type="button" id="btn-save" class="primary">Simpan Pengaturan</button>
+            </div>
           </div>
-          <div id="usage-models-list" class="usage-mini-list"></div>
-          <div id="usage-tasks-list" class="usage-mini-list usage-tasks-list"></div>
-        </div>
-      </div>
-    </div>
+        </section>
 
-    <!-- Tab 4: Manual Book & Learning Modules -->
-    <div id="panel-guide" class="guide-panel tab-panel hidden">
-      <div class="guide-toolbar">
-        <div class="guide-search-wrap">
-          <input type="text" id="guide-search" placeholder="Cari modul / perintah (mis: youtube, minimize, belajar, word)..." autocomplete="off">
-        </div>
-        <span id="guide-status-toast" class="guide-toast hidden"></span>
-      </div>
-      <div id="guide-list" class="guide-scroll"></div>
-    </div>
+        <!-- 2. PROFIL SUARA PEMILIK (VOICE IDENTITY TAHAP 2) -->
+        <section id="voice-profile-page" hidden>
+          <h1>Profil Suara Pemilik (Voice Identity)</h1>
+          <p>Kunci mikrofon agar Whisper dan Wis hanya mendengarkan suara Anda dan menolak suara orang lain.</p>
 
-    <!-- Footer -->
-    <div id="settings-footer" class="footer">
-      <span class="shortcut-hint"><code>Alt+Shift+V</code> Ketik · <code>Alt+Shift+C</code> AI</span>
-      <div class="footer-actions">
-        <button type="button" id="btn-restart-app" class="btn-secondary" title="Muat ulang aplikasi Whisper">Restart</button>
-        <button type="button" id="btn-quit-app" class="btn-danger" title="Tutup aplikasi Whisper">Keluar</button>
-        <button type="button" id="btn-save" class="btn-save">Simpan</button>
+          <!-- Status & Lock Switch -->
+          <div class="card">
+            <div class="status-banner" id="voice-status-banner">
+              <div class="status-icon" id="voice-status-icon">⚪</div>
+              <div class="status-text">
+                <strong id="voice-status-title">Memeriksa status profil suara...</strong>
+                <span id="voice-status-subtitle">Membaca data sidik suara lokal...</span>
+              </div>
+            </div>
+
+            <div class="toggle-row" style="margin-top: 16px;">
+              <div class="toggle-info">
+                <span class="toggle-title">Kunci Mikrofon Hanya Untuk Suara Pemilik (Lock to My Voice)</span>
+                <span class="toggle-desc">Jika aktif, setiap rekaman akan diverifikasi sidik suaranya. Suara orang lain akan diabaikan.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="lock-voice-toggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="slider-row" style="margin-top: 14px;">
+              <div class="slider-label-row">
+                <label for="voice-match-threshold">Tingkat Kemiripan Minimal (Match Threshold): <strong id="voice-threshold-val">70%</strong></label>
+                <small>Toleransi kemiripan vokal (rekomendasi 65% - 75%).</small>
+              </div>
+              <input type="range" id="voice-match-threshold" min="50" max="90" step="1" value="70">
+              <div class="range-labels">
+                <span>Lebih Longgar (50%)</span>
+                <span>Optimal (70%)</span>
+                <span>Sangat Ketat (90%)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Perekaman Sample Suara (Enrollment) -->
+          <div class="card">
+            <h2>Pendaftaran Sampel Suara (Enrollment)</h2>
+            <p>Ucapkan kalimat berikut dengan santai dan jelas di depan laptop selama 5 detik:</p>
+            <blockquote class="speech-script-box">
+              "Halo Wis, ini suara saya untuk verifikasi pemilik sistem Whisper Floating Widget."
+            </blockquote>
+
+            <div class="enroll-action-box">
+              <button type="button" id="btn-record-voice" class="primary btn-enroll">
+                ● Mulai Rekam Sampel Suara (5 Detik)
+              </button>
+              <button type="button" id="btn-delete-voice" class="secondary danger-btn" hidden>
+                Hapus Profil Suara
+              </button>
+            </div>
+
+            <!-- Live recording countdown and visualizer -->
+            <div id="enroll-progress-box" class="enroll-progress-box hidden">
+              <div class="progress-bar-track">
+                <div id="enroll-progress-fill" class="progress-bar-fill"></div>
+              </div>
+              <div class="progress-info-row">
+                <span id="enroll-timer-text">Merekam... Sisa 5 detik</span>
+                <span id="enroll-rms-level">Level Suara: -</span>
+              </div>
+            </div>
+            <p id="enroll-feedback-text" class="status-msg"></p>
+          </div>
+
+          <!-- Uji Coba Langsung (Live Test) -->
+          <div class="card">
+            <h2>Uji Kemiripan Suara Langsung (Live Test)</h2>
+            <p>Coba bicaralah selama 3 detik untuk melihat apakah suara Anda cocok atau jika suara orang lain ditolak.</p>
+
+            <div class="enroll-action-box">
+              <button type="button" id="btn-test-voice" class="secondary">
+                🎤 Uji Suara Sekarang (3 Detik)
+              </button>
+            </div>
+
+            <div id="test-result-box" class="test-result-box hidden">
+              <div class="test-score-meter">
+                <div id="test-meter-fill" class="meter-fill" style="width: 0%;"></div>
+              </div>
+              <div class="test-feedback-row">
+                <span id="test-score-text">Skor Kemiripan: <strong>0%</strong></span>
+                <span id="test-verdict-badge" class="verdict-badge">-</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. LIBRARY APP & WEB -->
+        <section id="library-page" hidden>
+          <h1>Library App &amp; Web</h1>
+          <p>Daftarkan aplikasi desktop dan link website kustom (misal: Artax) dengan variasi penyebutan suara.</p>
+
+          <form class="card" id="add-form">
+            <h2 id="form-k-title">Tambah Aplikasi atau Website</h2>
+            <input type="hidden" id="k-edit-id" value="">
+            <div class="grid">
+              <label>
+                Nama Aplikasi / Web
+                <input id="k-name" placeholder="Misal: Artax" required autocomplete="off">
+              </label>
+              <label>
+                Tipe
+                <select id="k-type">
+                  <option value="web">Website / URL Link</option>
+                  <option value="app">Aplikasi Desktop (.exe)</option>
+                </select>
+              </label>
+              <label class="full">
+                Target (URL atau Path Aplikasi)
+                <input id="k-target" placeholder="https://artax.id" required autocomplete="off">
+              </label>
+              <label class="full">
+                Variasi Penyebutan Suara
+                <input id="k-aliases" placeholder="Misal: artax, air tax, r tax, web artax" autocomplete="off">
+                <small>Pisahkan setiap variasi pengucapan dengan koma.</small>
+              </label>
+            </div>
+            <div class="actions">
+              <button type="button" id="btn-cancel-knowledge" class="secondary" hidden>Batal</button>
+              <button class="primary" type="submit" id="btn-save-knowledge">+ Simpan ke Library</button>
+            </div>
+            <p id="k-status" role="status" class="status-msg"></p>
+          </form>
+
+          <div class="card">
+            <h2 id="count">Daftar Tersimpan (0)</h2>
+            <div id="entries"></div>
+          </div>
+        </section>
+
+        <!-- 4. LOG PERINTAH SUARA -->
+        <section id="log-page" hidden>
+          <div class="section-header-flex">
+            <div>
+              <h1>Log Aktivitas Perintah</h1>
+              <p>Pantau riwayat perintah suara, antrean eksekusi, dan respon asisten.</p>
+            </div>
+            <button type="button" id="btn-clear-logs" class="secondary btn-sm">Bersihkan Log</button>
+          </div>
+
+          <div class="card">
+            <div id="log-list" class="log-list-scroll">
+              <div class="log-empty">
+                Belum ada riwayat perintah suara.<br>
+                Ucapkan perintah ke Wis untuk melihat jalannya eksekusi di sini.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. TOKEN & KUOTA GROQ API -->
+        <section id="quota-page" hidden>
+          <div class="section-header-flex">
+            <div>
+              <h1>Token &amp; Kuota API</h1>
+              <p>Pantau penggunaan kuota harian, batas token (TPD/TPM), dan kalkulasi tugas.</p>
+            </div>
+            <div class="actions-right">
+              <button type="button" id="btn-probe-quota" class="secondary btn-sm">Cek Kuota API</button>
+              <button type="button" id="btn-reset-usage" class="secondary btn-sm danger-btn">Reset Hari Ini</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Pemakaian Hari Ini</h2>
+            <div class="usage-progress-wrap">
+              <div class="progress-bar-track">
+                <div id="usage-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
+              </div>
+              <span id="usage-pct-label" class="usage-pct-pill">0%</span>
+            </div>
+
+            <div class="grid grid-4" style="margin-top: 16px;">
+              <div class="metric-card">
+                <small>Token Terpakai</small>
+                <strong id="metric-used-tokens">0</strong>
+              </div>
+              <div class="metric-card">
+                <small>Sisa Kuota (TPD)</small>
+                <strong id="metric-rem-tokens">-</strong>
+              </div>
+              <div class="metric-card">
+                <small>Req Harian (RPD)</small>
+                <strong id="metric-rpd">-</strong>
+              </div>
+              <div class="metric-card">
+                <small>Token/Menit (TPM)</small>
+                <strong id="metric-tpm">-</strong>
+              </div>
+            </div>
+
+            <div class="limit-custom-row" style="margin-top: 16px;">
+              <label>
+                Batas TPD Model Mandiri:
+                <input type="number" id="input-custom-limit" min="1000" step="10000" placeholder="200000">
+              </label>
+              <button type="button" id="btn-set-limit" class="secondary">Terapkan</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Kalkulasi Kapasitas Tugas Harian</h2>
+            <div class="grid grid-3">
+              <div class="metric-card">
+                <small>Rata-rata / Tugas</small>
+                <strong id="metric-avg-task">1.350 tkn</strong>
+              </div>
+              <div class="metric-card">
+                <small>Kapasitas Harian</small>
+                <strong id="metric-day-cap" class="text-blue">-</strong>
+              </div>
+              <div class="metric-card">
+                <small>Sisa Hari Ini</small>
+                <strong id="metric-day-rem" class="text-green">-</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. PANDUAN & TUTORIAL LENGKAP -->
+        <section id="guide-page" hidden>
+          <h1>Panduan &amp; Tutorial Perintah</h1>
+          <p>Pelajari semua kemampuan Wis. Anda dapat mencoba langsung perintah dengan tombol <strong>Coba</strong>.</p>
+
+          <div class="card">
+            <input type="text" id="guide-search" placeholder="Cari perintah (misal: youtube, brightness, minimize, word)..." autocomplete="off">
+          </div>
+
+          <div id="guide-list" class="guide-cards-container">
+            <!-- Dynamically populated from memory / knowledge -->
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   </div>
 
   <script src="settings.js"></script>

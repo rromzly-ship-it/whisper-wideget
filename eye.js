@@ -749,7 +749,7 @@ async function getAudioStream() {
   const baseAudio = {
     echoCancellation: true,
     noiseSuppression: true,
-    autoGainControl: true
+    autoGainControl: appConfig?.autoGainControl === true
   };
 
   if (appConfig && appConfig.deviceId && appConfig.deviceId !== 'default') {
@@ -976,8 +976,11 @@ async function startNextListeningSegment() {
     if (rms > maxRmsSeen) maxRmsSeen = rms;
     const now = performance.now();
 
-    // Dynamic threshold that adapts if background (e.g. laptop speaker) is noisy
-    const speechThreshold = Math.max(0.008, Math.min(0.035, ambientFloor * 2.8));
+    // Dynamic threshold that adapts if background is noisy and respects Noise Gate setting
+    const gateRms = (appConfig?.noiseGateEnabled !== false)
+      ? Math.pow(10, ((appConfig?.noiseGateThreshold !== undefined ? appConfig.noiseGateThreshold : -38)) / 20)
+      : 0.008;
+    const speechThreshold = Math.max(gateRms, Math.min(0.045, ambientFloor * 2.8));
 
     // When user has already spoken, detect if voice drops below 40% of speech peak
     // (meaning user stopped speaking even if background laptop speaker continues playing!)
@@ -1035,6 +1038,30 @@ async function processVoiceCommand(audioBlob, segPeak = 0) {
     return;
   }
   dbgLog(`transcribing audioBlob bytes=${audioBlob.size}`);
+
+  // Tahap 2: Voice Lock / Speaker Verification Check
+  if (appConfig?.lockToOwnerVoice === true) {
+    try {
+      const arrBuf = await audioBlob.arrayBuffer();
+      const tempCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      const decoded = await tempCtx.decodeAudioData(arrBuf);
+      await tempCtx.close();
+      const pcm = Array.from(decoded.getChannelData(0));
+      const verifyRes = await ipcRenderer.invoke('verify-voice-match', {
+        pcm,
+        sampleRate: decoded.sampleRate,
+        threshold: appConfig.voiceMatchThreshold || 70
+      });
+
+      if (verifyRes && !verifyRes.match) {
+        dbgLog(`voice lock rejected: match failed score=${verifyRes.score}% thr=${verifyRes.minThreshold}%`);
+        setEyeState('idle');
+        return;
+      }
+    } catch (vErr) {
+      dbgLog(`voice verification error: ${vErr.message}`);
+    }
+  }
 
   try {
     const promptHints = await ipcRenderer.invoke('get-whisper-prompt').catch(() => '');

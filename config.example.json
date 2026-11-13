@@ -5,6 +5,11 @@
   "voiceAssistant": true,
   "model": "whisper-large-v3",
   "deviceId": "default",
+  "noiseGateEnabled": true,
+  "noiseGateThreshold": -38,
+  "autoGainControl": false,
+  "lockToOwnerVoice": false,
+  "voiceMatchThreshold": 70,
   "posX": null,
   "posY": null
 }

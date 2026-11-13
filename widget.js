@@ -6,6 +6,10 @@ let currentState = 'idle'; // 'idle' | 'recording' | 'processing'
 let mediaRecorder = null;
 let audioChunks = [];
 let appConfig = null;
+let widgetAudioCtx = null;
+let widgetAnalyser = null;
+let peakDbRecorded = -100;
+let vadMonitorTimer = null;
 
 // Initial load config
 ipcRenderer.invoke('get-config').then(cfg => {
@@ -249,7 +253,7 @@ async function getAudioStream() {
   const baseAudio = {
     echoCancellation: true,
     noiseSuppression: true,
-    autoGainControl: true
+    autoGainControl: appConfig?.autoGainControl === true
   };
 
   if (appConfig && appConfig.deviceId && appConfig.deviceId !== 'default') {
@@ -276,6 +280,30 @@ async function startRecording() {
     const stream = await getAudioStream();
 
     audioChunks = [];
+    peakDbRecorded = -100;
+
+    // Attach Analyser for Noise Gate Level Tracking
+    try {
+      widgetAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = widgetAudioCtx.createMediaStreamSource(stream);
+      widgetAnalyser = widgetAudioCtx.createAnalyser();
+      widgetAnalyser.fftSize = 512;
+      source.connect(widgetAnalyser);
+
+      const pcmBuf = new Float32Array(widgetAnalyser.fftSize);
+      vadMonitorTimer = setInterval(() => {
+        if (!widgetAnalyser) return;
+        widgetAnalyser.getFloatTimeDomainData(pcmBuf);
+        let sumSq = 0;
+        for (let i = 0; i < pcmBuf.length; i++) sumSq += pcmBuf[i] * pcmBuf[i];
+        const rms = Math.sqrt(sumSq / pcmBuf.length);
+        const db = 20 * Math.log10(Math.max(1e-4, rms));
+        if (db > peakDbRecorded) peakDbRecorded = db;
+      }, 50);
+    } catch (audioErr) {
+      console.warn('Widget AudioContext init warning:', audioErr);
+    }
+
     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
 
     mediaRecorder.ondataavailable = (event) => {
@@ -285,6 +313,15 @@ async function startRecording() {
     };
 
     mediaRecorder.onstop = async () => {
+      if (vadMonitorTimer) {
+        clearInterval(vadMonitorTimer);
+        vadMonitorTimer = null;
+      }
+      if (widgetAudioCtx) {
+        try { await widgetAudioCtx.close(); } catch {}
+        widgetAudioCtx = null;
+        widgetAnalyser = null;
+      }
       stream.getTracks().forEach(track => track.stop());
       await processAudio();
     };
@@ -318,6 +355,41 @@ async function processAudio() {
   if (audioBlob.size < 1000) {
     setState('idle');
     return;
+  }
+
+  // Tahap 1: Noise Gate Check
+  if (appConfig?.noiseGateEnabled !== false) {
+    const threshold = (appConfig && appConfig.noiseGateThreshold !== undefined) ? appConfig.noiseGateThreshold : -38;
+    if (peakDbRecorded < threshold) {
+      dbgWidget(`Noise gate: peak level ${Math.round(peakDbRecorded)} dB is below threshold ${threshold} dB, discarded.`);
+      setState('idle');
+      return;
+    }
+  }
+
+  // Tahap 2: Voice Lock / Speaker Verification Check
+  if (appConfig?.lockToOwnerVoice === true) {
+    try {
+      const arrBuf = await audioBlob.arrayBuffer();
+      const tempCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      const decoded = await tempCtx.decodeAudioData(arrBuf);
+      await tempCtx.close();
+      const pcm = Array.from(decoded.getChannelData(0));
+      const evalRes = await ipcRenderer.invoke('verify-voice-match', {
+        pcm,
+        sampleRate: decoded.sampleRate,
+        threshold: appConfig.voiceMatchThreshold || 70
+      });
+
+      if (evalRes && !evalRes.match) {
+        dbgWidget(`Voice lock rejected: similarity ${evalRes.score}% is below ${evalRes.minThreshold}%`);
+        btnCircle.title = `Suara tidak cocok dengan profil pemilik (${evalRes.score}%)`;
+        setState('idle');
+        return;
+      }
+    } catch (vErr) {
+      dbgWidget(`Voice lock verification error: ${vErr.message}`);
+    }
   }
 
   try {

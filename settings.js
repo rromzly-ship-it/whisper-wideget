@@ -1,893 +1,767 @@
 const { ipcRenderer, shell } = require('electron');
 
-const settingsCard = document.querySelector('.settings-card');
+// DOM Elements - Navigation & Shell
+const shellContainer = document.querySelector('.shell');
+const sidebarToggleBtn = document.getElementById('toggle');
+const navButtons = document.querySelectorAll('nav [data-page]');
+const sections = document.querySelectorAll('.content > section');
+const sectionTitleEl = document.getElementById('section-name');
+const btnCloseWindow = document.getElementById('btn-close-window');
+
+// DOM Elements - Settings (Tahap 1)
 const apiKeyInput = document.getElementById('api-key');
 const toggleKeyBtn = document.getElementById('toggle-key-visibility');
-const iconEye = document.getElementById('icon-eye');
-const iconEyeOff = document.getElementById('icon-eye-off');
 const linkGroq = document.getElementById('link-groq');
 const languageSelect = document.getElementById('language');
 const modelSelect = document.getElementById('model');
 const micSelect = document.getElementById('mic-select');
-const voiceAssistantCheckbox = document.getElementById('voice-assistant');
-const autoStartCheckbox = document.getElementById('auto-start');
+const noiseGateToggle = document.getElementById('noise-gate-toggle');
+const noiseGateThreshold = document.getElementById('noise-gate-threshold');
+const noiseGateVal = document.getElementById('noise-gate-val');
+const disableAgcToggle = document.getElementById('disable-agc-toggle');
+const voiceAssistantToggle = document.getElementById('voice-assistant');
+const autoStartToggle = document.getElementById('auto-start');
 const btnSave = document.getElementById('btn-save');
-const btnRestartApp = document.getElementById('btn-restart-app');
-const btnQuitApp = document.getElementById('btn-quit-app');
-const btnCloseWindow = document.getElementById('btn-close-window');
-const tabBtnSettings = document.getElementById('tab-btn-settings');
-const tabBtnKnowledge = document.getElementById('tab-btn-knowledge');
-const tabBtnLog = document.getElementById('tab-btn-log');
-const tabBtnUsage = document.getElementById('tab-btn-usage');
-const tabBtnGuide = document.getElementById('tab-btn-guide');
-const panelSettings = document.getElementById('panel-settings');
-const panelKnowledge = document.getElementById('panel-knowledge');
-const panelLog = document.getElementById('panel-log');
-const panelUsage = document.getElementById('panel-usage');
-const panelGuide = document.getElementById('panel-guide');
-const settingsFooter = document.getElementById('settings-footer');
+const btnRestart = document.getElementById('btn-restart-app');
+const btnQuit = document.getElementById('btn-quit-app');
+
+// DOM Elements - Voice Profile (Tahap 2)
+const badgeVoiceLocked = document.getElementById('badge-voice-locked');
+const voiceStatusBanner = document.getElementById('voice-status-banner');
+const voiceStatusIcon = document.getElementById('voice-status-icon');
+const voiceStatusTitle = document.getElementById('voice-status-title');
+const voiceStatusSubtitle = document.getElementById('voice-status-subtitle');
+const lockVoiceToggle = document.getElementById('lock-voice-toggle');
+const voiceMatchThreshold = document.getElementById('voice-match-threshold');
+const voiceThresholdVal = document.getElementById('voice-threshold-val');
+const btnRecordVoice = document.getElementById('btn-record-voice');
+const btnDeleteVoice = document.getElementById('btn-delete-voice');
+const enrollProgressBox = document.getElementById('enroll-progress-box');
+const enrollProgressFill = document.getElementById('enroll-progress-fill');
+const enrollTimerText = document.getElementById('enroll-timer-text');
+const enrollRmsLevel = document.getElementById('enroll-rms-level');
+const enrollFeedbackText = document.getElementById('enroll-feedback-text');
+const btnTestVoice = document.getElementById('btn-test-voice');
+const testResultBox = document.getElementById('test-result-box');
+const testMeterFill = document.getElementById('test-meter-fill');
+const testScoreText = document.getElementById('test-score-text');
+const testVerdictBadge = document.getElementById('test-verdict-badge');
+
+// DOM Elements - Library App & Web
+const addForm = document.getElementById('add-form');
+const formKTitle = document.getElementById('form-k-title');
 const kEditId = document.getElementById('k-edit-id');
 const kName = document.getElementById('k-name');
 const kType = document.getElementById('k-type');
 const kTarget = document.getElementById('k-target');
 const kAliases = document.getElementById('k-aliases');
-const btnSaveKnowledge = document.getElementById('btn-save-knowledge');
-const btnCancelKnowledge = document.getElementById('btn-cancel-knowledge');
-const kTotalCount = document.getElementById('k-total-count');
-const knowledgeItemsContainer = document.getElementById('knowledge-items-container');
-const guideSearchInput = document.getElementById('guide-search');
-const guideList = document.getElementById('guide-list');
-const guideStatusToast = document.getElementById('guide-status-toast');
-const logTabBadge = document.getElementById('log-tab-badge');
-const logSummaryText = document.getElementById('log-summary-text');
+const btnCancelK = document.getElementById('btn-cancel-knowledge');
+const kStatus = document.getElementById('k-status');
+const kEntriesList = document.getElementById('entries');
+const kCount = document.getElementById('count');
+
+// DOM Elements - Log
 const logList = document.getElementById('log-list');
 const btnClearLogs = document.getElementById('btn-clear-logs');
-const usageKeyPill = document.getElementById('usage-key-pill');
+const logTabBadge = document.getElementById('log-tab-badge');
+
+// DOM Elements - Quota
 const btnProbeQuota = document.getElementById('btn-probe-quota');
 const btnResetUsage = document.getElementById('btn-reset-usage');
-const usagePctLabel = document.getElementById('usage-pct-label');
 const usageProgressFill = document.getElementById('usage-progress-fill');
+const usagePctLabel = document.getElementById('usage-pct-label');
 const metricUsedTokens = document.getElementById('metric-used-tokens');
 const metricRemTokens = document.getElementById('metric-rem-tokens');
 const metricRpd = document.getElementById('metric-rpd');
 const metricTpm = document.getElementById('metric-tpm');
 const inputCustomLimit = document.getElementById('input-custom-limit');
 const btnSetLimit = document.getElementById('btn-set-limit');
-const usageAvgSource = document.getElementById('usage-avg-source');
 const metricAvgTask = document.getElementById('metric-avg-task');
 const metricDayCap = document.getElementById('metric-day-cap');
 const metricDayRem = document.getElementById('metric-day-rem');
-const usageSimTokens = document.getElementById('usage-sim-tokens');
-const usageSimResult = document.getElementById('usage-sim-result');
-const usageWhisperInfo = document.getElementById('usage-whisper-info');
-const usageModelsList = document.getElementById('usage-models-list');
-const usageTasksList = document.getElementById('usage-tasks-list');
 
-let isClosing = false;
-let activeTab = 'settings';
-let latestLogs = [];
-let latestUsageSummary = null;
-let logTickTimer = null;
+// DOM Elements - Guide
+const guideSearchInput = document.getElementById('guide-search');
+const guideListContainer = document.getElementById('guide-list');
 
-function escapeHtml(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+// Internal State
+let currentConfig = {};
+let currentKnowledgeList = [];
+let isKeyVisible = false;
+let isRecordingEnrollment = false;
+let isTestingVoice = false;
 
-function formatClock(ts) {
-  if (!ts) return '';
-  try {
-    const d = new Date(ts);
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    const ss = String(d.getSeconds()).padStart(2, '0');
-    return `${hh}:${mm}:${ss}`;
-  } catch {
-    return '';
-  }
-}
+// =========================================================================
+// 1. SIDEBAR & NAVIGATION
+// =========================================================================
+sidebarToggleBtn.addEventListener('click', () => {
+  const isCompact = shellContainer.classList.toggle('compact');
+  sidebarToggleBtn.setAttribute('aria-expanded', String(!isCompact));
+  sidebarToggleBtn.setAttribute('aria-label', isCompact ? 'Lebarkan sidebar' : 'Ringkas sidebar');
+});
 
-function formatDuration(ms) {
-  const sec = Math.max(0, Number(ms || 0) / 1000);
-  return `${sec.toFixed(1)} dtk`;
-}
+navButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    navButtons.forEach(b => b.removeAttribute('aria-current'));
+    btn.setAttribute('aria-current', 'page');
+    const targetPage = btn.getAttribute('data-page');
+    sectionTitleEl.textContent = btn.getAttribute('aria-label') || 'Pengaturan';
 
-function formatNumberId(num) {
-  if (num === null || num === undefined || Number.isNaN(Number(num))) return '-';
-  return Number(num).toLocaleString('id-ID');
-}
-
-function switchTab(tabName) {
-  activeTab = ['settings', 'knowledge', 'log', 'usage', 'guide'].includes(tabName) ? tabName : 'settings';
-  const showSettings = activeTab === 'settings';
-  const showKnowledge = activeTab === 'knowledge';
-  const showLog = activeTab === 'log';
-  const showUsage = activeTab === 'usage';
-  const showGuide = activeTab === 'guide';
-
-  tabBtnSettings.classList.toggle('is-active', showSettings);
-  tabBtnSettings.setAttribute('aria-selected', String(showSettings));
-  tabBtnKnowledge.classList.toggle('is-active', showKnowledge);
-  tabBtnKnowledge.setAttribute('aria-selected', String(showKnowledge));
-  tabBtnLog.classList.toggle('is-active', showLog);
-  tabBtnLog.setAttribute('aria-selected', String(showLog));
-  tabBtnUsage.classList.toggle('is-active', showUsage);
-  tabBtnUsage.setAttribute('aria-selected', String(showUsage));
-  tabBtnGuide.classList.toggle('is-active', showGuide);
-  tabBtnGuide.setAttribute('aria-selected', String(showGuide));
-
-  panelSettings.classList.toggle('hidden', !showSettings);
-  settingsFooter.classList.toggle('hidden', !showSettings);
-  panelKnowledge.classList.toggle('hidden', !showKnowledge);
-  panelLog.classList.toggle('hidden', !showLog);
-  panelUsage.classList.toggle('hidden', !showUsage);
-  panelGuide.classList.toggle('hidden', !showGuide);
-
-  if (showKnowledge) {
-    loadAndRenderKnowledge();
-  } else if (showLog) {
-    ipcRenderer.invoke('get-command-logs').then(renderCommandLogs).catch(() => { });
-  } else if (showUsage) {
-    ipcRenderer.invoke('get-usage-summary').then(renderUsageSummary).catch(() => { });
-  } else if (showGuide) {
-    loadAndRenderGuide();
-  }
-}
-
-let knowledgeList = [];
-
-async function loadAndRenderKnowledge() {
-  try {
-    knowledgeList = await ipcRenderer.invoke('get-apps-knowledge') || [];
-    renderKnowledgeList();
-  } catch (e) {
-    console.warn('Gagal memuat apps knowledge:', e);
-  }
-}
-
-function renderKnowledgeList() {
-  if (!kTotalCount || !knowledgeItemsContainer) return;
-  kTotalCount.textContent = String(knowledgeList.length);
-  knowledgeItemsContainer.innerHTML = '';
-
-  if (knowledgeList.length === 0) {
-    knowledgeItemsContainer.innerHTML = `
-      <div class="log-empty">
-        Belum ada aplikasi atau website kustom yang didaftarkan.<br>
-        Tambahkan di formulir atas (misal: nama: <b>Artax</b>, URL: <b>https://artax.id</b>).
-      </div>
-    `;
-    return;
-  }
-
-  knowledgeList.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'k-item-card';
-
-    const isWeb = item.type === 'web' || /^https?:\/\//i.test(item.target);
-    const badgeClass = isWeb ? 'badge-web' : 'badge-app';
-    const badgeText = isWeb ? 'Web' : 'App';
-
-    const aliasChips = (item.aliases || []).map(a => `<span class="alias-chip">${escapeHtml(a)}</span>`).join('');
-
-    card.innerHTML = `
-      <div class="k-item-left">
-        <span class="k-type-badge ${badgeClass}">${badgeText}</span>
-        <div class="k-item-details">
-          <span class="k-item-title">${escapeHtml(item.name)}</span>
-          <span class="k-item-target">${escapeHtml(item.target)}</span>
-          ${aliasChips ? `<div class="k-item-aliases">${aliasChips}</div>` : ''}
-        </div>
-      </div>
-      <div class="k-item-actions">
-        <button type="button" class="btn-k-action btn-k-test" title="Uji Coba Langsung Buka">▶ Buka</button>
-        <button type="button" class="btn-k-action btn-k-edit" title="Edit Data">✎ Edit</button>
-        <button type="button" class="btn-k-action btn-k-delete" title="Hapus Data">🗑 Hapus</button>
-      </div>
-    `;
-
-    card.querySelector('.btn-k-test').addEventListener('click', async () => {
-      const btn = card.querySelector('.btn-k-test');
-      const orig = btn.textContent;
-      btn.textContent = '⏳ Buka...';
-      try {
-        await ipcRenderer.invoke('test-open-knowledge', item);
-        btn.textContent = '✓ Terbuka';
-      } catch (err) {
-        btn.textContent = '✕ Gagal';
-      }
-      setTimeout(() => { btn.textContent = orig; }, 1800);
+    sections.forEach(sec => {
+      sec.hidden = (sec.id !== targetPage);
     });
 
-    card.querySelector('.btn-k-edit').addEventListener('click', () => {
-      kEditId.value = item.id;
-      kName.value = item.name || '';
-      kType.value = item.type || 'web';
-      kTarget.value = item.target || '';
-      kAliases.value = (item.aliases || []).join(', ');
-      btnSaveKnowledge.textContent = 'Simpan Perubahan';
-      btnCancelKnowledge.classList.remove('hidden');
-      kName.focus();
-    });
-
-    card.querySelector('.btn-k-delete').addEventListener('click', async () => {
-      if (confirm(`Hapus "${item.name}" dari Library?`)) {
-        knowledgeList = knowledgeList.filter(k => k.id !== item.id);
-        await ipcRenderer.invoke('save-apps-knowledge', knowledgeList);
-        renderKnowledgeList();
-      }
-    });
-
-    knowledgeItemsContainer.appendChild(card);
+    if (targetPage === 'library-page') refreshKnowledgeView();
+    if (targetPage === 'voice-profile-page') refreshVoiceProfileView();
+    if (targetPage === 'log-page') loadCommandLogs();
+    if (targetPage === 'quota-page') loadUsageSummary();
+    if (targetPage === 'guide-page') renderGuideModules();
   });
-}
-
-function resetKnowledgeForm() {
-  if (!kEditId) return;
-  kEditId.value = '';
-  kName.value = '';
-  kType.value = 'web';
-  kTarget.value = '';
-  kAliases.value = '';
-  btnSaveKnowledge.textContent = '+ Simpan ke Library';
-  btnCancelKnowledge.classList.add('hidden');
-}
-
-if (btnSaveKnowledge) {
-  btnSaveKnowledge.addEventListener('click', async () => {
-    const name = kName.value.trim();
-    const type = kType.value;
-    const target = kTarget.value.trim();
-    const aliasesRaw = kAliases.value.trim();
-
-    if (!name || !target) {
-      alert('Nama dan Target (URL Link / Path Aplikasi) wajib diisi!');
-      return;
-    }
-
-    const aliases = aliasesRaw
-      ? aliasesRaw.split(/[,;\n]+/).map(s => s.trim().toLowerCase()).filter(Boolean)
-      : [name.toLowerCase()];
-
-    if (!aliases.includes(name.toLowerCase())) {
-      aliases.unshift(name.toLowerCase());
-    }
-
-    const editId = kEditId.value;
-    if (editId) {
-      const idx = knowledgeList.findIndex(k => k.id === editId);
-      if (idx !== -1) {
-        knowledgeList[idx] = {
-          ...knowledgeList[idx],
-          name,
-          type,
-          target,
-          spoken: name.toLowerCase(),
-          aliases
-        };
-      }
-    } else {
-      const newId = 'app_' + Date.now().toString(36);
-      knowledgeList.unshift({
-        id: newId,
-        name,
-        type,
-        target,
-        spoken: name.toLowerCase(),
-        aliases
-      });
-    }
-
-    await ipcRenderer.invoke('save-apps-knowledge', knowledgeList);
-    resetKnowledgeForm();
-    renderKnowledgeList();
-  });
-}
-
-if (btnCancelKnowledge) {
-  btnCancelKnowledge.addEventListener('click', resetKnowledgeForm);
-}
-
-function renderStatusCircle(item) {
-  if (item.status === 'done') {
-    return `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-  }
-  if (item.status === 'error') {
-    return `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-  }
-  if (item.status === 'queued') {
-    const qNum = item.queuePos > 0 ? item.queuePos : '';
-    return `<span class="log-spinner"></span>${qNum ? `<span class="log-queue-num">${qNum}</span>` : ''}`;
-  }
-  return `<span class="log-spinner"></span>`;
-}
-
-function updateLiveDurations() {
-  const now = Date.now();
-  const els = logList.querySelectorAll('.log-duration[data-created]');
-  els.forEach((el) => {
-    const created = Number(el.getAttribute('data-created'));
-    if (created > 0) {
-      el.textContent = formatDuration(now - created);
-    }
-  });
-}
-
-function syncDurationTicker(hasActive) {
-  if (hasActive && !logTickTimer) {
-    logTickTimer = setInterval(updateLiveDurations, 200);
-  } else if (!hasActive && logTickTimer) {
-    clearInterval(logTickTimer);
-    logTickTimer = null;
-  }
-}
-
-function renderCommandLogs(logs) {
-  latestLogs = Array.isArray(logs) ? logs : [];
-
-  const runningCount = latestLogs.filter(x => x.status === 'running').length;
-  const queuedCount = latestLogs.filter(x => x.status === 'queued').length;
-  const doneCount = latestLogs.filter(x => x.status === 'done').length;
-  const errorCount = latestLogs.filter(x => x.status === 'error').length;
-  const activeCount = runningCount + queuedCount;
-
-  syncDurationTicker(activeCount > 0);
-
-  if (activeCount > 0) {
-    logTabBadge.textContent = String(activeCount);
-    logTabBadge.classList.remove('hidden', 'all-done');
-    logTabBadge.classList.add('has-active');
-  } else if (doneCount > 0) {
-    logTabBadge.textContent = String(doneCount);
-    logTabBadge.classList.remove('hidden', 'has-active');
-    logTabBadge.classList.add('all-done');
-  } else {
-    logTabBadge.classList.add('hidden');
-  }
-
-  if (latestLogs.length === 0) {
-    logSummaryText.textContent = 'Belum ada perintah';
-    logList.innerHTML = `
-      <div class="log-empty">
-        Belum ada perintah suara.<br>
-        Klik ikon Wis lalu ucapkan perintah untuk memantau antrean &amp; status pengerjaan di sini.
-      </div>`;
-    return;
-  }
-
-  const parts = [];
-  if (runningCount > 0) parts.push(`${runningCount} diproses`);
-  if (queuedCount > 0) parts.push(`${queuedCount} antrean`);
-  if (doneCount > 0) parts.push(`${doneCount} selesai`);
-  if (errorCount > 0) parts.push(`${errorCount} gagal`);
-  logSummaryText.textContent = parts.join(' · ') || `${latestLogs.length} perintah`;
-
-  logList.innerHTML = latestLogs.map((item) => {
-    const isActive = item.status === 'running' || item.status === 'queued';
-    const durText = isActive
-      ? formatDuration(Date.now() - Number(item.createdAt || Date.now()))
-      : formatDuration(item.durationMs || 0);
-    const durAttr = isActive ? ` data-created="${Number(item.createdAt || Date.now())}"` : '';
-    const stageText = item.stage || (item.status === 'done' ? 'Selesai' : 'Memproses...');
-    const tokTotal = Number(item.usage?.totalTokens || 0);
-    const durWithTokens = tokTotal > 0 ? `${durText} · ${formatNumberId(tokTotal)} tkn` : durText;
-
-    return `
-      <div class="log-item status-${escapeHtml(item.status)}">
-        <div class="log-circle" aria-label="${escapeHtml(item.status)}">
-          ${renderStatusCircle(item)}
-        </div>
-        <div class="log-body">
-          <div class="log-top">
-            <span class="log-title">${escapeHtml(item.transcript || '(Perintah kosong)')}</span>
-            <span class="log-time">${escapeHtml(formatClock(item.createdAt))}</span>
-          </div>
-          <div class="log-bottom">
-            <span class="log-stage" title="${escapeHtml(stageText)}">${escapeHtml(stageText)}</span>
-            <span class="log-duration"${durAttr}>${escapeHtml(durWithTokens)}</span>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function updateSimulationPreview() {
-  if (!latestUsageSummary) {
-    usageSimResult.textContent = '';
-    return;
-  }
-  const simVal = Number(usageSimTokens.value);
-  const avg = (Number.isFinite(simVal) && simVal >= 100) ? simVal : latestUsageSummary.avgTokensPerTask;
-  const lim = latestUsageSummary.dailyTokenLimit;
-  const rem = latestUsageSummary.remainingDailyTokens;
-  if (!lim || !avg) {
-    usageSimResult.textContent = '';
-    return;
-  }
-  let cap = Math.floor(lim / avg);
-  let remTasks = rem !== null ? Math.floor(rem / avg) : cap;
-  if (latestUsageSummary.rpdLimit !== null) cap = Math.min(cap, latestUsageSummary.rpdLimit);
-  if (latestUsageSummary.rpdRemaining !== null) remTasks = Math.min(remTasks, latestUsageSummary.rpdRemaining);
-  usageSimResult.textContent = (Number.isFinite(simVal) && simVal >= 100)
-    ? `≈ ${formatNumberId(cap)}/hr (sisa ${formatNumberId(remTasks)})`
-    : '';
-}
-
-function renderUsageSummary(summary) {
-  latestUsageSummary = summary || null;
-  if (!summary) return;
-
-  usageKeyPill.textContent = `API: ${summary.keyHint || 'Belum diisi'}`;
-  const limit = summary.dailyTokenLimit;
-  const used = Number(summary.primaryTokensUsed || 0);
-  const pct = limit ? Math.min(100, Math.round((used / limit) * 100)) : 0;
-
-  usagePctLabel.textContent = limit ? `${pct}%` : 'TPD -';
-  usageProgressFill.style.width = `${pct}%`;
-  usageProgressFill.classList.toggle('is-warn', pct >= 80);
-
-  metricUsedTokens.textContent = limit
-    ? `${formatNumberId(used)} / ${formatNumberId(limit)}`
-    : `${formatNumberId(summary.totalTokensToday)} tkn`;
-  metricRemTokens.textContent = summary.remainingDailyTokens !== null
-    ? `${formatNumberId(summary.remainingDailyTokens)} tkn`
-    : '-';
-
-  metricRpd.textContent = summary.rpdLimit !== null
-    ? `${formatNumberId(summary.rpdRemaining)} / ${formatNumberId(summary.rpdLimit)}`
-    : 'Belum dicek';
-  metricTpm.textContent = summary.tpmLimit !== null
-    ? `${formatNumberId(summary.tpmRemaining)} / ${formatNumberId(summary.tpmLimit)}`
-    : 'Belum dicek';
-
-  if (document.activeElement !== inputCustomLimit) {
-    inputCustomLimit.value = summary.customDailyTokenLimit || summary.dailyTokenLimit || '';
-  }
-
-  usageAvgSource.textContent = summary.isEstimatedAvg
-    ? 'Estimasi awal'
-    : `Dari ${summary.taskTokenSamples} tugas API ini`;
-  metricAvgTask.textContent = `${formatNumberId(summary.avgTokensPerTask)} tkn`;
-  metricDayCap.textContent = summary.estimatedTasksPerDay !== null
-    ? `± ${formatNumberId(summary.estimatedTasksPerDay)} tugas`
-    : '-';
-  metricDayRem.textContent = summary.estimatedRemainingTasksToday !== null
-    ? `± ${formatNumberId(summary.estimatedRemainingTasksToday)} lagi`
-    : '-';
-  updateSimulationPreview();
-
-  usageWhisperInfo.textContent = `Whisper: ${summary.whisperCallsToday || 0} call (${Number(summary.whisperSecondsToday || 0).toFixed(1)} dtk)`;
-
-  const models = Array.isArray(summary.models) ? summary.models : [];
-  usageModelsList.innerHTML = models.length === 0
-    ? '<div class="usage-empty-mini">Belum ada pemanggilan API pada API key ini hari ini. Klik "Cek Data API" atau beri 1 perintah.</div>'
-    : models.map((m) => {
-      const limParts = [];
-      if (m.rpdRemaining !== null && m.rpdLimit !== null) limParts.push(`RPD ${formatNumberId(m.rpdRemaining)}/${formatNumberId(m.rpdLimit)}`);
-      if (m.tpmRemaining !== null && m.tpmLimit !== null) limParts.push(`TPM ${formatNumberId(m.tpmRemaining)}/${formatNumberId(m.tpmLimit)}`);
-      const rightTxt = `${m.calls}x · ${formatNumberId(m.tokens)} tkn${limParts.length ? ' · ' + limParts.join(' · ') : ''}`;
-      return `<div class="usage-mini-row"><span class="usage-mini-left">${escapeHtml(m.model)}</span><span class="usage-mini-right">${escapeHtml(rightTxt)}</span></div>`;
-    }).join('');
-
-  const tasks = Array.isArray(summary.recentTasks) ? summary.recentTasks : [];
-  usageTasksList.innerHTML = tasks.length === 0
-    ? ''
-    : tasks.slice(0, 6).map((t) => `
-      <div class="usage-mini-row">
-        <span class="usage-mini-left" title="${escapeHtml(t.transcript)}">${escapeHtml(t.transcript || '(Kosong)')}</span>
-        <span class="usage-mini-right">${formatNumberId(t.totalTokens)} tkn (In ${formatNumberId(t.promptTokens)} / Out ${formatNumberId(t.completionTokens)})</span>
-      </div>`).join('');
-}
-
-const MANUAL_MODULES = [
-  {
-    id: 'basics',
-    badge: 'Modul 1',
-    title: 'Aktivasi Wis, Dikte Teks, & Sapaan',
-    desc: 'Klik ikon mata biru (Alt+Shift+C) untuk masuk mode standby merah tanpa sapaan pembuka. Ucapkan perintah lalu jeda ~0.9 detik. Tombol mikrofon besar di bawah (Alt+Shift+V) khusus untuk mengetikkan ucapan langsung ke posisi kursor.',
-    examples: [
-      { say: 'Aplikasi apa yang lagi saya buka sekarang?', note: 'Cek ingatan aplikasi aktif Wis saat ini', runnable: true },
-      { say: 'Halo Wis, kamu bisa apa saja?', note: 'Minta Wis menjelaskan kemampuannya lewat suara', runnable: true }
-    ]
-  },
-  {
-    id: 'windows',
-    badge: 'Modul 2',
-    title: 'Buka Aplikasi, Alt+Tab, & Kontrol Jendela',
-    desc: 'Jika aplikasi sudah terbuka di Alt+Tab, Wis otomatis pindah ke jendela itu (tidak membuka duplikat). Anda juga bisa langsung mengecilkan, membesarkan, atau fullscreen aplikasi mana pun.',
-    examples: [
-      { say: 'Buka Alt Tab', note: 'Menampilkan daftar semua jendela terbuka', runnable: true },
-      { say: 'Buka Chrome', note: 'Pindah ke Chrome yang terbuka atau buka baru', runnable: true },
-      { say: 'Minimize Chrome', note: 'Mengecilkan jendela Chrome ke taskbar', runnable: true },
-      { say: 'Maximize aplikasi ini', note: 'Membesarkan jendela aktif di layar', runnable: true },
-      { say: 'Fullscreen aplikasi ini', note: 'Masuk/keluar mode layar penuh (F11)', runnable: true },
-      { say: 'Buka folder Downloads', note: 'Folder: Downloads, Documents, Desktop, Recycle Bin', runnable: true }
-    ]
-  },
-  {
-    id: 'youtube',
-    badge: 'Modul 3',
-    title: 'YouTube, Browser, & Kontrol Video Cepat',
-    desc: 'Cari lagu/channel di YouTube, buka video berdasarkan urutan ke-1 s/d ke-10 atau judul, pindah tab, kembali, serta kontrol play/pause/mute super cepat tanpa jeda Vision.',
-    examples: [
-      { say: 'Buka YouTube', note: 'Membuka YouTube di browser', runnable: true },
-      { say: 'Telusuri 420', note: 'Otomatis mencari "Fourtwnty" di kolom Telusuri YouTube', runnable: true },
-      { say: 'Klik video pertama', note: 'Bisa urutan ke-1 s/d ke-10 ("video keempat") atau sebut judul', runnable: true },
-      { say: 'Pause video ini', note: 'Jeda/lanjutkan video instan (shortcut K)', runnable: true },
-      { say: 'Fullscreen video', note: 'Layar penuh pemutar YouTube (shortcut F)', runnable: true },
-      { say: 'Kembali ke halaman sebelumnya', note: 'Navigasi Back (Alt+Left)', runnable: true }
-    ]
-  },
-  {
-    id: 'vision',
-    badge: 'Modul 4',
-    title: 'Penglihatan Layar (Vision) & Klik Elemen',
-    desc: 'Wis dapat melihat layar lewat UI Automation + Grid Catur 5x4 (A1-E4), lalu meluncur mengklik profil Chrome, tombol, menu, atau mengetik ke kotak input tertentu.',
-    examples: [
-      { say: 'Lihat layar ini, ada apa saja?', note: 'Membaca & merangkum isi layar aktif saat ini', runnable: true },
-      { say: 'Pilih profil Chrome [Nama]', note: 'Mengklik profil browser atau tombol sesuai nama', runnable: false },
-      { say: 'Klik tombol Generate', note: 'Mengarahkan kursor visual lalu klik elemen target', runnable: false }
-    ]
-  },
-  {
-    id: 'scrollzoom',
-    badge: 'Modul 5',
-    title: 'Scroll Otomatis 3D & Zoom Layar',
-    desc: 'Mata Wis ikut bergulir 3D ke atas/bawah/kiri/kanan saat menggulir, melotot saat zoom in, dan mengecil saat zoom out.',
-    examples: [
-      { say: 'Scroll ke bawah', note: 'Gulir sekali ke bawah / atas / kiri / kanan', runnable: true },
-      { say: 'Scroll pelan-pelan ke bawah sampai saya suruh berhenti', note: 'Gulir kontinu lembut sampai ada perintah berhenti', runnable: true },
-      { say: 'Berhenti', note: 'Menghentikan scroll otomatis langsung', runnable: true },
-      { say: 'Zoom in', note: 'Perbesar tampilan (Ctrl + Plus) atau bilang "Zoom out" / "Reset zoom"', runnable: true }
-    ]
-  },
-  {
-    id: 'word',
-    badge: 'Modul 6',
-    title: 'Microsoft Word & Dokumen',
-    desc: 'Buat dokumen baru, buka file dari Documents/Desktop/Downloads, buat draf tulisan otomatis, perbaiki typo/tata bahasa, dan simpan.',
-    examples: [
-      { say: 'Buat dokumen Word baru', note: 'Membuka Word dengan dokumen kosong baru', runnable: true },
-      { say: 'Tulis surat permohonan izin kerja', note: 'AI menulis draf rapi langsung ke dokumen Word', runnable: false },
-      { say: 'Perbaiki ejaan dan tata bahasa dokumen ini', note: 'Merevisi isi dokumen Word agar rapi', runnable: false },
-      { say: 'Simpan dokumen', note: 'Menyimpan perubahan Word', runnable: false }
-    ]
-  },
-  {
-    id: 'selflearn',
-    badge: 'Modul 7',
-    title: 'Ajari AI Skill & Kamus Baru (Tanpa Coding)',
-    desc: 'Anda bisa mengajari Wis kosakata khusus (learn_alias) maupun resep tugas baru / multi-langkah (learn_skill). Skill yang sudah dipelajari persis dijalankan instan 0 token AI!',
-    examples: [
-      { say: 'Wis belajar, kalau saya bilang bersihkan layar, minimize Chrome', note: 'Mengajari skill baru permanen ke wis-memory.json', runnable: true },
-      { say: 'Wis ingat kalau saya bilang air trade maksudnya iTrade', note: 'Menambahkan kamus pengucapan baru', runnable: true },
-      { say: 'Wis ingat catatan bahwa saya suka musik indie', note: 'Menyimpan fakta pribadi ke ingatan Wis', runnable: true }
-    ]
-  },
-  {
-    id: 'brightness',
-    badge: 'Modul 8',
-    title: 'Kontrol Kecerahan Layar (0 Token)',
-    desc: 'Atur tingkat pencahayaan / brightness monitor ke persentase kustom secara instan dan akurat.',
-    examples: [
-      { say: 'Turunkan brightness jadi 20%', note: 'Mengatur kecerahan monitor ke 20%', runnable: true },
-      { say: 'Atur brightness ke 50%', note: 'Mengatur kecerahan monitor ke 50%', runnable: true },
-      { say: 'Kecerahan 70%', note: 'Mengatur kecerahan monitor ke 70%', runnable: true },
-      { say: 'Redupkan layar', note: 'Mengatur kecerahan ke mode malam/redup (25%)', runnable: true },
-      { say: 'Terangkan layar', note: 'Mengatur kecerahan ke mode terang (85%)', runnable: true }
-    ]
-  },
-  {
-    id: 'communication',
-    badge: 'Modul 9',
-    title: 'Aplikasi Komunikasi (WhatsApp, Telegram)',
-    desc: 'Buka dan fokus ke aplikasi perpesanan WhatsApp Desktop atau Telegram langsung dalam 1 perintah cepat.',
-    examples: [
-      { say: 'Buka aplikasi WhatsApp', note: 'Membuka atau berpindah ke jendela WhatsApp', runnable: true },
-      { say: 'Buka Telegram', note: 'Membuka atau berpindah ke Telegram Desktop', runnable: true }
-    ]
-  },
-  {
-    id: 'monitor',
-    badge: 'Modul 10',
-    title: 'Pantau Antrean (Log) & Kapasitas (Token & Kuota)',
-    desc: 'Tab Log menampilkan antrean perintah real-time (spinner biru/amber -> checklist hijau saat selesai, plus biaya tokennya). Tab Token & Kuota menghitung sisa RPD/TPM API Key aktif dan perkiraan kapasitas tugas per hari.',
-    examples: []
-  }
-];
-
-let cachedMemoryOverview = null;
-
-async function loadAndRenderGuide() {
-  cachedMemoryOverview = await ipcRenderer.invoke('get-memory-overview').catch(() => ({ skills: [], facts: [], aliases: [] }));
-  renderGuideModules();
-}
-
-function showGuideToast(msg) {
-  guideStatusToast.textContent = msg;
-  guideStatusToast.classList.remove('hidden');
-  clearTimeout(showGuideToast._t);
-  showGuideToast._t = setTimeout(() => {
-    guideStatusToast.classList.add('hidden');
-  }, 2000);
-}
-
-function renderGuideModules() {
-  const q = String(guideSearchInput?.value || '').trim().toLowerCase();
-  const filtered = MANUAL_MODULES.filter((mod) => {
-    if (!q) return true;
-    if (mod.title.toLowerCase().includes(q) || mod.desc.toLowerCase().includes(q)) return true;
-    return mod.examples.some(ex => ex.say.toLowerCase().includes(q) || ex.note.toLowerCase().includes(q));
-  });
-
-  const blocks = filtered.map((mod) => {
-    const exHtml = mod.examples.map((ex) => `
-      <div class="guide-cmd-row">
-        <div class="guide-cmd-info">
-          <span class="guide-cmd-say">"${escapeHtml(ex.say)}"</span>
-          <span class="guide-cmd-note">${escapeHtml(ex.note)}</span>
-        </div>
-        ${ex.runnable ? `<button type="button" class="btn-try-cmd" data-cmd="${escapeHtml(ex.say)}">▶ Coba</button>` : ''}
-      </div>`).join('');
-
-    return `
-      <div class="guide-module">
-        <div class="guide-module-head">
-          <span class="guide-module-title">${escapeHtml(mod.title)}</span>
-          <span class="guide-module-badge">${escapeHtml(mod.badge)}</span>
-        </div>
-        <div class="guide-module-desc">${escapeHtml(mod.desc)}</div>
-        ${exHtml ? `<div class="guide-examples">${exHtml}</div>` : ''}
-      </div>`;
-  });
-
-  const mem = cachedMemoryOverview || { skills: [], facts: [], aliases: [] };
-  const skillsHtml = mem.skills.length === 0
-    ? '<div class="usage-empty-mini">Belum ada skill kustom tersimpan.</div>'
-    : mem.skills.map((s) => {
-      const synTxt = Array.isArray(s.synonyms) && s.synonyms.length ? ` · juga: ${s.synonyms.slice(0, 2).join(', ')}` : '';
-      return `
-      <div class="guide-cmd-row">
-        <div class="guide-cmd-info">
-          <span class="guide-cmd-say">"${escapeHtml(s.trigger)}"</span>
-          <span class="guide-cmd-note">${escapeHtml(s.description || '')}${escapeHtml(synTxt)}</span>
-        </div>
-        <button type="button" class="btn-try-cmd" data-cmd="${escapeHtml(s.trigger)}">▶ Jalankan</button>
-      </div>`;
-    }).join('');
-
-  const aliasesPreview = mem.aliases.slice(-8).map(([k, v]) => `${k} → ${v}`).join(' · ');
-
-  blocks.push(`
-    <div class="guide-module guide-mem-card">
-      <div class="guide-module-head">
-        <span class="guide-module-title">Skill Portabel &amp; Kamus (skills.json)</span>
-        <span class="guide-module-badge">${mem.skills.length} skill · ${mem.aliases.length} alias</span>
-      </div>
-      <div class="guide-examples">${skillsHtml}</div>
-      ${aliasesPreview ? `<div class="guide-module-desc">Kamus terbaru: ${escapeHtml(aliasesPreview)}</div>` : ''}
-    </div>`);
-
-  guideList.innerHTML = blocks.join('');
-
-  guideList.querySelectorAll('.btn-try-cmd').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const cmd = btn.getAttribute('data-cmd');
-      if (!cmd) return;
-      btn.disabled = true;
-      const originalText = btn.textContent;
-      btn.textContent = '⏳ Menguji...';
-      showGuideToast(`Sedang menguji: "${cmd.slice(0, 24)}${cmd.length > 24 ? '...' : ''}"...`);
-      try {
-        const res = await ipcRenderer.invoke('execute-voice-command', cmd);
-        btn.disabled = false;
-        if (res && res.ok) {
-          btn.textContent = '✓ Sukses';
-          showGuideToast(`✓ Sukses: ${res.message || res.reply || 'Selesai dieksekusi'}`);
-        } else {
-          btn.textContent = '✕ Gagal';
-          showGuideToast(`✕ Gagal: ${res?.message || 'Tidak dapat menjalankan perintah'}`);
-        }
-      } catch (err) {
-        btn.disabled = false;
-        btn.textContent = '✕ Error';
-        showGuideToast(`✕ Error: ${err.message || 'Gagal'}`);
-      }
-      setTimeout(() => {
-        btn.textContent = originalText;
-      }, 2400);
-    });
-  });
-}
-
-tabBtnSettings.addEventListener('click', () => switchTab('settings'));
-tabBtnKnowledge.addEventListener('click', () => switchTab('knowledge'));
-tabBtnLog.addEventListener('click', () => switchTab('log'));
-tabBtnUsage.addEventListener('click', () => switchTab('usage'));
-tabBtnGuide.addEventListener('click', () => switchTab('guide'));
-guideSearchInput.addEventListener('input', renderGuideModules);
-btnClearLogs.addEventListener('click', async () => {
-  const remaining = await ipcRenderer.invoke('clear-completed-logs').catch(() => []);
-  renderCommandLogs(remaining);
-});
-btnProbeQuota.addEventListener('click', async () => {
-  const candidateKey = apiKeyInput.value.trim();
-  btnProbeQuota.disabled = true;
-  btnProbeQuota.textContent = 'Mengecek...';
-  try {
-    const res = await ipcRenderer.invoke('probe-api-quota', candidateKey);
-    renderUsageSummary(res);
-  } catch (err) {
-    usageAvgSource.textContent = (err && err.message) ? err.message.slice(0, 48) : 'Gagal cek API';
-  } finally {
-    btnProbeQuota.disabled = false;
-    btnProbeQuota.textContent = 'Cek Data API';
-  }
-});
-btnSetLimit.addEventListener('click', async () => {
-  const summary = await ipcRenderer.invoke('set-custom-daily-limit', inputCustomLimit.value);
-  renderUsageSummary(summary);
-});
-btnResetUsage.addEventListener('click', async () => {
-  const summary = await ipcRenderer.invoke('reset-today-usage');
-  renderUsageSummary(summary);
-});
-usageSimTokens.addEventListener('input', updateSimulationPreview);
-
-ipcRenderer.on('command-logs-updated', (event, logs) => {
-  renderCommandLogs(logs);
 });
 
-ipcRenderer.on('usage-updated', (event, summary) => {
-  renderUsageSummary(summary);
-});
-
-function playOpenAnimation(originX, originY) {
-  isClosing = false;
-  if (originX !== undefined && originY !== undefined) {
-    settingsCard.style.setProperty('--origin-x', `${originX}px`);
-    settingsCard.style.setProperty('--origin-y', `${originY}px`);
-  }
-  settingsCard.classList.remove('is-closing', 'is-open');
-  settingsCard.style.animation = 'none';
-  void settingsCard.offsetWidth;
-  settingsCard.style.animation = '';
-  settingsCard.classList.add('is-open');
-}
-
-function closeWithAnimation() {
-  if (isClosing) return;
-  isClosing = true;
-  settingsCard.classList.remove('is-open');
-  settingsCard.style.animation = 'none';
-  void settingsCard.offsetWidth;
-  settingsCard.style.animation = '';
-  settingsCard.classList.add('is-closing');
-
-  setTimeout(() => {
-    ipcRenderer.send('settings-closed-done');
-  }, 210);
-}
-
-async function applyConfigToForm(config) {
-  if (!config) return;
-  if (config.apiKey) apiKeyInput.value = config.apiKey;
-  if (config.language) languageSelect.value = config.language;
-  if (config.model) modelSelect.value = config.model;
-  voiceAssistantCheckbox.checked = config.voiceAssistant !== false;
-  if (config.autoStart !== undefined) autoStartCheckbox.checked = config.autoStart;
-  await loadMicrophones(config.deviceId);
-}
-
-ipcRenderer.on('settings-open', async (event, { originX, originY }) => {
-  const [config, logs, usageSummary] = await Promise.all([
-    ipcRenderer.invoke('get-config'),
-    ipcRenderer.invoke('get-command-logs').catch(() => []),
-    ipcRenderer.invoke('get-usage-summary').catch(() => null)
-  ]);
-  await applyConfigToForm(config);
-  renderCommandLogs(logs);
-  renderUsageSummary(usageSummary);
-  btnSave.disabled = false;
-  btnSave.textContent = 'Simpan';
-  playOpenAnimation(originX, originY);
-});
-
-ipcRenderer.on('settings-request-close', () => {
-  closeWithAnimation();
-});
-
-// Populate available microphones
-async function loadMicrophones(selectedDeviceId) {
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const audioInputs = devices.filter(d => d.kind === 'audioinput');
-    micSelect.innerHTML = '<option value="default">Default Sistem</option>';
-
-    audioInputs.forEach((device, idx) => {
-      if (device.deviceId === 'default' || device.deviceId === 'communications') return;
-      const opt = document.createElement('option');
-      opt.value = device.deviceId;
-      opt.textContent = device.label || `Mikrofon ${idx + 1}`;
-      micSelect.appendChild(opt);
-    });
-
-    if (selectedDeviceId) {
-      micSelect.value = selectedDeviceId;
-      if (!micSelect.value) micSelect.value = 'default';
-    }
-  } catch (err) {
-    console.warn('Could not list audio devices:', err);
-  }
-}
-
-// Load current configuration, logs & usage
-ipcRenderer.invoke('get-config').then(applyConfigToForm);
-ipcRenderer.invoke('get-command-logs').then(renderCommandLogs).catch(() => { });
-ipcRenderer.invoke('get-usage-summary').then(renderUsageSummary).catch(() => { });
-
-// Close window via top-right X button
 btnCloseWindow.addEventListener('click', () => {
-  closeWithAnimation();
+  ipcRenderer.send('hide-settings');
 });
 
-// Close on Escape
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeWithAnimation();
-});
-
-// Toggle password visibility with crisp SVG icons
-toggleKeyBtn.addEventListener('click', () => {
-  if (apiKeyInput.type === 'password') {
-    apiKeyInput.type = 'text';
-    iconEye.classList.add('hidden');
-    iconEyeOff.classList.remove('hidden');
-  } else {
-    apiKeyInput.type = 'password';
-    iconEye.classList.remove('hidden');
-    iconEyeOff.classList.add('hidden');
+  if (e.key === 'Escape') {
+    ipcRenderer.send('hide-settings');
   }
 });
 
-// Open external browser for Groq registration
+// =========================================================================
+// 2. GENERAL SETTINGS & TAHAP 1 NOISE GATE
+// =========================================================================
+toggleKeyBtn.addEventListener('click', () => {
+  isKeyVisible = !isKeyVisible;
+  apiKeyInput.type = isKeyVisible ? 'text' : 'password';
+  toggleKeyBtn.textContent = isKeyVisible ? '🙈' : '👁';
+});
+
 linkGroq.addEventListener('click', (e) => {
   e.preventDefault();
   shell.openExternal('https://console.groq.com/keys');
 });
 
-// Save configuration
+noiseGateThreshold.addEventListener('input', () => {
+  noiseGateVal.textContent = `${noiseGateThreshold.value} dB`;
+});
+
+async function loadMicrophoneDevices(selectedId) {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const audioInputs = devices.filter(d => d.kind === 'audioinput');
+    micSelect.innerHTML = '<option value="default">Default Sistem</option>';
+    audioInputs.forEach((dev, idx) => {
+      const opt = document.createElement('option');
+      opt.value = dev.deviceId;
+      opt.textContent = dev.label || `Mikrofon ${idx + 1}`;
+      if (dev.deviceId === selectedId) opt.selected = true;
+      micSelect.appendChild(opt);
+    });
+  } catch (err) {
+    console.warn('Gagal membaca perangkat mikrofon:', err);
+  }
+}
+
+async function loadConfig() {
+  currentConfig = await ipcRenderer.invoke('get-config') || {};
+  apiKeyInput.value = currentConfig.apiKey || '';
+  languageSelect.value = currentConfig.language || 'auto';
+  modelSelect.value = currentConfig.model || 'whisper-large-v3-turbo';
+  voiceAssistantToggle.checked = currentConfig.voiceAssistant !== false;
+  autoStartToggle.checked = currentConfig.autoStart !== false;
+
+  // Tahap 1 Settings
+  noiseGateToggle.checked = currentConfig.noiseGateEnabled !== false;
+  noiseGateThreshold.value = currentConfig.noiseGateThreshold !== undefined ? currentConfig.noiseGateThreshold : -38;
+  noiseGateVal.textContent = `${noiseGateThreshold.value} dB`;
+  disableAgcToggle.checked = currentConfig.autoGainControl === false;
+
+  // Tahap 2 Settings
+  lockVoiceToggle.checked = currentConfig.lockToOwnerVoice === true;
+  voiceMatchThreshold.value = currentConfig.voiceMatchThreshold || 70;
+  voiceThresholdVal.textContent = `${voiceMatchThreshold.value}%`;
+  updateVoiceLockBadge(currentConfig.lockToOwnerVoice);
+
+  await loadMicrophoneDevices(currentConfig.deviceId);
+}
+
 btnSave.addEventListener('click', async () => {
-  const newConfig = {
+  const updated = {
     apiKey: apiKeyInput.value.trim(),
     language: languageSelect.value,
     model: modelSelect.value,
     deviceId: micSelect.value,
-    voiceAssistant: voiceAssistantCheckbox.checked,
-    autoStart: autoStartCheckbox.checked
+    voiceAssistant: voiceAssistantToggle.checked,
+    autoStart: autoStartToggle.checked,
+    // Tahap 1
+    noiseGateEnabled: noiseGateToggle.checked,
+    noiseGateThreshold: Number(noiseGateThreshold.value),
+    autoGainControl: !disableAgcToggle.checked,
+    // Tahap 2
+    lockToOwnerVoice: lockVoiceToggle.checked,
+    voiceMatchThreshold: Number(voiceMatchThreshold.value)
   };
 
-  btnSave.disabled = true;
-  btnSave.textContent = 'Menyimpan...';
+  await ipcRenderer.invoke('save-config', updated);
+  currentConfig = { ...currentConfig, ...updated };
+  updateVoiceLockBadge(updated.lockToOwnerVoice);
 
-  await ipcRenderer.invoke('save-config', newConfig);
-
-  btnSave.textContent = 'Tersimpan!';
+  btnSave.textContent = '✓ Tersimpan!';
   setTimeout(() => {
-    closeWithAnimation();
-  }, 260);
+    btnSave.textContent = 'Simpan Pengaturan';
+  }, 1800);
 });
 
-if (btnRestartApp) {
-  btnRestartApp.addEventListener('click', () => {
+btnRestart.addEventListener('click', () => {
+  if (confirm('Muat ulang aplikasi Whisper Widget?')) {
     ipcRenderer.send('restart-app');
+  }
+});
+
+btnQuit.addEventListener('click', () => {
+  if (confirm('Keluar dari aplikasi Whisper Widget?')) {
+    ipcRenderer.send('quit-app');
+  }
+});
+
+// =========================================================================
+// 3. VOICE IDENTITY & SPEAKER VERIFICATION (TAHAP 2)
+// =========================================================================
+lockVoiceToggle.addEventListener('change', () => {
+  updateVoiceLockBadge(lockVoiceToggle.checked);
+});
+
+voiceMatchThreshold.addEventListener('input', () => {
+  voiceThresholdVal.textContent = `${voiceMatchThreshold.value}%`;
+});
+
+function updateVoiceLockBadge(isLocked) {
+  if (isLocked) {
+    badgeVoiceLocked.classList.remove('hidden');
+  } else {
+    badgeVoiceLocked.classList.add('hidden');
+  }
+}
+
+async function refreshVoiceProfileView() {
+  const profile = await ipcRenderer.invoke('get-voice-profile');
+  if (profile && profile.mfcc) {
+    voiceStatusIcon.textContent = '🔒';
+    voiceStatusTitle.textContent = 'Profil Sidik Suara Aktif (Terdaftar)';
+    voiceStatusSubtitle.textContent = `Tersimpan: Pitch ~${profile.meanPitch || 130} Hz · ${profile.framesCount || 0} frame vokal · Spektral ~${profile.meanCentroid || 2400} Hz`;
+    btnDeleteVoice.hidden = false;
+    btnRecordVoice.textContent = '↻ Rekam Ulang Sampel Suara (5 Detik)';
+  } else {
+    voiceStatusIcon.textContent = '⚪';
+    voiceStatusTitle.textContent = 'Belum Ada Profil Suara Terdaftar';
+    voiceStatusSubtitle.textContent = 'Klik tombol di bawah untuk merekam 5 detik sampel suara pemilik.';
+    btnDeleteVoice.hidden = true;
+    btnRecordVoice.textContent = '● Mulai Rekam Sampel Suara (5 Detik)';
+  }
+}
+
+btnDeleteVoice.addEventListener('click', async () => {
+  if (confirm('Hapus profil sidik suara pemilik? Fitur kunci suara akan dinonaktifkan.')) {
+    await ipcRenderer.invoke('delete-voice-profile');
+    lockVoiceToggle.checked = false;
+    updateVoiceLockBadge(false);
+    await refreshVoiceProfileView();
+    enrollFeedbackText.textContent = 'Profil suara berhasil dihapus.';
+  }
+});
+
+// Record audio sample and extract PCM Float32Array using native Web Audio
+async function capturePcmAudio(durationSec, onProgress) {
+  const baseConstraints = {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: false
+  };
+
+  const stream = (currentConfig.deviceId && currentConfig.deviceId !== 'default')
+    ? await navigator.mediaDevices.getUserMedia({ audio: { ...baseConstraints, deviceId: { exact: currentConfig.deviceId } } })
+    : await navigator.mediaDevices.getUserMedia({ audio: baseConstraints });
+
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+  const source = audioCtx.createMediaStreamSource(stream);
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 512;
+  source.connect(analyser);
+
+  const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+  const chunks = [];
+
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) chunks.push(e.data);
+  };
+
+  mediaRecorder.start();
+
+  const startTime = Date.now();
+  const totalMs = durationSec * 1000;
+  const timerInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(100, (elapsed / totalMs) * 100);
+    const remainSec = Math.max(0, Math.ceil((totalMs - elapsed) / 1000));
+
+    // Calculate live RMS
+    const pcmData = new Float32Array(analyser.fftSize);
+    analyser.getFloatTimeDomainData(pcmData);
+    let sumSq = 0;
+    for (let i = 0; i < pcmData.length; i++) sumSq += pcmData[i] * pcmData[i];
+    const rms = Math.sqrt(sumSq / pcmData.length);
+    const db = Math.round(20 * Math.log10(Math.max(1e-4, rms)));
+
+    onProgress({ progress, remainSec, db, rms });
+  }, 100);
+
+  await new Promise(r => setTimeout(r, totalMs));
+  clearInterval(timerInterval);
+
+  await new Promise((resolve) => {
+    mediaRecorder.onstop = resolve;
+    mediaRecorder.stop();
+  });
+
+  stream.getTracks().forEach(t => t.stop());
+
+  const blob = new Blob(chunks, { type: 'audio/webm' });
+  const arrayBuf = await blob.arrayBuffer();
+  const decoded = await audioCtx.decodeAudioData(arrayBuf);
+  await audioCtx.close();
+
+  return {
+    pcm: Array.from(decoded.getChannelData(0)),
+    sampleRate: decoded.sampleRate
+  };
+}
+
+// Enrollment Handler (5 Seconds)
+btnRecordVoice.addEventListener('click', async () => {
+  if (isRecordingEnrollment) return;
+  isRecordingEnrollment = true;
+  btnRecordVoice.disabled = true;
+  enrollProgressBox.classList.remove('hidden');
+  enrollFeedbackText.textContent = '';
+
+  try {
+    const { pcm, sampleRate } = await capturePcmAudio(5, ({ progress, remainSec, db }) => {
+      enrollProgressFill.style.width = `${progress}%`;
+      enrollTimerText.textContent = `Merekam... Sisa ${remainSec} detik`;
+      enrollRmsLevel.textContent = `Level Mic: ${db} dB`;
+    });
+
+    enrollTimerText.textContent = 'Menganalisis karakteristik akustik vokal...';
+    const result = await ipcRenderer.invoke('enroll-voice-profile', { pcm, sampleRate });
+
+    if (result && result.ok) {
+      enrollFeedbackText.textContent = `✓ Berhasil! Sidik suara tersimpan (Pitch rata-rata: ${result.profile.meanPitch} Hz).`;
+      lockVoiceToggle.checked = true;
+      updateVoiceLockBadge(true);
+      await refreshVoiceProfileView();
+    } else {
+      enrollFeedbackText.textContent = `Gagal: ${result?.message || 'Suara terlalu pelan atau tidak terdengar jelas.'}`;
+    }
+  } catch (err) {
+    enrollFeedbackText.textContent = `Terjadi kesalahan mic: ${err.message}`;
+  } finally {
+    isRecordingEnrollment = false;
+    btnRecordVoice.disabled = false;
+    setTimeout(() => {
+      enrollProgressBox.classList.add('hidden');
+    }, 2500);
+  }
+});
+
+// Live Testing Handler (3 Seconds)
+btnTestVoice.addEventListener('click', async () => {
+  if (isTestingVoice) return;
+  const profile = await ipcRenderer.invoke('get-voice-profile');
+  if (!profile) {
+    alert('Daftarkan sampel suara pemilik terlebih dahulu di atas sebelum melakukan tes.');
+    return;
+  }
+
+  isTestingVoice = true;
+  btnTestVoice.disabled = true;
+  testResultBox.classList.remove('hidden');
+  testScoreText.innerHTML = 'Mendengarkan ucapan... (3 detik)';
+  testMeterFill.style.width = '0%';
+  testVerdictBadge.className = 'verdict-badge';
+  testVerdictBadge.textContent = 'Merekam...';
+
+  try {
+    const { pcm, sampleRate } = await capturePcmAudio(3, ({ progress }) => {
+      testMeterFill.style.width = `${progress * 0.5}%`;
+    });
+
+    testScoreText.innerHTML = 'Membandingkan sidik suara...';
+    const evalRes = await ipcRenderer.invoke('verify-voice-match', { pcm, sampleRate });
+
+    if (evalRes) {
+      const score = evalRes.score || 0;
+      testMeterFill.style.width = `${score}%`;
+      testScoreText.innerHTML = `Skor Kemiripan: <strong>${score}%</strong> (Ambang: ${voiceMatchThreshold.value}%)`;
+
+      if (evalRes.match) {
+        testMeterFill.style.background = '#22c55e';
+        testVerdictBadge.className = 'verdict-badge verdict-match';
+        testVerdictBadge.textContent = '✓ Suara Pemilik Terverifikasi';
+      } else {
+        testMeterFill.style.background = '#ef4444';
+        testVerdictBadge.className = 'verdict-badge verdict-mismatch';
+        testVerdictBadge.textContent = '✗ Suara Ditolak (Bukan Pemilik / Noise)';
+      }
+    }
+  } catch (err) {
+    testScoreText.textContent = `Error mic: ${err.message}`;
+  } finally {
+    isTestingVoice = false;
+    btnTestVoice.disabled = false;
+  }
+});
+
+// =========================================================================
+// 4. LIBRARY APP & WEB
+// =========================================================================
+async function refreshKnowledgeView() {
+  currentKnowledgeList = await ipcRenderer.invoke('get-apps-knowledge') || [];
+  kCount.textContent = `Daftar Tersimpan (${currentKnowledgeList.length})`;
+  kEntriesList.innerHTML = '';
+
+  if (currentKnowledgeList.length === 0) {
+    kEntriesList.innerHTML = '<p style="color:#888;margin:10px 0;">Belum ada aplikasi atau website tersimpan.</p>';
+    return;
+  }
+
+  currentKnowledgeList.forEach((item, index) => {
+    const row = document.createElement('div');
+    row.className = 'row';
+
+    const info = document.createElement('div');
+    info.innerHTML = `
+      <strong>${item.name}</strong> <span style="font-size:11px;color:#60a5fa;margin-left:6px;">[${item.type === 'web' ? 'Web' : 'App'}]</span>
+      <small>${item.target} ${item.aliases ? '· Alias: ' + item.aliases : ''}</small>
+    `;
+
+    const actions = document.createElement('div');
+    actions.className = 'row-actions';
+
+    const testBtn = document.createElement('button');
+    testBtn.type = 'button';
+    testBtn.textContent = 'Buka';
+    testBtn.title = 'Uji buka link atau aplikasi ini';
+    testBtn.addEventListener('click', async () => {
+      const res = await ipcRenderer.invoke('test-open-knowledge', item);
+      kStatus.textContent = res.message || 'Membuka...';
+    });
+
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => {
+      kEditId.value = item.id;
+      kName.value = item.name;
+      kType.value = item.type || 'web';
+      kTarget.value = item.target;
+      kAliases.value = item.aliases || '';
+      formKTitle.textContent = `Edit: ${item.name}`;
+      btnCancelK.hidden = false;
+      kName.focus();
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.textContent = 'Hapus';
+    delBtn.addEventListener('click', async () => {
+      if (confirm(`Hapus "${item.name}" dari Library?`)) {
+        currentKnowledgeList.splice(index, 1);
+        await ipcRenderer.invoke('save-apps-knowledge', currentKnowledgeList);
+        kStatus.textContent = `"${item.name}" dihapus.`;
+        refreshKnowledgeView();
+      }
+    });
+
+    actions.append(testBtn, editBtn, delBtn);
+    row.append(info, actions);
+    kEntriesList.appendChild(row);
   });
 }
 
-if (btnQuitApp) {
-  btnQuitApp.addEventListener('click', () => {
-    ipcRenderer.send('quit-app');
+kType.addEventListener('change', () => {
+  kTarget.placeholder = kType.value === 'web' ? 'https://artax.id' : 'C:\\App\\Artax.exe';
+});
+
+btnCancelK.addEventListener('click', () => {
+  kEditId.value = '';
+  addForm.reset();
+  formKTitle.textContent = 'Tambah Aplikasi atau Website';
+  btnCancelK.hidden = true;
+  kStatus.textContent = '';
+});
+
+addForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = kName.value.trim();
+  const type = kType.value;
+  const target = kTarget.value.trim();
+  const aliases = kAliases.value.trim();
+  const editId = kEditId.value.trim();
+
+  if (!name || !target) {
+    kStatus.textContent = 'Nama dan Target wajib diisi.';
+    return;
+  }
+
+  if (editId) {
+    const idx = currentKnowledgeList.findIndex(k => k.id === editId);
+    if (idx !== -1) {
+      currentKnowledgeList[idx] = { id: editId, name, type, target, aliases };
+      kStatus.textContent = `"${name}" berhasil diperbarui.`;
+    }
+  } else {
+    currentKnowledgeList.push({
+      id: 'k-' + Date.now(),
+      name,
+      type,
+      target,
+      aliases
+    });
+    kStatus.textContent = `"${name}" berhasil ditambahkan ke Library.`;
+  }
+
+  await ipcRenderer.invoke('save-apps-knowledge', currentKnowledgeList);
+  kEditId.value = '';
+  addForm.reset();
+  formKTitle.textContent = 'Tambah Aplikasi atau Website';
+  btnCancelK.hidden = true;
+  refreshKnowledgeView();
+});
+
+// =========================================================================
+// 5. LIVE COMMAND ACTIVITY LOG
+// =========================================================================
+async function loadCommandLogs() {
+  const logs = await ipcRenderer.invoke('get-command-logs') || [];
+  renderLogs(logs);
+}
+
+function renderLogs(logs) {
+  if (!logs || logs.length === 0) {
+    logList.innerHTML = '<div class="log-empty">Belum ada riwayat perintah suara.<br>Ucapkan perintah ke Wis untuk memantau aktivitasnya di sini.</div>';
+    logTabBadge.classList.add('hidden');
+    return;
+  }
+
+  logTabBadge.textContent = String(logs.length);
+  logTabBadge.classList.remove('hidden');
+  logList.innerHTML = '';
+
+  logs.forEach(log => {
+    const item = document.createElement('div');
+    item.className = 'log-item';
+
+    const statusTag = log.status === 'done'
+      ? '<span class="log-status-tag tag-done">Selesai</span>'
+      : (log.status === 'running'
+        ? '<span class="log-status-tag tag-running">Berjalan</span>'
+        : '<span class="log-status-tag tag-error">Gagal</span>');
+
+    item.innerHTML = `
+      <div class="log-left">
+        <span class="log-user">"${log.transcript || '-'}"</span>
+        <span class="log-reply">${log.reply || log.summary || '-'}</span>
+      </div>
+      <div>${statusTag}</div>
+    `;
+    logList.appendChild(item);
   });
 }
+
+btnClearLogs.addEventListener('click', async () => {
+  await ipcRenderer.invoke('clear-completed-logs');
+  loadCommandLogs();
+});
+
+ipcRenderer.on('command-logs-updated', (e, logs) => {
+  renderLogs(logs);
+});
+
+// =========================================================================
+// 6. TOKEN & KUOTA GROQ API
+// =========================================================================
+async function loadUsageSummary() {
+  const summary = await ipcRenderer.invoke('get-usage-summary');
+  if (!summary) return;
+
+  const used = summary.todayTokens || 0;
+  const limit = summary.dailyLimit || 200000;
+  const pct = Math.min(100, Math.round((used / limit) * 100));
+
+  usageProgressFill.style.width = `${pct}%`;
+  usagePctLabel.textContent = `${pct}%`;
+  metricUsedTokens.textContent = used.toLocaleString('id-ID');
+  metricRemTokens.textContent = Math.max(0, limit - used).toLocaleString('id-ID');
+  metricRpd.textContent = summary.rpd ? `${summary.rpdRemaining || '-'} / ${summary.rpdLimit || '-'}` : '-';
+  metricTpm.textContent = summary.tpmLimit ? summary.tpmLimit.toLocaleString('id-ID') : '-';
+
+  if (summary.avgTokensPerTask) {
+    metricAvgTask.textContent = `${summary.avgTokensPerTask.toLocaleString('id-ID')} tkn`;
+  }
+  if (summary.dailyCapacityTasks) {
+    metricDayCap.textContent = `${summary.dailyCapacityTasks} tugas`;
+  }
+  if (summary.remainingTasksToday !== undefined) {
+    metricDayRem.textContent = `${summary.remainingTasksToday} tugas`;
+  }
+}
+
+btnProbeQuota.addEventListener('click', async () => {
+  btnProbeQuota.textContent = 'Memeriksa...';
+  await ipcRenderer.invoke('probe-api-quota');
+  await loadUsageSummary();
+  btnProbeQuota.textContent = 'Cek Kuota API';
+});
+
+btnResetUsage.addEventListener('click', async () => {
+  if (confirm('Reset hitungan statistik token hari ini?')) {
+    await ipcRenderer.invoke('reset-today-usage');
+    await loadUsageSummary();
+  }
+});
+
+btnSetLimit.addEventListener('click', async () => {
+  const val = Number(inputCustomLimit.value);
+  if (val && val >= 1000) {
+    await ipcRenderer.invoke('set-custom-daily-limit', val);
+    await loadUsageSummary();
+    inputCustomLimit.value = '';
+  }
+});
+
+ipcRenderer.on('usage-summary-updated', () => {
+  loadUsageSummary();
+});
+
+// =========================================================================
+// 7. PANDUAN DENGAN TOMBOL "COBA" INTERAKTIF
+// =========================================================================
+const GUIDE_COMMANDS = [
+  {
+    title: 'Navigasi YouTube & Web',
+    desc: 'Buka YouTube dan langsung cari lagu/konten tanpa klik manual.',
+    example: 'buka youtube cari lofi hip hop',
+    category: 'browser'
+  },
+  {
+    title: 'Kontrol Media & Video',
+    desc: 'Jeda, lanjutkan, mute, atau aktifkan layar penuh pada video aktif.',
+    example: 'play video',
+    category: 'media'
+  },
+  {
+    title: 'Klik Video Samping / Rekomendasi',
+    desc: 'Klik video yang ada di kolom rekomendasi samping YouTube.',
+    example: 'klik video di samping',
+    category: 'vision'
+  },
+  {
+    title: 'Pengaturan Kecerahan Layar',
+    desc: 'Ubah tingkat kecerahan layar laptop secara presisi atau bertahap.',
+    example: 'turunkan brightness jadi 30%',
+    category: 'brightness'
+  },
+  {
+    title: 'Buka Aplikasi & Web dari Library',
+    desc: 'Membuka aplikasi atau web yang didaftarkan di tab Library secara instan.',
+    example: 'buka artax',
+    category: 'knowledge'
+  },
+  {
+    title: 'Manajemen Jendela Windows',
+    desc: 'Kecilkan, besarkan, atau tutup jendela aplikasi aktif.',
+    example: 'minimize jendela',
+    category: 'window'
+  },
+  {
+    title: 'Scroll Layar Otomatis',
+    desc: 'Menggulir halaman web atau dokumen secara perlahan.',
+    example: 'scroll pelan-pelan ke bawah',
+    category: 'navigasi'
+  },
+  {
+    title: 'Tanya Isi Layar (Vision)',
+    desc: 'Minta Wis melihat layar dan menjawab apa yang sedang terbuka.',
+    example: 'ada apa di layar sekarang?',
+    category: 'vision'
+  }
+];
+
+function renderGuideModules(filterQuery = '') {
+  guideListContainer.innerHTML = '';
+  const q = String(filterQuery || '').toLowerCase().trim();
+
+  const filtered = GUIDE_COMMANDS.filter(item => {
+    return !q || item.title.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q) || item.example.toLowerCase().includes(q);
+  });
+
+  if (filtered.length === 0) {
+    guideListContainer.innerHTML = '<p style="color:#888;">Tidak ada perintah yang sesuai pencarian.</p>';
+    return;
+  }
+
+  filtered.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'guide-item';
+
+    const info = document.createElement('div');
+    info.className = 'guide-item-info';
+    info.innerHTML = `
+      <span class="guide-item-title">${item.title}</span>
+      <span class="guide-item-desc">${item.desc}</span>
+      <span class="guide-item-example">Ucapkan: "${item.example}"</span>
+    `;
+
+    const tryBtn = document.createElement('button');
+    tryBtn.type = 'button';
+    tryBtn.className = 'btn-try-guide';
+    tryBtn.textContent = 'Coba';
+    tryBtn.title = `Jalankan perintah "${item.example}" sekarang`;
+    tryBtn.addEventListener('click', async () => {
+      tryBtn.textContent = 'Menjalankan...';
+      tryBtn.disabled = true;
+      try {
+        await ipcRenderer.invoke('execute-voice-command', item.example);
+        tryBtn.textContent = '✓ Berhasil';
+      } catch (err) {
+        tryBtn.textContent = 'Gagal';
+      } finally {
+        setTimeout(() => {
+          tryBtn.textContent = 'Coba';
+          tryBtn.disabled = false;
+        }, 2200);
+      }
+    });
+
+    card.append(info, tryBtn);
+    guideListContainer.appendChild(card);
+  });
+}
+
+guideSearchInput.addEventListener('input', () => {
+  renderGuideModules(guideSearchInput.value);
+});
+
+// =========================================================================
+// INITIALIZATION
+// =========================================================================
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadConfig();
+  await refreshKnowledgeView();
+  await refreshVoiceProfileView();
+  loadCommandLogs();
+  loadUsageSummary();
+  renderGuideModules();
+});

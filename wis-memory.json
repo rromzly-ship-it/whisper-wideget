@@ -2,90 +2,6 @@
   "facts": [],
   "history": [
     {
-      "ts": "2026-11-13T00:55:03.125Z",
-      "user": "naikkan volume lebih dari 100% Hai Wis, naikkan volume lebih dari 100% pause video",
-      "summary": "volume naik",
-      "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-13T00:56:17.592Z",
-      "user": "Hai Wis",
-      "summary": "Halo, ada yang bisa Wis bantu?",
-      "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
-      "action": "chat_reply"
-    },
-    {
-      "ts": "2026-11-13T00:56:20.564Z",
-      "user": "Repress tab ini",
-      "summary": "tutup tab",
-      "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-13T01:26:38.810Z",
-      "user": "pause video",
-      "summary": "Pause/Play video",
-      "app": "",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-13T01:27:07.884Z",
-      "user": "Tolong buka Youtube ya",
-      "summary": "Buka YouTube",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
-      "ts": "2026-11-13T01:27:19.120Z",
-      "user": "Klik video argumentasi dimensi",
-      "summary": "Buka YouTube",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
-      "ts": "2026-11-13T01:27:47.291Z",
-      "user": "Play video argumentasi dimensi",
-      "summary": "Buka YouTube",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
-      "ts": "2026-11-13T01:28:16.607Z",
-      "user": "Tolong naikkan volume ke 50%",
-      "summary": "naikkan volume",
-      "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-13T01:28:23.856Z",
-      "user": "turunkan volume ke 50%",
-      "summary": "turunkan volume",
-      "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-13T01:28:28.418Z",
-      "user": "turunkan lagi",
-      "summary": "volume mute",
-      "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-13T01:29:00.659Z",
-      "user": "Hai Wisper, cari tutorial cara membuat kue",
-      "summary": "Cari tutorial",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
-      "ts": "2026-11-13T01:29:06.805Z",
-      "user": "Scroll ke bawah",
-      "summary": "Scroll down",
-      "app": "Browser",
-      "action": "scroll"
-    },
-    {
       "ts": "2026-11-13T01:29:09.843Z",
       "user": "Lagi",
       "summary": "Scroll lagi",
@@ -175,11 +91,95 @@
       "summary": "Buka YouTube",
       "app": "Browser",
       "action": "open_url"
+    },
+    {
+      "ts": "2026-11-13T02:21:04.449Z",
+      "user": "Buka Chrome",
+      "summary": "Buka chrome",
+      "app": "chrome",
+      "action": "open_app"
+    },
+    {
+      "ts": "2026-11-13T02:21:12.291Z",
+      "user": "Gulir ke bawah",
+      "summary": "Scroll down",
+      "app": "chrome",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-13T02:21:15.642Z",
+      "user": "Hi",
+      "summary": "Halo, ada yang bisa Wis bantu?",
+      "app": "electron (Wis Speech Bubble)",
+      "action": "chat_reply"
+    },
+    {
+      "ts": "2026-11-13T02:21:34.591Z",
+      "user": "Klik video untuk perempuan yang sedang dalam pelukan",
+      "summary": "Klik video untuk perempuan yang sedang dalam pelukan",
+      "app": "electron (Wis Speech Bubble)",
+      "action": "vision_click"
+    },
+    {
+      "ts": "2026-11-13T02:21:43.123Z",
+      "user": "Coba gue liat lagi ke bawah",
+      "summary": "Scroll ke bawah",
+      "app": "electron (Wis Speech Bubble)",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-13T02:21:46.684Z",
+      "user": "Scroll ke bawah",
+      "summary": "Scroll down",
+      "app": "electron (Wis Speech Bubble)",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-13T02:21:55.870Z",
+      "user": "Coba scroll ke bawah",
+      "summary": "Scroll down",
+      "app": "chrome ((363) Payung Teduh Untuk Perempuan - YouTube - Google Chrome)",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-13T08:03:38.549Z",
+      "user": "Terima kasih kerana ada wis",
+      "summary": "Sip, diputar ya",
+      "app": "electron (Wis Speech Bubble)",
+      "action": "chat_reply"
+    },
+    {
+      "ts": "2026-11-13T08:03:44.627Z",
+      "user": "open youtube",
+      "summary": "Buka YouTube",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-13T08:03:46.532Z",
+      "user": "atau buka Youtube gitu",
+      "summary": "Buka YouTube",
+      "app": "YouTube",
+      "action": "open_app"
+    },
+    {
+      "ts": "2026-11-13T08:03:57.223Z",
+      "user": "pause video",
+      "summary": "Jeda video",
+      "app": "chrome (YouTube - Google Chrome)",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T08:03:58.787Z",
+      "user": "and pause video",
+      "summary": "Video dijeda",
+      "app": "chrome ((368) YouTube - Google Chrome)",
+      "action": "hotkey"
     }
   ],
   "activeApp": {
     "process": "chrome",
-    "title": "https://www.youtube.com/results?search_query=Payung+Teduh+Untuk+Perempuan",
-    "updatedAt": "2026-11-13T01:46:13.240Z"
+    "title": "(368) YouTube - Google Chrome",
+    "updatedAt": "2026-11-13T08:03:59.557Z"
   }
 }

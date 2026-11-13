@@ -4,6 +4,25 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
+## [v1.0.7] - 2026-11-13 (Pembaruan Terkini)
+
+### 🚀 Redesign Side Menu Pengaturan, Noise Gate (Tahap 1), & Voice Identity Kunci Suara Pemilik (Tahap 2):
+- **Redesign UI Menu Pengaturan: Side Menu Modern & Collapsible:**
+  - Mengubah layout tab horizontal menjadi **Side Menu / Collapsible Sidebar** modern (`.shell`, `aside`, `nav`, `main`, `header`, `.content`) sesuai persis dengan spesifikasi dan kode template pengguna.
+  - Sidebar dapat diciutkan (*compact mode* 58px) dengan tombol toggle panel atau dilebarkan (232px) dengan transisi halus.
+  - Navigasi 6 halaman lengkap: **Pengaturan**, **Profil Suara Pemilik**, **Library App & Web**, **Log**, **Token & Kuota**, serta **Panduan** interaktif dengan tombol "Coba".
+  - Ukuran jendela diperbarui menjadi 860x640px dengan fitur resizable agar tampilan lapang dan elegan.
+- **Tahap 1: Noise Gate & Sensitivitas Jarak Mikrofon:**
+  - Opsi mematikan *Auto Gain Control* (AGC) agar mikrofon laptop tidak otomatis mendongkrak sensitivitas saat hening dan tidak menyerap suara orang di ruangan.
+  - Filter Noise Gate dengan slider desibel (-50 dB s.d. -20 dB, default -38 dB) terintegrasi pada tombol mikrofon dikte (`widget.js`) dan asisten Wis (`eye.js`) untuk memotong desisan AC, kipas, dan obrolan latar belakang.
+- **Tahap 2: Voice Identity & Speaker Verification (Kunci Suara Pemilik):**
+  - Modul baru [voice-profile.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/voice-profile.js) (0 dependensi): mengekstrak sidik vokal akustik pemilik (Pitch F0, 24-band Mel filterbank, 12 MFCCs, Spectral Centroid) dan disimpan di `voice-profile.json`.
+  - Halaman pendaftaran sampel suara 5 detik dengan countdown dan meter level mic di tab *"Profil Suara Pemilik"*.
+  - Fasilitas live test 3 detik untuk menguji skor kemiripan suara (%) secara langsung.
+  - Switch **"Kunci Mikrofon Hanya Untuk Suara Pemilik" (Lock to My Voice)**: saat aktif, ucapan dari orang lain atau noise di ruangan otomatis ditolak dan tidak diproses ke Whisper/Wis.
+
+---
+
 ## [v1.0.6] - 2026-11-13 (Pembaruan Terkini)
 
 ### 🚀 Bahasa Santai (Non-Militer), Konteks Aktif In-Place, & Animasi Flat Huruf Z:

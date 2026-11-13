@@ -7,6 +7,7 @@ const tts = require('./tts');
 const vision = require('./vision');
 const memory = require('./memory');
 const usage = require('./usage');
+const voiceProfile = require('./voice-profile');
 
 process.on('uncaughtException', (err) => {
   try { fs.appendFileSync(path.join(__dirname, 'main_crash.log'), `[UNCAUGHT] ${err.stack || err}\n`); } catch {}
@@ -622,8 +623,10 @@ function toggleRadialMenu() {
 
 function createSettingsWindow() {
   settingsWindow = new BrowserWindow({
-    width: 475,
-    height: 550,
+    width: 860,
+    height: 640,
+    minWidth: 540,
+    minHeight: 480,
     title: 'Pengaturan Whisper Agent (Wis)',
     icon: path.join(__dirname, 'icon.ico'),
     show: false,
@@ -631,7 +634,7 @@ function createSettingsWindow() {
     transparent: true,
     backgroundColor: '#00000000',
     alwaysOnTop: true,
-    resizable: false,
+    resizable: true,
     skipTaskbar: true,
     minimizable: false,
     maximizable: false,
@@ -661,8 +664,8 @@ function openSettings() {
     createSettingsWindow();
   }
 
-  const settingsW = 475;
-  const settingsH = 550;
+  const settingsW = 860;
+  const settingsH = 640;
 
   let micCenterX = 400;
   let anchorTopY = 400;
@@ -1051,6 +1054,46 @@ ipcMain.handle('test-open-knowledge', async (event, item) => {
     }
   } catch (e) {
     return { ok: false, message: e.message };
+  }
+});
+
+// Voice Identity & Speaker Verification (Tahap 2)
+ipcMain.handle('get-voice-profile', () => {
+  return voiceProfile.loadVoiceProfile();
+});
+
+ipcMain.handle('enroll-voice-profile', (event, { pcm, sampleRate }) => {
+  if (!pcm || pcm.length === 0) return { ok: false, message: 'Audio kosong' };
+  const floatSamples = new Float32Array(pcm);
+  const features = voiceProfile.extractVoiceFeatures(floatSamples, sampleRate || 16000);
+  if (!features || !features.mfcc || features.mfcc.length === 0) {
+    return { ok: false, message: 'Suara tidak terdeteksi atau terlalu pelan' };
+  }
+  const ok = voiceProfile.saveVoiceProfile(features);
+  return { ok, profile: features };
+});
+
+ipcMain.handle('delete-voice-profile', () => {
+  return voiceProfile.deleteVoiceProfile();
+});
+
+ipcMain.handle('verify-voice-match', (event, { pcm, sampleRate, threshold }) => {
+  const profile = voiceProfile.loadVoiceProfile();
+  if (!profile) return { match: true, score: 100, reason: 'Belum ada profil' };
+  if (!pcm || pcm.length === 0) return { match: false, score: 0, reason: 'Audio kosong' };
+  const floatSamples = new Float32Array(pcm);
+  const candidate = voiceProfile.extractVoiceFeatures(floatSamples, sampleRate || 16000);
+  if (!candidate) return { match: false, score: 0, reason: 'Suara tidak terdeteksi' };
+
+  const evalRes = voiceProfile.compareVoiceFeatures(candidate, profile);
+  const minThreshold = threshold !== undefined ? threshold : (appConfig?.voiceMatchThreshold || 70);
+  const match = evalRes.score >= minThreshold;
+  return { match, score: evalRes.score, minThreshold };
+});
+
+ipcMain.on('hide-settings', () => {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.hide();
   }
 });
 
