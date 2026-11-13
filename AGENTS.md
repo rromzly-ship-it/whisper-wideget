@@ -38,3 +38,4 @@ Setiap kali Anda atau agen lain baru membuka proyek ini, melakukan `git pull`, a
 ## 🖐️ ATURAN 5: KOMPATIBILITAS INPUT (TOUCH, PEN, MOUSE)
 1. Hindari penggunaan event mouse murni (`mousedown`, `mouseup`, `mousemove`) pada elemen yang dapat diinteraksi; selalu gunakan **Pointer Events** (`pointerdown`, `pointermove`, `pointerup`, `pointercancel`) dengan atribut `touch-action: none;` dan styling bebas tap-highlight.
 2. Pergerakan widget di layar sentuh ditangani oleh native loop dan raw input watcher (`injector.exe`) untuk menjaga pergerakan tetap 120Hz smooth tanpa patah-patah.
+

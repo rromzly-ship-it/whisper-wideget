@@ -428,9 +428,9 @@ function createMenuWindow() {
   menuWindow.setAlwaysOnTop(true, 'screen-saver', 1);
   menuWindow.loadFile('menu.html');
 
-  // Auto-hide popup menu smoothly when user clicks anywhere else (ignore touch/pen release grace window)
+  // Auto-hide popup menu smoothly when user clicks anywhere else (ignore rapid initial focus bounce)
   menuWindow.on('blur', () => {
-    if (Date.now() - lastMenuOpenedAt < 500) return;
+    if (Date.now() - lastMenuOpenedAt < 200) return;
     requestCloseMenu('blur');
   });
 
@@ -439,9 +439,12 @@ function createMenuWindow() {
   });
 }
 
+let lastMenuClosedAt = 0;
+
 function requestCloseMenu(reason) {
   if (!menuWindow || !menuWindow.isVisible() || isMenuClosing) return;
   isMenuClosing = true;
+  lastMenuClosedAt = Date.now();
   menuWindow.webContents.send('menu-close', reason || 'blur');
 }
 
@@ -488,7 +491,8 @@ function toggleRadialMenu() {
   if (!widgetWindow || isQuittingFlow) return;
   if (!menuWindow) createMenuWindow();
 
-  if (menuWindow.isVisible()) {
+  // If menu is visible or was just requested to close (e.g. within 350ms from blur), close/stay closed
+  if (menuWindow.isVisible() || (Date.now() - lastMenuClosedAt < 350)) {
     requestCloseMenu('toggle');
     return;
   }

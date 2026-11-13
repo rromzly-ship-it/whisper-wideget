@@ -91,12 +91,14 @@ function triggerMicSafe() {
 window.addEventListener('pointerdown', (e) => {
   lastPointerType = e.pointerType || 'mouse';
 
-  // Stylus barrel button or mouse right-click opens radial menu cleanly
+  // Stylus barrel button or mouse right-click
   if (e.button === 2 || (e.pointerType === 'pen' && (e.buttons & 2))) {
-    gestureMode = 'menu';
-    lastMenuTriggerAt = Date.now();
     cancelHoldTimers();
-    ipcRenderer.send('open-radial-menu');
+    if (e.pointerType === 'pen' && (e.buttons & 2)) {
+      gestureMode = 'menu';
+      lastMenuTriggerAt = Date.now();
+      ipcRenderer.send('toggle-radial-menu');
+    }
     return;
   }
   if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -219,10 +221,10 @@ btnContainer.addEventListener('click', (e) => {
   triggerMicSafe();
 });
 
-// Mouse right-click opens radial menu (touch/pen OS press-and-hold contextmenu is suppressed to avoid double-trigger or drag conflict)
+// Mouse right-click toggles radial menu (touch/pen OS press-and-hold contextmenu is suppressed to avoid double-trigger or drag conflict)
 window.addEventListener('contextmenu', (e) => {
   e.preventDefault();
-  if (gestureMode === 'dragging' || gestureMode === 'menu' || (Date.now() - lastDragEndTime < 450)) return;
+  if (gestureMode === 'dragging' || (Date.now() - lastDragEndTime < 450)) return;
   if (lastPointerType === 'touch' || lastPointerType === 'pen') return;
   lastMenuTriggerAt = Date.now();
   ipcRenderer.send('toggle-radial-menu');

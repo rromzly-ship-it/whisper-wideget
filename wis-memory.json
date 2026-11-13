@@ -2,13 +2,6 @@
   "facts": [],
   "history": [
     {
-      "ts": "2026-11-12T13:09:48.860Z",
-      "user": "Ya tolong buka",
-      "summary": "Buka YouTube",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
       "ts": "2026-11-12T13:09:51.471Z",
       "user": "Chrome",
       "summary": "buka Chrome",
@@ -175,11 +168,18 @@
       "summary": "volume mute",
       "app": "chrome ((351) eńau feat. Ari Lesmana - Sesi Potret (Official Music Video) - YouTube - Google Chrome)",
       "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T00:05:41.161Z",
+      "user": "Hai Wisper, buka chrome dan buka youtube",
+      "summary": "Buka Chrome dan YouTube",
+      "app": "Browser",
+      "action": "open_app"
     }
   ],
   "activeApp": {
     "process": "chrome",
-    "title": "(351) eńau feat. Ari Lesmana - Sesi Potret (Official Music Video) - YouTube - G",
-    "updatedAt": "2026-11-12T14:03:39.109Z"
+    "title": "(362) YouTube - Google Chrome",
+    "updatedAt": "2026-11-13T00:05:59.144Z"
   }
 }

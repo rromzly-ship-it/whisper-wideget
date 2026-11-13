@@ -4,7 +4,19 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.0.1] - 2026-11-13 (Pembaruan Terkini)
+## [v1.0.2] - 2026-11-13 (Pembaruan Terkini)
+
+### 🐛 Perbaikan Bug Interaksi & Peta Jalan:
+- **Perbaikan Menu Klik Kanan (Setting & Close):**
+  - Mengatasi masalah menu radial yang mengharuskan tombol klik kanan mouse ditahan.
+  - Sekarang sekali klik kanan pada mikrofon akan memunculkan menu dan **tetap terbuka** (*toggle on*).
+  - Mengklik sekali lagi pada mikrofon ATAU mengklik di area luar menu (*klik ngasal / blur*) akan menutup menu secara halus (*toggle off*).
+- **Penyusunan Dokumen Roadmap Resmi (`ROADMAP.md`):**
+  - Mendokumentasikan rencana pengembangan Fase 1 s/d Fase 4 (Speech Bubble, mode tidur/ngantuk idle, artikulasi mulut A-I-U-E-O, Smart Selection teks, dan integrasi OS).
+
+---
+
+## [v1.0.1] - 2026-11-13
 
 ### 📢 Standardisasi Aturan Proyek & Sinkronisasi GitHub:
 - **Aturan Wajib Push Otomatis (`AGENTS.md` & `GEMINI.md`):**

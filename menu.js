@@ -176,6 +176,13 @@ micHotspot.addEventListener('contextmenu', (e) => {
   startClosing('mic-right-click');
 });
 
+window.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('#btn-settings') || e.target.closest('#btn-close')) {
+    return;
+  }
+  startClosing('backdrop-click');
+});
+
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     startClosing('escape');
