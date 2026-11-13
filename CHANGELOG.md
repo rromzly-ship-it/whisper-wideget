@@ -4,7 +4,20 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.0.3] - 2026-11-13 (Pembaruan Terkini)
+## [v1.0.4] - 2026-11-13 (Pembaruan Terkini)
+
+### 🐛 Perbaikan Bug Sintaks & Deklarasi Ganda:
+- **Perbaikan SyntaxError di `skills/index.js`:**
+  - Menghapus deklarasi ganda modul skill (`brightnessSkill`, `whatsappSkill`, `telegramSkill`, `filesSkill`, `macroSkill`) yang memicu error saat modul dimuat di *main process*.
+  - Membersihkan duplikasi elemen pada array `SKILL_MODULES`.
+- **Perbaikan SyntaxError di `eye.js`:**
+  - Menghapus deklarasi ganda variabel renderer (`activeTtsAnalyser`, `lastInteractionTime`, `isAngry`, `angryTimer`).
+- **Verifikasi & Eksekusi:**
+  - Seluruh file JS (`main.js`, `assistant.js`, `skills/index.js`, `eye.js`, dll.) telah divalidasi dengan `node -c` dan berhasil berjalan mulus tanpa popup error.
+
+---
+
+## [v1.0.3] - 2026-11-13
 
 ### 🚀 Penyelesaian Penuh Roadmap Fase 1 - 4 & Fitur Baru:
 - **Sinkronisasi Respon Cepat & Eliminasi Delay Suara:**

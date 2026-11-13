@@ -1150,6 +1150,27 @@ async function executeStep(step, visibleWindows, installedApps, chromeTabs, apiK
       return { ok: true, message: `Pesan WhatsApp disiapkan untuk ${step.recipient}` };
     }
 
+    case 'set_brightness': {
+      const target = Math.max(0, Math.min(100, Math.round(Number(step.percent !== undefined ? step.percent : (step.value || 50)))));
+      const psCmd = `(Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightnessMethods).WmiSetBrightness(1, ${target})`;
+      try {
+        execSync(`powershell -NoProfile -Command "${psCmd}"`, { timeout: 1500 });
+        return { ok: true, message: `Kecerahan layar diatur ke ${target}%` };
+      } catch (err) {
+        return { ok: false, message: `Gagal mengatur kecerahan layar: ${err.message}` };
+      }
+    }
+
+    case 'search_open_file': {
+      const q = String(step.query || '').trim();
+      const matched = findBestDocument(q, false);
+      if (matched) {
+        const errMsg = await shell.openPath(matched.path);
+        return errMsg ? { ok: false, message: errMsg } : { ok: true, message: `Membuka file ${matched.name}` };
+      }
+      return { ok: false, message: `File '${q}' tidak ditemukan` };
+    }
+
     case 'word_new_doc': {
       return await runWordHelper('open_new');
     }

@@ -84,3 +84,4 @@ ipcRenderer.on('bubble-update', (event, payload) => {
 ipcRenderer.on('bubble-close-request', () => {
   closeBubble();
 });
+
