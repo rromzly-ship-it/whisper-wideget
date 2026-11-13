@@ -4,6 +4,26 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
+## [v1.0.6] - 2026-11-13 (Pembaruan Terkini)
+
+### 🚀 Bahasa Santai (Non-Militer), Konteks Aktif In-Place, & Animasi Flat Huruf Z:
+- **Gaya Bahasa Santai & Akrab (Menghapus Total Kata Kaku / Militer "Siap"):**
+  - Wis kini berbicara dengan gaya bahasa Indonesia sehari-hari yang santai, luwes, dan akrab layaknya teman ngobrol (*"Sip, lagi diputar nih"*, *"Beres, kembali ke halaman sebelumnya ya"*, *"Sip, aku klik ya"*, *"Beres, kecerahan udah diturunin ya"*, *"Iya, lagi dibuka nih"*).
+  - Menghapus kata kaku/militer "Siap" di semua modul skill (`browser`, `media`, `vision`, `apps-knowledge`, `window`, `brightness`, `scroll-zoom`, `whatsapp`, `telegram`, `macro`) dan instruksi LLM di `assistant.js`.
+  - `tts.js` menormalisasi kata "oke", "ok", "okey", dan "siap" menjadi "Sip" yang terdengar renyah, natural, dan bebas dari distorsi fonetik "okret".
+- **Prinsip Melanjutkan Konteks Aktif (Dilarang Membuka Tab Baru Sembarangan):**
+  - Wis memegang aturan mutlak untuk selalu melanjutkan interaksi pada halaman, menu, atau jendela aplikasi yang sedang aktif di layar.
+  - Perintah klik elemen visual, pilih video di samping/rekomendasi (*"klik video yang di samping"*, *"klik video yang lain"*, *"putar resep kue lapis"*, *"pilih menu panduan"*): WAJIB menggunakan `vision_click` langsung di tempat (*in-place*) pada layar aktif tanpa membuka tab baru atau mengubah URL.
+  - Membuka tab baru (`ctrl+t` / `open_url`) HANYA diizinkan jika pengguna secara eksplisit dan sengaja memerintahkan membuka tab baru atau browsing dari awal (*"buka tab baru dan cari ..."*, *"buka website ..."*).
+  - Penyesuaian `skills/browser.js` dan urutan prioritas di `skills/index.js` sehingga aksi in-place layar (`visionSkill`, `mediaSkill`) selalu diprioritaskan sebelum penelusuran URL.
+- **Penyempurnaan Animasi Tidur Huruf Z (Flat & Bebas Kotak Terpotong):**
+  - Menghapus text-shadow berwarna biru pada partikel huruf `Z` sehingga tampil minimalis flat putih bersih (`#FFFFFF`).
+  - Memperbaiki lintasan dan batas animasi `float-z`: partikel Z melayang ke atas-kanan sambil mengecil secara dinamis (`scale(0.1)`) dan memudar perlahan (`opacity: 0`) jauh sebelum mencapai batas jendela Electron 64x64, sehingga sama sekali tidak pernah terpotong oleh batas kotak jendela (*no margin clipping*).
+- **Optimasi VAD Anti Speaker Bleed:**
+  - Menambahkan algoritma adaptive drop-off VAD dan hard ceiling timeout (2.8s) agar audio laptop dari video yang sedang berputar tidak menahan jeda perintah suara pengguna.
+
+---
+
 ## [v1.0.5] - 2026-11-13 (Pembaruan Terkini)
 
 ### 🚀 Fitur Baru Library Aplikasi & Website Kustom + Polishing Total:

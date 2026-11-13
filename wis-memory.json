@@ -2,55 +2,6 @@
   "facts": [],
   "history": [
     {
-      "ts": "2026-11-13T00:46:09.142Z",
-      "user": "tolong buka aplikasi whatsapp ya",
-      "summary": "Buka WhatsApp",
-      "app": "WhatsApp",
-      "action": "open_app"
-    },
-    {
-      "ts": "2026-11-13T00:46:43.760Z",
-      "user": "RIP RIP",
-      "summary": "Oke",
-      "app": "Antigravity IDE (whisper-floating-widget - Antigravity IDE - main.js)",
-      "action": "chat_reply"
-    },
-    {
-      "ts": "2026-11-13T00:49:55.807Z",
-      "user": "Hai Wis",
-      "summary": "Halo, ada yang bisa Wis bantu?",
-      "app": "Antigravity IDE (whisper-floating-widget - Antigravity IDE - main.js)",
-      "action": "chat_reply"
-    },
-    {
-      "ts": "2026-11-13T00:50:04.581Z",
-      "user": "tolong naikkan volume 50%",
-      "summary": "naikkan volume",
-      "app": "Antigravity IDE (whisper-floating-widget - Antigravity IDE - main.js)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-13T00:54:15.281Z",
-      "user": "Hai Wis, buka iTrade",
-      "summary": "Buka iTrade",
-      "app": "iTrade ARSS Pro - Google Chr",
-      "action": "switch_window"
-    },
-    {
-      "ts": "2026-11-13T00:54:22.430Z",
-      "user": "tolong pindah ke tab youtube",
-      "summary": "Pindah ke tab youtube",
-      "app": "Browser",
-      "action": "chrome_select_tab"
-    },
-    {
-      "ts": "2026-11-13T00:54:27.877Z",
-      "user": "play videonya",
-      "summary": "mainkan video",
-      "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
       "ts": "2026-11-13T00:55:03.125Z",
       "user": "naikkan volume lebih dari 100% Hai Wis, naikkan volume lebih dari 100% pause video",
       "summary": "volume naik",
@@ -175,11 +126,60 @@
       "summary": "Cari Artaks",
       "app": "Browser",
       "action": "open_url"
+    },
+    {
+      "ts": "2026-11-13T01:45:02.430Z",
+      "user": "Hai Wis, buka chrome",
+      "summary": "Buka chrome",
+      "app": "chrome",
+      "action": "open_app"
+    },
+    {
+      "ts": "2026-11-13T01:45:09.118Z",
+      "user": "buka youtube yang udah ada aja di tab ini",
+      "summary": "Buka YouTube cari yang udah ada  di tab ini",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-13T01:45:18.863Z",
+      "user": "cari 420",
+      "summary": "Buka pencarian",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-13T01:45:27.286Z",
+      "user": "bullet ke bawah",
+      "summary": "Scroll ke bawah",
+      "app": "chrome ((363) 420 - YouTube - Google Chrome)",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-13T01:45:31.687Z",
+      "user": "Play",
+      "summary": "Putar video",
+      "app": "chrome ((363) 420 - YouTube - Google Chrome)",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T01:45:36.286Z",
+      "user": "Video Argumentasi Dimensi",
+      "summary": "Putar video",
+      "app": "chrome ((363) 420 - YouTube - Google Chrome)",
+      "action": "vision_click"
+    },
+    {
+      "ts": "2026-11-13T01:46:13.242Z",
+      "user": "Klik Payung Teduh Untuk Perempuan",
+      "summary": "Buka YouTube",
+      "app": "Browser",
+      "action": "open_url"
     }
   ],
   "activeApp": {
-    "process": "electron",
-    "title": "Wis Speech Bubble",
-    "updatedAt": "2026-11-13T01:37:54.183Z"
+    "process": "chrome",
+    "title": "https://www.youtube.com/results?search_query=Payung+Teduh+Untuk+Perempuan",
+    "updatedAt": "2026-11-13T01:46:13.240Z"
   }
 }

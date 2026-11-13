@@ -18,7 +18,7 @@ module.exports = {
         steps: [{ action: 'open_app', appName: 'telegram', forceNew: false }],
         summary: 'Membuka Telegram Desktop',
         replyLang: 'id',
-        reply: 'Oke'
+        reply: 'Sip, membuka Telegram ya'
       };
     }
     return null;

@@ -340,8 +340,20 @@ function findBestUiMatch(targetDescription, uiContext) {
     }
   }
 
+  const isSideVideo = /\b(samping|kanan|sebelah kanan|yang lain|rekomendasi|terkait|berikutnya)\b/i.test(q);
+  if (isSideVideo) {
+    const sideFeed = els
+      .filter(e => (e.role === 'Link' || e.role === 'Button' || e.role === 'ListItem' || e.role === 'Text' || e.role === 'Image') && e.x_pct >= 50 && e.y_pct >= 12 && String(e.name || '').length >= 3)
+      .sort((a, b) => a.y_pct - b.y_pct);
+    if (sideFeed.length > 0) {
+      const pickIdx = /\b(kedua|ke-2|2|lain)\b/i.test(q) && sideFeed.length > 1 ? 1 : 0;
+      const target = sideFeed[pickIdx] || sideFeed[0];
+      return { found: true, x_pct: target.x_pct, y_pct: target.y_pct, label: target.name || 'Video rekomendasi samping', source: 'uia-sidebar' };
+    }
+  }
+
   // Direct text token match over page elements (strictly exclude Chrome tab bar unless asking for Tab)
-  const stop = new Set(['yang', 'di', 'pada', 'ke', 'video', 'judul', 'thumbnail', 'tombol', 'klik', 'buka', 'putar', 'cari', 'channel', 'bagian', 'layar', 'youtube', 'chrome', 'muncul', 'adalah', 'atau']);
+  const stop = new Set(['yang', 'di', 'pada', 'ke', 'video', 'judul', 'thumbnail', 'tombol', 'klik', 'buka', 'putar', 'cari', 'channel', 'bagian', 'layar', 'youtube', 'chrome', 'muncul', 'adalah', 'atau', 'itu', 'dong', 'ya', 'aja', 'tolong']);
   const tokens = q.replace(/[^\w\s]/g, ' ').split(/\s+/).filter(w => w.length >= 2 && !stop.has(w));
   if (tokens.length === 0) return null;
 
@@ -352,7 +364,14 @@ function findBestUiMatch(targetDescription, uiContext) {
     const nameLow = String(el.name || '').toLowerCase();
     let hits = 0;
     for (const tok of tokens) {
-      if (nameLow.includes(tok)) hits++;
+      if (nameLow.includes(tok)) {
+        hits++;
+      } else {
+        const tokSub = tok.slice(1);
+        if (tokSub.length >= 3 && nameLow.includes(tokSub)) {
+          hits += 0.8;
+        }
+      }
     }
     if (hits > 0) {
       let score = (hits / tokens.length) * 100 + hits * 15;
@@ -363,7 +382,7 @@ function findBestUiMatch(targetDescription, uiContext) {
       }
     }
   }
-  if (bestEl && bestScore >= 95) {
+  if (bestEl && bestScore >= 45) {
     return { found: true, x_pct: bestEl.x_pct, y_pct: bestEl.y_pct, label: bestEl.name, source: 'uia-text' };
   }
   return null;
@@ -401,6 +420,7 @@ Find center of: "${targetDescription}"${uiList}
 Rules:
 - Never pick browser top tab strip or close/minimize bar for webpage videos/search boxes.
 - For ordinal items ("video pertama/kedua/ke-N"), count visual thumbnails L->R, T->B below pills.
+- For sidebar / recommendation items ("di samping", "sebelah kanan", "yang lain"): look at the right sidebar (cols D-E) next to the main video player.
 JSON ONLY: {"found":true,"cell":"A1..E4","pos_in_cell_x":0..100,"pos_in_cell_y":0..100,"label":"short"} OR {"found":false,"reason":"singkat ID"}`;
 
   const raw = await callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode: true, maxTokens: 280, onUsage });

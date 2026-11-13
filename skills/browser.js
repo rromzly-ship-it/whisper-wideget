@@ -41,68 +41,63 @@ module.exports = {
   ],
 
   matchFastPlan({ clean }) {
-    // 1. Buka YouTube langsung tanpa bertanya balik
+    // 1. Buka YouTube langsung jika diminta eksplisit
     if (/^(?:buka|ke|tampilkan|jalankan)\s+(?:situs\s+|halaman\s+|aplikasi\s+|tab\s+)?(?:youtube|yutub)(?:\s+(?:saja|aja|dong|ya))?$/i.test(clean)) {
-      return { steps: [{ action: 'open_url', url: 'https://www.youtube.com' }], summary: 'Buka YouTube', replyLang: 'id', reply: 'Siap, membuka YouTube' };
+      return { steps: [{ action: 'open_url', url: 'https://www.youtube.com' }], summary: 'Buka YouTube', replyLang: 'id', reply: 'Sip, membuka YouTube ya' };
     }
 
-    // 2. Buka YouTube + langsung cari konten dalam 1 langkah
+    // 2. Buka YouTube + langsung cari konten HANYA jika diminta eksplisit mencari di YouTube dari awal
     let ytQuery = null;
-    const ytMatch1 = clean.match(/^(?:buka\s+)?(?:youtube|yutub)[\s,]+(?:dan\s+)?(?:buka\s+)?(?:cari\s+|konten\s+|content\s+|video\s+|lagu\s+|channel\s+)?(.+)$/i);
+    const ytMatch1 = clean.match(/^(?:buka\s+)?(?:youtube|yutub)[\s,]+(?:dan\s+)?(?:buka\s+)?(?:cari\s+|search\s+|konten\s+|content\s+|channel\s+)?(.+)$/i);
     if (ytMatch1 && ytMatch1[1]) {
       ytQuery = ytMatch1[1];
     } else {
-      const ytMatch2 = clean.match(/^(?:cari|putar|tonton|lihat)\s+(.+?)\s+di\s+(?:youtube|yutub)$/i);
+      const ytMatch2 = clean.match(/^(?:cari|search)\s+(.+?)\s+di\s+(?:youtube|yutub)$/i);
       if (ytMatch2 && ytMatch2[1]) {
         ytQuery = ytMatch2[1];
-      } else {
-        const ytMatch3 = clean.match(/^(?:buka\s+)?(?:konten|content)\s+(.+?)(?:\s+di\s+(?:youtube|yutub))?$/i);
-        if (ytMatch3 && ytMatch3[1]) {
-          ytQuery = ytMatch3[1];
-        }
       }
     }
 
     if (ytQuery) {
       let cleanYt = ytQuery.replace(/\b(ya|dong|saja|aja|tolong|coba|nih|kan)\b/gi, '').trim();
-      cleanYt = cleanYt.replace(/^(?:buka\s+(?:konten|content)\s+|konten\s+|content\s+|cari\s+|video\s+|lagu\s+)/i, '').trim();
+      cleanYt = cleanYt.replace(/^(?:buka\s+(?:konten|content)\s+|konten\s+|content\s+|cari\s+|search\s+)/i, '').trim();
       if (cleanYt.length >= 2 && !/^(ini|itu|semua)$/i.test(cleanYt)) {
         const finalQuery = applyQueryAliases(cleanYt);
         return {
           steps: [{ action: 'open_url', url: `https://www.youtube.com/results?search_query=${encodeURIComponent(finalQuery)}` }],
           summary: `Buka YouTube cari ${finalQuery}`,
           replyLang: 'id',
-          reply: `Siap, mencari ${finalQuery} di YouTube`
+          reply: `Sip, mencari ${finalQuery} di YouTube ya`
         };
       }
     }
 
     // 3. Navigasi & tab browser
     if (/^(?:(?:tolong|coba)\s+)?(?:kembali(?:\s+ke\s+halaman(?:\s+\w+)?)?(?:\s+yang)?\s+sebelumnya|halaman\s+sebelumnya|kembali|back)$/i.test(clean)) {
-      return { steps: [{ action: 'hotkey', keys: 'browser_back' }], summary: 'Kembali ke halaman sebelumnya', replyLang: 'id', reply: 'Kembali ke halaman sebelumnya' };
+      return { steps: [{ action: 'hotkey', keys: 'browser_back' }], summary: 'Kembali ke halaman sebelumnya', replyLang: 'id', reply: 'Beres, kembali ke halaman sebelumnya ya' };
     }
     if (/^(?:maju(?:\s+ke\s+halaman\s+(?:berikutnya|selanjutnya))?|halaman\s+(?:berikutnya|selanjutnya)|forward)$/i.test(clean)) {
-      return { steps: [{ action: 'hotkey', keys: 'browser_forward' }], summary: 'Maju satu halaman', replyLang: 'id', reply: 'Maju ke halaman selanjutnya' };
+      return { steps: [{ action: 'hotkey', keys: 'browser_forward' }], summary: 'Maju satu halaman', replyLang: 'id', reply: 'Beres, maju ke halaman selanjutnya ya' };
     }
     if (/^(?:buka\s+)?tab\s+baru$|^new\s+tab$/i.test(clean)) {
-      return { steps: [{ action: 'hotkey', keys: 'ctrl+t' }], summary: 'Buka tab baru', replyLang: 'id', reply: 'Tab baru dibuka' };
+      return { steps: [{ action: 'hotkey', keys: 'ctrl+t' }], summary: 'Buka tab baru', replyLang: 'id', reply: 'Sip, tab baru dibuka ya' };
     }
     if (/^(?:tutup\s+tab(?:\s+ini)?|close\s+tab)$/i.test(clean)) {
-      return { steps: [{ action: 'hotkey', keys: 'ctrl+w' }], summary: 'Tutup tab', replyLang: 'id', reply: 'Tab ditutup' };
+      return { steps: [{ action: 'hotkey', keys: 'ctrl+w' }], summary: 'Tutup tab', replyLang: 'id', reply: 'Beres, tab udah ditutup ya' };
     }
     if (/^(?:(?:ber)?pindah\s+ke\s+|buka\s+|kembali\s+ke\s+)?tab\s+sebelumnya$|^previous\s+tab$/i.test(clean)) {
-      return { steps: [{ action: 'hotkey', keys: 'ctrl+shift+tab' }], summary: 'Pindah ke tab sebelumnya', replyLang: 'id', reply: 'Pindah ke tab sebelumnya' };
+      return { steps: [{ action: 'hotkey', keys: 'ctrl+shift+tab' }], summary: 'Pindah ke tab sebelumnya', replyLang: 'id', reply: 'Sip, pindah ke tab sebelumnya ya' };
     }
     if (/^(?:(?:ber)?pindah\s+ke\s+|buka\s+)?tab\s+(?:berikutnya|selanjutnya)$|^next\s+tab$/i.test(clean)) {
-      return { steps: [{ action: 'hotkey', keys: 'ctrl+tab' }], summary: 'Pindah ke tab berikutnya', replyLang: 'id', reply: 'Pindah ke tab berikutnya' };
+      return { steps: [{ action: 'hotkey', keys: 'ctrl+tab' }], summary: 'Pindah ke tab berikutnya', replyLang: 'id', reply: 'Sip, pindah ke tab berikutnya ya' };
     }
     const tabTargetMatch = clean.match(/^(?:(?:ber)?pindah\s+ke\s+|buka\s+)tab\s+([a-z0-9 ._+-]{2,28})(?:\s+di\s+browser.*)?$/i);
     if (tabTargetMatch && !/^(baru|sebelumnya|berikutnya|selanjutnya|ini|terakhir)$/i.test(tabTargetMatch[1].trim())) {
       const kw = tabTargetMatch[1].trim();
-      return { steps: [{ action: 'chrome_select_tab', keyword: kw }], summary: `Pindah ke tab ${kw}`, replyLang: 'id', reply: `Pindah ke tab ${kw}` };
+      return { steps: [{ action: 'chrome_select_tab', keyword: kw }], summary: `Pindah ke tab ${kw}`, replyLang: 'id', reply: `Sip, pindah ke tab ${kw} ya` };
     }
     if (/^(?:refresh|muat ulang)(?:\s+halaman)?$/i.test(clean)) {
-      return { steps: [{ action: 'hotkey', keys: 'f5' }], summary: 'Refresh halaman', replyLang: 'id', reply: 'Halaman dimuat ulang' };
+      return { steps: [{ action: 'hotkey', keys: 'f5' }], summary: 'Refresh halaman', replyLang: 'id', reply: 'Beres, halaman dimuat ulang ya' };
     }
 
     return null;

@@ -43,7 +43,7 @@ module.exports = {
           steps: Array.isArray(item.steps) ? item.steps : [],
           summary: item.description || `Macro: ${item.trigger}`,
           replyLang: 'id',
-          reply: item.reply || 'Oke, macro dijalankan'
+          reply: item.reply || 'Sip, macro dijalankan ya'
         };
       }
     }

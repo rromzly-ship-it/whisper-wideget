@@ -65,7 +65,7 @@ module.exports = {
             ],
             summary: `Buka ${item.name}`,
             replyLang: 'id',
-            reply: `Siap, membuka ${item.name}`
+            reply: `Sip, membuka ${item.name} ya`
           };
         }
       }
@@ -74,3 +74,4 @@ module.exports = {
     return null;
   }
 };
+

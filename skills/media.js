@@ -17,7 +17,7 @@ module.exports = {
         steps: [{ action: 'hotkey', keys: 'k' }],
         summary: isPause ? 'Jeda video' : 'Putar video',
         replyLang: 'id',
-        reply: isPause ? 'Video dijeda' : 'Video dimainkan'
+        reply: isPause ? 'Sip, videonya dipause ya' : 'Sip, lanjut putar ya'
       };
     }
 
@@ -30,7 +30,7 @@ module.exports = {
           steps: [{ action: 'vision_click', targetDescription: `video ${targetTitle}`, clickType: 'left' }],
           summary: `Putar video ${targetTitle}`,
           replyLang: 'id',
-          reply: `Siap, memutar video ${targetTitle}`
+          reply: `Sip, memutar video ${targetTitle} ya`
         };
       }
     }
@@ -41,7 +41,7 @@ module.exports = {
         steps: [{ action: 'hotkey', keys: 'm' }],
         summary: 'Mute/Unmute audio video',
         replyLang: 'id',
-        reply: 'Suara video disesuaikan'
+        reply: 'Beres, suara disesuaikan ya'
       };
     }
 
@@ -51,7 +51,7 @@ module.exports = {
         steps: [{ action: 'hotkey', keys: 'f' }],
         summary: 'Layar penuh video',
         replyLang: 'id',
-        reply: 'Layar penuh diaktifkan'
+        reply: 'Sip, layar penuh aktif ya'
       };
     }
 

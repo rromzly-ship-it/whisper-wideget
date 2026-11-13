@@ -23,7 +23,7 @@ module.exports = {
         steps: [{ action: 'open_app', appName: 'whatsapp', forceNew: false }],
         summary: 'Membuka WhatsApp Desktop',
         replyLang: 'id',
-        reply: 'Oke'
+        reply: 'Sip, membuka WhatsApp ya'
       };
     }
 
@@ -39,7 +39,7 @@ module.exports = {
         ],
         summary: `Kirim WA ke ${recipient}`,
         replyLang: 'id',
-        reply: `Membuka chat WhatsApp untuk ${recipient}`
+        reply: `Sip, membuka chat WhatsApp untuk ${recipient} ya`
       };
     }
 

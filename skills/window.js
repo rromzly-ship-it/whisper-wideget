@@ -102,7 +102,7 @@ module.exports = {
           steps: [{ action: 'open_folder', target: QUICK_FOLDERS[key] }],
           summary: `Buka folder ${key}`,
           replyLang: 'id',
-          reply: `Siap, membuka folder ${key}`
+          reply: `Sip, membuka folder ${key} ya`
         };
       }
       if (QUICK_APPS[key]) {
@@ -110,7 +110,7 @@ module.exports = {
           steps: [{ action: 'open_app', appName: QUICK_APPS[key], forceNew: false }],
           summary: `Buka ${QUICK_APPS[key]}`,
           replyLang: 'id',
-          reply: `Siap, membuka ${QUICK_APPS[key]}`
+          reply: `Sip, membuka ${QUICK_APPS[key]} ya`
         };
       }
     }

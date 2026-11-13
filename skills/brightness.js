@@ -21,7 +21,7 @@ module.exports = {
           steps: [{ action: 'set_brightness', percent: val }],
           summary: `Atur kecerahan layar ke ${val}%`,
           replyLang: 'id',
-          reply: `Kecerahan diatur ke ${val}%`
+          reply: `Sip, kecerahan diatur ke ${val}% ya`
         };
       }
     }
@@ -32,7 +32,7 @@ module.exports = {
         steps: [{ action: 'set_brightness', delta: -20 }],
         summary: 'Turunkan kecerahan layar',
         replyLang: 'id',
-        reply: 'Kecerahan layar diturunkan'
+        reply: 'Sip, kecerahan layar diturunkan ya'
       };
     }
     if (/^(?:naikkan|tambah|tinggikan)\s+(?:brightness|kecerahan|pencahayaan)(?:\s+(?:layar|screen))?$/i.test(clean)) {
@@ -40,7 +40,7 @@ module.exports = {
         steps: [{ action: 'set_brightness', delta: 20 }],
         summary: 'Naikkan kecerahan layar',
         replyLang: 'id',
-        reply: 'Kecerahan layar dinaikkan'
+        reply: 'Sip, kecerahan layar dinaikkan ya'
       };
     }
 
@@ -50,7 +50,7 @@ module.exports = {
         steps: [{ action: 'set_brightness', percent: 25 }],
         summary: 'Redupkan layar ke 25%',
         replyLang: 'id',
-        reply: 'Layar diredupkan ke 25%'
+        reply: 'Sip, layar diredupkan ke 25% ya'
       };
     }
     if (/^(?:terangkan|cerahkan)\s+layar$/i.test(clean) || clean === 'terangkan') {
@@ -58,7 +58,7 @@ module.exports = {
         steps: [{ action: 'set_brightness', percent: 85 }],
         summary: 'Terangkan layar ke 85%',
         replyLang: 'id',
-        reply: 'Layar diterangkan ke 85%'
+        reply: 'Sip, layar diterangkan ke 85% ya'
       };
     }
     return null;

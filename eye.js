@@ -931,13 +931,15 @@ async function startNextListeningSegment() {
   dbgLog(`listening segment #${segId} started (floor=${ambientFloor.toFixed(4)})`);
 
   const POLL_MS = 50;
-  const MIN_SPEECH_MS = 100;
-  const MICRO_GAP_RESET_MS = 240;
-  const SILENCE_COMMIT_MS = 480;
+  const MIN_SPEECH_MS = 90;
+  const MICRO_GAP_RESET_MS = 220;
+  const SILENCE_COMMIT_MS = 360;
+  const MAX_ACTIVE_SPEECH_MS = 2800; // Hard cap: 2.8s max command duration to eliminate speaker feedback hang
   const IDLE_SLEEP_MS = 35000;
 
   const dataBuf = new Float32Array(analyser.fftSize);
   const segmentStart = performance.now();
+  let speechStartedAt = 0;
 
   vadTimer = setInterval(() => {
     if (segId !== segmentSeq || !activeSession || !analyser || currentState !== 'listening') {
@@ -974,14 +976,22 @@ async function startNextListeningSegment() {
     if (rms > maxRmsSeen) maxRmsSeen = rms;
     const now = performance.now();
 
-    const speechThreshold = Math.max(0.008, Math.min(0.022, ambientFloor * 3.0));
+    // Dynamic threshold that adapts if background (e.g. laptop speaker) is noisy
+    const speechThreshold = Math.max(0.008, Math.min(0.035, ambientFloor * 2.8));
 
-    if (rms > speechThreshold) {
+    // When user has already spoken, detect if voice drops below 40% of speech peak
+    // (meaning user stopped speaking even if background laptop speaker continues playing!)
+    const isVoiceActive = (!hasSpoken)
+      ? (rms > speechThreshold)
+      : (rms > Math.max(speechThreshold, maxRmsSeen * 0.40));
+
+    if (isVoiceActive) {
       speechAccumMs += POLL_MS;
       lastVoiceTime = now;
       if (!hasSpoken && speechAccumMs >= MIN_SPEECH_MS) {
         hasSpoken = true;
         vadHasSpoken = true;
+        speechStartedAt = now;
         dbgLog(`speech detected rms=${rms.toFixed(4)} thr=${speechThreshold.toFixed(4)}`);
       }
     } else {
@@ -994,12 +1004,19 @@ async function startNextListeningSegment() {
           dbgLog(`idle timeout 35s (maxRms=${maxRmsSeen.toFixed(4)} floor=${ambientFloor.toFixed(4)})`);
           stopAssistantSession('idle');
         }
-      } else if (now - lastVoiceTime >= SILENCE_COMMIT_MS) {
+      }
+    }
+
+    if (hasSpoken) {
+      const isSilenceSatisfied = (now - lastVoiceTime >= SILENCE_COMMIT_MS);
+      const isMaxDurationReached = (now - speechStartedAt >= MAX_ACTIVE_SPEECH_MS);
+
+      if (isSilenceSatisfied || isMaxDurationReached) {
         clearInterval(vadTimer);
         vadTimer = null;
         vadHasSpoken = false;
         lastSegMaxRms = maxRmsSeen;
-        dbgLog(`silence commit (peak=${maxRmsSeen.toFixed(4)} chunks=${audioChunks.length})`);
+        dbgLog(`silence commit (peak=${maxRmsSeen.toFixed(4)} dur=${(now - speechStartedAt).toFixed(0)}ms maxReached=${isMaxDurationReached})`);
         commitCurrentSegment();
       }
     }

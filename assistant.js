@@ -627,17 +627,24 @@ async function planCommandWithGroq(transcript, apiKey, onUsage = null) {
     memCtx.tutorialGuide ? memCtx.tutorialGuide : ''
   ].filter(Boolean).join('\n');
 
-  const systemPrompt = `Wis, asisten desktop Windows. Balas HANYA JSON:
-{"steps":[...],"summary":"3-4 kata","replyLang":"id","reply":"Siap, melaksanakan"}
+  const systemPrompt = `Wis, asisten desktop Windows yang ramah dan santai. Balas HANYA JSON:
+{"steps":[...],"summary":"3-4 kata","replyLang":"id","reply":"Sip, diputar ya"}
 Aksi Inti: chat_reply{reply} | open_app{appName} | open_url{url} | switch_window{hwnd,label} | window_control{op:"minimize|maximize|restore|fullscreen|close",hwnd?,label?} | hotkey{keys:"k|f|m|space|f11|browser_back|browser_forward|ctrl+w|ctrl+t|ctrl+tab|ctrl+shift+tab|media_play_pause|volume_mute|lain"} | scroll{direction:"down|up|left|right"} | scroll_auto{direction,speed:"slow|medium|fast"} | scroll_stop{} | zoom{mode:"in|out|reset"} | type_text{text} | unknown{reason}
 ${skillModules.length ? `Aksi Tambahan: ${skillModules.join(' | ')}\n` : ''}Aturan:
 - EKSEKUSI LANGSUNG tanpa tanya balik/klarifikasi. Pertanyaan murni->chat_reply (dilarang steps:[]).
-- reply: gunakan kalimat konfirmasi singkat, natural, dan ramah dalam bahasa Indonesia (misal: "Siap, membuka YouTube", "Siap, memutar video", "Layar penuh diaktifkan"). DILARANG hanya menjawab kata "Oke".
-- Video & YouTube: pause/lanjut->hotkey:"k", mute->"m", fullscreen->"f". Jika user meminta putar video judul tertentu (misal: "putar video resep kue"), gunakan vision_click{targetDescription:"video [judul]"} jika sedang di halaman YouTube, atau open_url cari YouTube jika belum.
+- PRINSIP KONTEKS AKTIF (DILARANG BUKA TAB BARU SEMBARANGAN):
+  Wis WAJIB melanjutkan interaksi di halaman, menu, atau aplikasi yang sedang aktif di layar.
+  DILARANG KERAS membuka tab baru atau menjalankan open_url KECUALI pengguna secara eksplisit meminta: "buka tab baru", "buka website [URL]", "cari di google/internet", atau "buka tab baru dan cari ...".
+  Jika pengguna menyuruh klik, pilih, putar video, tonton, atau buka menu/elemen saat sedang di suatu aplikasi/halaman (seperti YouTube, menu setting, dll.), WAJIB gunakan vision_click{targetDescription:"..."} langsung pada layar aktif tanpa membuka tab baru!
+- GAYA BAHASA SANTAI & AKRAB (BUKAN MILITER):
+  Gunakan bahasa Indonesia yang santai, akrab, ramah, dan luwes layaknya teman ngobrol sehari-hari.
+  DILARANG KERAS menggunakan kata kaku, formal, atau bernada militer seperti "Siap", "Siap laksanakan", "Siap, ...", dsb.
+  Gunakan konfirmasi santai seperti: "Sip, lagi diputar nih", "Beres, videonya jalan ya", "Sip, aku klik ya", "Beres, kecerahan diturunin ya", "Iya, lagi dibuka nih", "Bentar ya". DILARANG hanya menjawab kata tunggal "Oke".
+- Video & YouTube: pause/lanjut->hotkey:"k", mute->"m", fullscreen->"f". Jika pengguna meminta putar/tonton video tertentu atau klik video di samping/rekomendasi, gunakan vision_click{targetDescription:"..."} pada layar yang sedang aktif.
 - Browser: tab baru->"ctrl+t", tutup->"ctrl+w", kembali->"browser_back", pindah tab->chrome_select_tab.
 - App di Win->switch_window atau open_app. Terapkan Alias jika cocok.
 
-Konteks Saat Ini:
+Konteks Layar & Aplikasi Saat Ini:
 ${contextLines}`;
 
   logAssistant(`Transcript: "${transcript}"`);
@@ -733,7 +740,7 @@ async function routeCommandWithGroq(transcript, apiKey, runtimeCtx = {}) {
       steps: exactSkill.steps,
       summary: exactSkill.description || exactSkill.trigger,
       replyLang: 'id',
-      reply: 'Oke'
+      reply: 'Sip'
     };
   } else {
     runtimeCtx.onStage?.('Memahami perintah (AI)...');
@@ -815,7 +822,7 @@ async function routeCommandWithGroq(transcript, apiKey, runtimeCtx = {}) {
   const replyText = sanitizeForSpeech(
     lastResult.isChat
       ? lastResult.message
-      : (plan.reply || 'Oke')
+      : (plan.reply || 'Sip')
   );
 
   recordSession(transcript, finalMessage, activeApp, steps[0]?.action || '');
@@ -1122,7 +1129,7 @@ async function executeStep(step, visibleWindows, installedApps, chromeTabs, apiK
       }
       const ok = memory.learnSkill({ trigger, description, steps: skillSteps });
       return ok
-        ? { ok: true, isChat: true, message: `Siap, Wis sudah belajar: jika Anda bilang "${trigger}", Wis akan menjalankan ${description}.` }
+        ? { ok: true, isChat: true, message: `Beres, Wis udah ingat: jika Anda bilang "${trigger}", Wis akan menjalankan ${description}.` }
         : { ok: false, message: 'Gagal menyimpan skill baru' };
     }
 

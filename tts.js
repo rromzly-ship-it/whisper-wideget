@@ -53,9 +53,10 @@ function normalizePronunciationForLang(text, lang) {
   let out = String(text || '');
   if (lang === 'id') {
     const idPhonetics = [
-      [/\boke\b/gi, 'Siap'],
-      [/\bok\b/gi, 'Siap'],
-      [/\bokey\b/gi, 'Siap'],
+      [/\boke\b/gi, 'Sip'],
+      [/\bok\b/gi, 'Sip'],
+      [/\bokey\b/gi, 'Sip'],
+      [/\bsiap\b/gi, 'Sip'],
       [/\bAlt\+Tab\b|\bAlt-Tab\b/gi, 'Alt Tab'],
       [/\bFourtwnty\b|\b420\b/gi, 'For Twenti'],
       [/\bMr\.?\s*Beast\b/gi, 'Mister Bis'],
@@ -235,7 +236,7 @@ async function synthesizeWavBase64(rawText, langHint = 'auto') {
 }
 
 function prewarmCache() {
-  const commonPhrases = ['Oke', 'Siap', 'Baik', 'Halo', 'Hai'];
+  const commonPhrases = ['Sip', 'Beres', 'Baik', 'Halo', 'Hai'];
   for (const p of commonPhrases) {
     synthesizeWavBase64(p, 'id').catch(() => {});
   }
