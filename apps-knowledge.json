@@ -1,0 +1,11 @@
+[
+  {
+    "id": "artax",
+    "name": "Artax",
+    "type": "web",
+    "target": "https://artax.id",
+    "spoken": "artax",
+    "aliases": ["air tax", "r tax", "artex", "web artax", "aplikasi artax"],
+    "description": "Portal Layanan & Aplikasi Artax"
+  }
+]

@@ -4,7 +4,30 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.0.4] - 2026-11-13 (Pembaruan Terkini)
+## [v1.0.5] - 2026-11-13 (Pembaruan Terkini)
+
+### 🚀 Fitur Baru Library Aplikasi & Website Kustom + Polishing Total:
+- **Fitur Baru "Library App & Web" di Menu Pengaturan (`settings.html`/`settings.js`):**
+  - Tab baru untuk mendaftarkan website atau aplikasi kustom (contoh: **Artax**).
+  - Menyimpan nama, tipe (`web` / `app`), target URL/path, dan variasi cara penyebutan (*voice aliases*).
+  - Terintegrasi langsung dengan modul skill [skills/apps-knowledge.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/skills/apps-knowledge.js) untuk eksekusi instan 0ms (0 token), serta diinjeksikan ke prompt LLM sebagai knowledge base Wis.
+- **Perbaikan Ucapan "Oke" (Eliminasi Bunyi "Okret"):**
+  - Normalisasi fonetik di `tts.js` memetakan kata "oke", "ok", dan "okey" menjadi "Siap" yang terdengar natural dan jernih pada Piper Indonesian TTS.
+  - Menghapus instruksi balasan generik "Oke" di sistem prompt LLM dan menggantinya dengan konfirmasi ramah dan spesifik (*"Siap, membuka YouTube"*, *"Siap, memutar video"*, *"Video dimainkan"*).
+- **Redesign Speech Bubble Minimalis Gaya WhatsApp:**
+  - Menghapus total header bar (ikon mata, judul Wis, tombol silang) sesuai permintaan pengguna; murni hanya menampilkan teks pesan.
+  - Desain bubble mengadopsi gaya chat bubble abu-abu gelap WhatsApp (`#202c33`), teks `#e9edef`, dan tail segitiga rapi mengarah ke Wis.
+  - Ukuran jendela diperkecil dan auto-fit agar kompak dan tidak menghalangi tampilan layar.
+- **Perbaikan Kontrol Kecerahan Layar (Brightness):**
+  - Mengatasi kendala sintaks CIM dengan `Invoke-CimMethod -MethodName WmiSetBrightness`.
+  - Mendukung persentase kustom ("turunkan brightness jadi 20%") serta perintah relatif ("turunkan brightness", "naikkan kecerahan").
+- **Penyempurnaan Visual Karakter Wis:**
+  - Animasi mulut artikulasi kini diwarnai putih bersih (`#FFFFFF`) serasi dengan mata (menghilangkan warna hitam).
+  - Animasi huruf `Z` tidur kini berukuran besar, beranimasi mengambang keluar dari kepala Wis ke arah atas-kanan tanpa terpotong lingkaran mata.
+
+---
+
+## [v1.0.4] - 2026-11-13
 
 ### 🐛 Perbaikan Bug Sintaks & Deklarasi Ganda:
 - **Perbaikan SyntaxError di `skills/index.js`:**

@@ -32,6 +32,7 @@
     <!-- Tabs -->
     <div class="tab-bar" role="tablist">
       <button type="button" id="tab-btn-settings" class="tab-btn is-active" role="tab" aria-selected="true">Pengaturan</button>
+      <button type="button" id="tab-btn-knowledge" class="tab-btn" role="tab" aria-selected="false">Library App &amp; Web</button>
       <button type="button" id="tab-btn-log" class="tab-btn" role="tab" aria-selected="false">
         <span>Log</span>
         <span id="log-tab-badge" class="tab-badge hidden">0</span>
@@ -114,6 +115,56 @@
           <input type="checkbox" id="auto-start">
           <span class="slider"></span>
         </label>
+      </div>
+    </div>
+
+    <!-- Tab Knowledge: Library Aplikasi & Web Kustom -->
+    <div id="panel-knowledge" class="knowledge-panel tab-panel hidden">
+      <div class="knowledge-header-box">
+        <span class="knowledge-title">Library Aplikasi &amp; Website Kustom</span>
+        <span class="knowledge-subtitle">Daftarkan aplikasi internal atau link website (misal: Artax) beserta variasi cara pengucapannya agar Wis dapat langsung membukanya dalam 0ms tanpa buang token.</span>
+      </div>
+
+      <!-- Form Tambah / Edit -->
+      <div class="knowledge-form-card">
+        <input type="hidden" id="k-edit-id" value="">
+        <div class="form-row">
+          <div class="form-group" style="flex: 1.2;">
+            <label for="k-name">Nama Aplikasi / Web</label>
+            <input type="text" id="k-name" placeholder="Misal: Artax" autocomplete="off">
+          </div>
+          <div class="form-group" style="flex: 0.8;">
+            <label for="k-type">Tipe</label>
+            <select id="k-type">
+              <option value="web">Website / URL</option>
+              <option value="app">Aplikasi Lokal (.exe)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="k-target">Target (URL Link / Path Aplikasi)</label>
+          <input type="text" id="k-target" placeholder="Misal: https://artax.id atau C:\App\Artax.exe" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label for="k-aliases">Variasi Penyebutan Suara (Pisahkan dengan koma)</label>
+          <input type="text" id="k-aliases" placeholder="Misal: artax, air tax, r tax, web artax, aplikasi artax" autocomplete="off">
+          <span class="input-hint">Penyebutan yang mungkin tertangkap saat Anda bicara lewat mic.</span>
+        </div>
+
+        <div class="knowledge-form-actions">
+          <button type="button" id="btn-cancel-knowledge" class="btn-secondary hidden">Batal</button>
+          <button type="button" id="btn-save-knowledge" class="btn-save-k">+ Simpan ke Library</button>
+        </div>
+      </div>
+
+      <!-- Daftar Item Tersimpan -->
+      <div class="knowledge-list-header">
+        <span class="k-count-label">Daftar Tersimpan (<span id="k-total-count">0</span>)</span>
+      </div>
+      <div id="knowledge-items-container" class="knowledge-items-scroll">
+        <!-- Dynamically rendered -->
       </div>
     </div>
 

@@ -263,8 +263,8 @@ function createBubbleWindow() {
   if (bubbleWindow && !bubbleWindow.isDestroyed()) return;
 
   bubbleWindow = new BrowserWindow({
-    width: 330,
-    height: 190,
+    width: 260,
+    height: 85,
     show: false,
     frame: false,
     transparent: true,
@@ -295,13 +295,13 @@ function updateBubblePlacement() {
   const display = screen.getDisplayNearestPoint({ x: ex, y: ey });
   const { x: areaX, y: areaY, width: areaW, height: areaH } = display.workArea;
 
-  const bw = 330;
-  const bh = 190;
+  const bw = 260;
+  const bh = 85;
   let bx = Math.round(ex + 32 - bw / 2);
-  let by = Math.round(ey - bh - 8);
+  let by = Math.round(ey - bh - 4);
 
   if (by < areaY) {
-    by = ey + 64 + 8;
+    by = ey + 64 + 4;
   }
   bx = Math.max(areaX + 8, Math.min(areaX + areaW - bw - 8, bx));
   bubbleWindow.setBounds({ x: bx, y: by, width: bw, height: bh });
@@ -1004,6 +1004,54 @@ ipcMain.handle('open-debug-log', () => {
 
 ipcMain.on('stop-auto-scroll', () => {
   stopAutoScroll();
+});
+
+const appsKnowledgePath = path.join(__dirname, 'apps-knowledge.json');
+
+function loadAppsKnowledgeList() {
+  try {
+    if (fs.existsSync(appsKnowledgePath)) {
+      return JSON.parse(fs.readFileSync(appsKnowledgePath, 'utf8')) || [];
+    }
+  } catch {}
+  return [];
+}
+
+function saveAppsKnowledgeList(list) {
+  try {
+    fs.writeFileSync(appsKnowledgePath, JSON.stringify(list, null, 2), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('Error saving apps-knowledge.json:', err);
+    return false;
+  }
+}
+
+ipcMain.handle('get-apps-knowledge', () => {
+  return loadAppsKnowledgeList();
+});
+
+ipcMain.handle('save-apps-knowledge', (event, list) => {
+  return saveAppsKnowledgeList(list);
+});
+
+ipcMain.handle('test-open-knowledge', async (event, item) => {
+  if (!item || !item.target) return { ok: false, message: 'Target kosong' };
+  try {
+    const isWeb = (item.type === 'web') || /^https?:\/\//i.test(item.target);
+    if (isWeb) {
+      await shell.openExternal(item.target);
+      return { ok: true, message: `Membuka website ${item.name}` };
+    } else {
+      const errMsg = await shell.openPath(item.target);
+      if (errMsg) {
+        spawn(item.target, [], { detached: true, stdio: 'ignore' }).unref();
+      }
+      return { ok: true, message: `Membuka aplikasi ${item.name}` };
+    }
+  } catch (e) {
+    return { ok: false, message: e.message };
+  }
 });
 
 let cachedWhisperTabHints = [];

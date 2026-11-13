@@ -341,9 +341,9 @@ function drawMouth(rotation, open, now) {
     ctx.lineCap = 'round';
     ctx.stroke();
   } else if (isSpeaking && mouthOpen > 0.10) {
-    ctx.fillStyle = '#0F172A';
+    ctx.fillStyle = '#FFFFFF';
     ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 2.0;
+    ctx.lineWidth = 1.6;
 
     let mw = 7;
     let mh = 5;
@@ -482,10 +482,6 @@ function frame(now) {
   drawEye(-1, open, rotation);
   drawEye(1, open, rotation);
   drawMouth(rotation, open, now);
-
-  if (expression === 'tidur') {
-    drawSleepingZ(now, center);
-  }
 
   requestAnimationFrame(frame);
 }

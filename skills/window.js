@@ -73,25 +73,25 @@ module.exports = {
 
   matchFastPlan({ clean }) {
     if (/^(?:buka\s+)?alt\s*[+-]?\s*tab$|^(?:lihat|tampilkan)\s+(?:aplikasi|jendela)\s+(?:yang\s+)?aktif$/i.test(clean)) {
-      return { steps: [{ action: 'open_alt_tab' }], summary: 'Buka Alt+Tab', replyLang: 'id', reply: 'Oke' };
+      return { steps: [{ action: 'open_alt_tab' }], summary: 'Buka Alt+Tab', replyLang: 'id', reply: 'Membuka Alt Tab' };
     }
     if (/^(?:buka\s+)?task\s*view$|^(?:lihat|tampilkan)\s+semua\s+(?:aplikasi|jendela)$/i.test(clean)) {
-      return { steps: [{ action: 'open_task_view' }], summary: 'Buka Task View', replyLang: 'id', reply: 'Oke' };
+      return { steps: [{ action: 'open_task_view' }], summary: 'Buka Task View', replyLang: 'id', reply: 'Membuka Task View' };
     }
     if (/^(?:minimize|kecilkan)\s+(?:aplikasi|jendela)\s+ini$/i.test(clean)) {
-      return { steps: [{ action: 'window_control', op: 'minimize' }], summary: 'Minimize jendela', replyLang: 'id', reply: 'Oke' };
+      return { steps: [{ action: 'window_control', op: 'minimize' }], summary: 'Minimize jendela', replyLang: 'id', reply: 'Jendela diminimalkan' };
     }
     if (/^(?:maximize|besarkan)\s+(?:aplikasi|jendela)\s+ini$/i.test(clean)) {
-      return { steps: [{ action: 'window_control', op: 'maximize' }], summary: 'Maximize jendela', replyLang: 'id', reply: 'Oke' };
+      return { steps: [{ action: 'window_control', op: 'maximize' }], summary: 'Maximize jendela', replyLang: 'id', reply: 'Jendela dimaksimalkan' };
     }
     if (/^(?:fullscreen|layar\s+penuh)\s+(?:aplikasi|jendela)\s+ini$/i.test(clean)) {
-      return { steps: [{ action: 'window_control', op: 'fullscreen' }], summary: 'Fullscreen aplikasi', replyLang: 'id', reply: 'Oke' };
+      return { steps: [{ action: 'window_control', op: 'fullscreen' }], summary: 'Fullscreen aplikasi', replyLang: 'id', reply: 'Layar penuh diaktifkan' };
     }
     if (/^(?:restore|kembalikan)\s+(?:ukuran\s+)?(?:aplikasi|jendela)\s+ini$/i.test(clean)) {
-      return { steps: [{ action: 'window_control', op: 'restore' }], summary: 'Restore jendela', replyLang: 'id', reply: 'Oke' };
+      return { steps: [{ action: 'window_control', op: 'restore' }], summary: 'Restore jendela', replyLang: 'id', reply: 'Ukuran jendela dikembalikan' };
     }
     if (/^(?:tutup|close)\s+(?:aplikasi|jendela)\s+ini$/i.test(clean)) {
-      return { steps: [{ action: 'window_control', op: 'close' }], summary: 'Tutup jendela', replyLang: 'id', reply: 'Oke' };
+      return { steps: [{ action: 'window_control', op: 'close' }], summary: 'Tutup jendela', replyLang: 'id', reply: 'Jendela ditutup' };
     }
 
     const folderMatch = clean.match(/^buka\s+(?:folder\s+|aplikasi\s+|program\s+|app\s+)?([a-z0-9\s._+-]+)$/i);
@@ -102,7 +102,7 @@ module.exports = {
           steps: [{ action: 'open_folder', target: QUICK_FOLDERS[key] }],
           summary: `Buka folder ${key}`,
           replyLang: 'id',
-          reply: 'Oke'
+          reply: `Siap, membuka folder ${key}`
         };
       }
       if (QUICK_APPS[key]) {
@@ -110,7 +110,7 @@ module.exports = {
           steps: [{ action: 'open_app', appName: QUICK_APPS[key], forceNew: false }],
           summary: `Buka ${QUICK_APPS[key]}`,
           replyLang: 'id',
-          reply: 'Oke'
+          reply: `Siap, membuka ${QUICK_APPS[key]}`
         };
       }
     }

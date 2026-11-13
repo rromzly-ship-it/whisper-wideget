@@ -16,14 +16,25 @@ const btnRestartApp = document.getElementById('btn-restart-app');
 const btnQuitApp = document.getElementById('btn-quit-app');
 const btnCloseWindow = document.getElementById('btn-close-window');
 const tabBtnSettings = document.getElementById('tab-btn-settings');
+const tabBtnKnowledge = document.getElementById('tab-btn-knowledge');
 const tabBtnLog = document.getElementById('tab-btn-log');
 const tabBtnUsage = document.getElementById('tab-btn-usage');
 const tabBtnGuide = document.getElementById('tab-btn-guide');
 const panelSettings = document.getElementById('panel-settings');
+const panelKnowledge = document.getElementById('panel-knowledge');
 const panelLog = document.getElementById('panel-log');
 const panelUsage = document.getElementById('panel-usage');
 const panelGuide = document.getElementById('panel-guide');
 const settingsFooter = document.getElementById('settings-footer');
+const kEditId = document.getElementById('k-edit-id');
+const kName = document.getElementById('k-name');
+const kType = document.getElementById('k-type');
+const kTarget = document.getElementById('k-target');
+const kAliases = document.getElementById('k-aliases');
+const btnSaveKnowledge = document.getElementById('btn-save-knowledge');
+const btnCancelKnowledge = document.getElementById('btn-cancel-knowledge');
+const kTotalCount = document.getElementById('k-total-count');
+const knowledgeItemsContainer = document.getElementById('knowledge-items-container');
 const guideSearchInput = document.getElementById('guide-search');
 const guideList = document.getElementById('guide-list');
 const guideStatusToast = document.getElementById('guide-status-toast');
@@ -90,14 +101,17 @@ function formatNumberId(num) {
 }
 
 function switchTab(tabName) {
-  activeTab = (tabName === 'log' || tabName === 'usage' || tabName === 'guide') ? tabName : 'settings';
+  activeTab = ['settings', 'knowledge', 'log', 'usage', 'guide'].includes(tabName) ? tabName : 'settings';
   const showSettings = activeTab === 'settings';
+  const showKnowledge = activeTab === 'knowledge';
   const showLog = activeTab === 'log';
   const showUsage = activeTab === 'usage';
   const showGuide = activeTab === 'guide';
 
   tabBtnSettings.classList.toggle('is-active', showSettings);
   tabBtnSettings.setAttribute('aria-selected', String(showSettings));
+  tabBtnKnowledge.classList.toggle('is-active', showKnowledge);
+  tabBtnKnowledge.setAttribute('aria-selected', String(showKnowledge));
   tabBtnLog.classList.toggle('is-active', showLog);
   tabBtnLog.setAttribute('aria-selected', String(showLog));
   tabBtnUsage.classList.toggle('is-active', showUsage);
@@ -107,17 +121,174 @@ function switchTab(tabName) {
 
   panelSettings.classList.toggle('hidden', !showSettings);
   settingsFooter.classList.toggle('hidden', !showSettings);
+  panelKnowledge.classList.toggle('hidden', !showKnowledge);
   panelLog.classList.toggle('hidden', !showLog);
   panelUsage.classList.toggle('hidden', !showUsage);
   panelGuide.classList.toggle('hidden', !showGuide);
 
-  if (showLog) {
+  if (showKnowledge) {
+    loadAndRenderKnowledge();
+  } else if (showLog) {
     ipcRenderer.invoke('get-command-logs').then(renderCommandLogs).catch(() => { });
   } else if (showUsage) {
     ipcRenderer.invoke('get-usage-summary').then(renderUsageSummary).catch(() => { });
   } else if (showGuide) {
     loadAndRenderGuide();
   }
+}
+
+let knowledgeList = [];
+
+async function loadAndRenderKnowledge() {
+  try {
+    knowledgeList = await ipcRenderer.invoke('get-apps-knowledge') || [];
+    renderKnowledgeList();
+  } catch (e) {
+    console.warn('Gagal memuat apps knowledge:', e);
+  }
+}
+
+function renderKnowledgeList() {
+  if (!kTotalCount || !knowledgeItemsContainer) return;
+  kTotalCount.textContent = String(knowledgeList.length);
+  knowledgeItemsContainer.innerHTML = '';
+
+  if (knowledgeList.length === 0) {
+    knowledgeItemsContainer.innerHTML = `
+      <div class="log-empty">
+        Belum ada aplikasi atau website kustom yang didaftarkan.<br>
+        Tambahkan di formulir atas (misal: nama: <b>Artax</b>, URL: <b>https://artax.id</b>).
+      </div>
+    `;
+    return;
+  }
+
+  knowledgeList.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'k-item-card';
+
+    const isWeb = item.type === 'web' || /^https?:\/\//i.test(item.target);
+    const badgeClass = isWeb ? 'badge-web' : 'badge-app';
+    const badgeText = isWeb ? 'Web' : 'App';
+
+    const aliasChips = (item.aliases || []).map(a => `<span class="alias-chip">${escapeHtml(a)}</span>`).join('');
+
+    card.innerHTML = `
+      <div class="k-item-left">
+        <span class="k-type-badge ${badgeClass}">${badgeText}</span>
+        <div class="k-item-details">
+          <span class="k-item-title">${escapeHtml(item.name)}</span>
+          <span class="k-item-target">${escapeHtml(item.target)}</span>
+          ${aliasChips ? `<div class="k-item-aliases">${aliasChips}</div>` : ''}
+        </div>
+      </div>
+      <div class="k-item-actions">
+        <button type="button" class="btn-k-action btn-k-test" title="Uji Coba Langsung Buka">▶ Buka</button>
+        <button type="button" class="btn-k-action btn-k-edit" title="Edit Data">✎ Edit</button>
+        <button type="button" class="btn-k-action btn-k-delete" title="Hapus Data">🗑 Hapus</button>
+      </div>
+    `;
+
+    card.querySelector('.btn-k-test').addEventListener('click', async () => {
+      const btn = card.querySelector('.btn-k-test');
+      const orig = btn.textContent;
+      btn.textContent = '⏳ Buka...';
+      try {
+        await ipcRenderer.invoke('test-open-knowledge', item);
+        btn.textContent = '✓ Terbuka';
+      } catch (err) {
+        btn.textContent = '✕ Gagal';
+      }
+      setTimeout(() => { btn.textContent = orig; }, 1800);
+    });
+
+    card.querySelector('.btn-k-edit').addEventListener('click', () => {
+      kEditId.value = item.id;
+      kName.value = item.name || '';
+      kType.value = item.type || 'web';
+      kTarget.value = item.target || '';
+      kAliases.value = (item.aliases || []).join(', ');
+      btnSaveKnowledge.textContent = 'Simpan Perubahan';
+      btnCancelKnowledge.classList.remove('hidden');
+      kName.focus();
+    });
+
+    card.querySelector('.btn-k-delete').addEventListener('click', async () => {
+      if (confirm(`Hapus "${item.name}" dari Library?`)) {
+        knowledgeList = knowledgeList.filter(k => k.id !== item.id);
+        await ipcRenderer.invoke('save-apps-knowledge', knowledgeList);
+        renderKnowledgeList();
+      }
+    });
+
+    knowledgeItemsContainer.appendChild(card);
+  });
+}
+
+function resetKnowledgeForm() {
+  if (!kEditId) return;
+  kEditId.value = '';
+  kName.value = '';
+  kType.value = 'web';
+  kTarget.value = '';
+  kAliases.value = '';
+  btnSaveKnowledge.textContent = '+ Simpan ke Library';
+  btnCancelKnowledge.classList.add('hidden');
+}
+
+if (btnSaveKnowledge) {
+  btnSaveKnowledge.addEventListener('click', async () => {
+    const name = kName.value.trim();
+    const type = kType.value;
+    const target = kTarget.value.trim();
+    const aliasesRaw = kAliases.value.trim();
+
+    if (!name || !target) {
+      alert('Nama dan Target (URL Link / Path Aplikasi) wajib diisi!');
+      return;
+    }
+
+    const aliases = aliasesRaw
+      ? aliasesRaw.split(/[,;\n]+/).map(s => s.trim().toLowerCase()).filter(Boolean)
+      : [name.toLowerCase()];
+
+    if (!aliases.includes(name.toLowerCase())) {
+      aliases.unshift(name.toLowerCase());
+    }
+
+    const editId = kEditId.value;
+    if (editId) {
+      const idx = knowledgeList.findIndex(k => k.id === editId);
+      if (idx !== -1) {
+        knowledgeList[idx] = {
+          ...knowledgeList[idx],
+          name,
+          type,
+          target,
+          spoken: name.toLowerCase(),
+          aliases
+        };
+      }
+    } else {
+      const newId = 'app_' + Date.now().toString(36);
+      knowledgeList.unshift({
+        id: newId,
+        name,
+        type,
+        target,
+        spoken: name.toLowerCase(),
+        aliases
+      });
+    }
+
+    await ipcRenderer.invoke('save-apps-knowledge', knowledgeList);
+    resetKnowledgeForm();
+    renderKnowledgeList();
+  });
+}
+
+if (btnCancelKnowledge) {
+  btnCancelKnowledge.addEventListener('click', resetKnowledgeForm);
 }
 
 function renderStatusCircle(item) {
@@ -533,6 +704,7 @@ function renderGuideModules() {
 }
 
 tabBtnSettings.addEventListener('click', () => switchTab('settings'));
+tabBtnKnowledge.addEventListener('click', () => switchTab('knowledge'));
 tabBtnLog.addEventListener('click', () => switchTab('log'));
 tabBtnUsage.addEventListener('click', () => switchTab('usage'));
 tabBtnGuide.addEventListener('click', () => switchTab('guide'));

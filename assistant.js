@@ -612,16 +612,28 @@ async function planCommandWithGroq(transcript, apiKey, onUsage = null) {
     memCtx.matchedSkills.length ? `Skill: ${JSON.stringify(memCtx.matchedSkills)}` : '',
     memCtx.facts.length ? `Fakta: ${memCtx.facts.join(' | ')}` : '',
     memCtx.recentHistory.length ? `Riwayat: ${memCtx.recentHistory.join(' ; ')}` : '',
+    (() => {
+      try {
+        const kPath = path.join(__dirname, 'apps-knowledge.json');
+        if (fs.existsSync(kPath)) {
+          const kList = JSON.parse(fs.readFileSync(kPath, 'utf8')) || [];
+          if (kList.length) {
+            return `Knowledge Apps/Web: ` + kList.map(k => `${k.name} (${k.type || 'web'} -> ${k.target})`).join('; ');
+          }
+        }
+      } catch {}
+      return '';
+    })(),
     memCtx.tutorialGuide ? memCtx.tutorialGuide : ''
   ].filter(Boolean).join('\n');
 
   const systemPrompt = `Wis, asisten desktop Windows. Balas HANYA JSON:
-{"steps":[...],"summary":"3-4 kata","replyLang":"id","reply":"Oke"}
+{"steps":[...],"summary":"3-4 kata","replyLang":"id","reply":"Siap, melaksanakan"}
 Aksi Inti: chat_reply{reply} | open_app{appName} | open_url{url} | switch_window{hwnd,label} | window_control{op:"minimize|maximize|restore|fullscreen|close",hwnd?,label?} | hotkey{keys:"k|f|m|space|f11|browser_back|browser_forward|ctrl+w|ctrl+t|ctrl+tab|ctrl+shift+tab|media_play_pause|volume_mute|lain"} | scroll{direction:"down|up|left|right"} | scroll_auto{direction,speed:"slow|medium|fast"} | scroll_stop{} | zoom{mode:"in|out|reset"} | type_text{text} | unknown{reason}
 ${skillModules.length ? `Aksi Tambahan: ${skillModules.join(' | ')}\n` : ''}Aturan:
 - EKSEKUSI LANGSUNG tanpa tanya balik/klarifikasi. Pertanyaan murni->chat_reply (dilarang steps:[]).
-- reply:"Oke" utk aksi biasa (kalimat lengkap hanya utk chat_reply/vision_inspect/learn_skill).
-- Media: pause/lanjut->hotkey:"k", mute->"m", fullscreen->"f". YouTube cari->open_url:"https://www.youtube.com/results?search_query=...".
+- reply: gunakan kalimat konfirmasi singkat, natural, dan ramah dalam bahasa Indonesia (misal: "Siap, membuka YouTube", "Siap, memutar video", "Layar penuh diaktifkan"). DILARANG hanya menjawab kata "Oke".
+- Video & YouTube: pause/lanjut->hotkey:"k", mute->"m", fullscreen->"f". Jika user meminta putar video judul tertentu (misal: "putar video resep kue"), gunakan vision_click{targetDescription:"video [judul]"} jika sedang di halaman YouTube, atau open_url cari YouTube jika belum.
 - Browser: tab baru->"ctrl+t", tutup->"ctrl+w", kembali->"browser_back", pindah tab->chrome_select_tab.
 - App di Win->switch_window atau open_app. Terapkan Alias jika cocok.
 
@@ -1124,11 +1136,22 @@ async function executeStep(step, visibleWindows, installedApps, chromeTabs, apiK
     }
 
     case 'set_brightness': {
-      const target = Math.max(0, Math.min(100, Math.round(Number(step.percent !== undefined ? step.percent : (step.value || 50)))));
-      const psCmd = `(Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightnessMethods).WmiSetBrightness(1, ${target})`;
+      let target = null;
+      if (step.percent !== undefined) {
+        target = Math.max(0, Math.min(100, Math.round(Number(step.percent))));
+      } else if (step.value !== undefined && !isNaN(Number(step.value))) {
+        target = Math.max(0, Math.min(100, Math.round(Number(step.value))));
+      }
+      const delta = Number(step.delta || 0);
+
+      const psCmd = (target !== null)
+        ? `Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightnessMethods | Invoke-CimMethod -MethodName WmiSetBrightness -Arguments @{Timeout = [uint32]1; Brightness = [byte]${target}}`
+        : `$cur = (Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightness).CurrentBrightness; $new = [Math]::Max(10, [Math]::Min(100, $cur + (${delta}))); Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightnessMethods | Invoke-CimMethod -MethodName WmiSetBrightness -Arguments @{Timeout = [uint32]1; Brightness = [byte]$new}`;
+
       try {
-        execSync(`powershell -NoProfile -Command "${psCmd}"`, { timeout: 1500 });
-        return { ok: true, message: `Kecerahan layar diatur ke ${target}%` };
+        execSync(`powershell -NoProfile -Command "${psCmd}"`, { timeout: 2500 });
+        const msg = (target !== null) ? `Kecerahan layar diatur ke ${target}%` : `Kecerahan layar disesuaikan`;
+        return { ok: true, message: msg };
       } catch (err) {
         return { ok: false, message: `Gagal mengatur kecerahan layar: ${err.message}` };
       }
@@ -1151,11 +1174,22 @@ async function executeStep(step, visibleWindows, installedApps, chromeTabs, apiK
     }
 
     case 'set_brightness': {
-      const target = Math.max(0, Math.min(100, Math.round(Number(step.percent !== undefined ? step.percent : (step.value || 50)))));
-      const psCmd = `(Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightnessMethods).WmiSetBrightness(1, ${target})`;
+      let target = null;
+      if (step.percent !== undefined) {
+        target = Math.max(0, Math.min(100, Math.round(Number(step.percent))));
+      } else if (step.value !== undefined && !isNaN(Number(step.value))) {
+        target = Math.max(0, Math.min(100, Math.round(Number(step.value))));
+      }
+      const delta = Number(step.delta || 0);
+
+      const psCmd = (target !== null)
+        ? `Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightnessMethods | Invoke-CimMethod -MethodName WmiSetBrightness -Arguments @{Timeout = [uint32]1; Brightness = [byte]${target}}`
+        : `$cur = (Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightness).CurrentBrightness; $new = [Math]::Max(10, [Math]::Min(100, $cur + (${delta}))); Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightnessMethods | Invoke-CimMethod -MethodName WmiSetBrightness -Arguments @{Timeout = [uint32]1; Brightness = [byte]$new}`;
+
       try {
-        execSync(`powershell -NoProfile -Command "${psCmd}"`, { timeout: 1500 });
-        return { ok: true, message: `Kecerahan layar diatur ke ${target}%` };
+        execSync(`powershell -NoProfile -Command "${psCmd}"`, { timeout: 2500 });
+        const msg = (target !== null) ? `Kecerahan layar diatur ke ${target}%` : `Kecerahan layar disesuaikan`;
+        return { ok: true, message: msg };
       } catch (err) {
         return { ok: false, message: `Gagal mengatur kecerahan layar: ${err.message}` };
       }

@@ -53,6 +53,9 @@ function normalizePronunciationForLang(text, lang) {
   let out = String(text || '');
   if (lang === 'id') {
     const idPhonetics = [
+      [/\boke\b/gi, 'Siap'],
+      [/\bok\b/gi, 'Siap'],
+      [/\bokey\b/gi, 'Siap'],
       [/\bAlt\+Tab\b|\bAlt-Tab\b/gi, 'Alt Tab'],
       [/\bFourtwnty\b|\b420\b/gi, 'For Twenti'],
       [/\bMr\.?\s*Beast\b/gi, 'Mister Bis'],

@@ -1,12 +1,10 @@
 const { ipcRenderer } = require('electron');
 
 const container = document.getElementById('bubble-container');
-const titleEl = document.getElementById('bubble-title');
 const contentEl = document.getElementById('bubble-content');
 const progressEl = document.getElementById('bubble-progress');
 const progressTextEl = document.getElementById('progress-text');
 const actionsEl = document.getElementById('bubble-actions');
-const btnClose = document.getElementById('btn-close-bubble');
 
 let autoHideTimer = null;
 
@@ -19,10 +17,13 @@ function closeBubble() {
   setTimeout(() => {
     ipcRenderer.send('hide-speech-bubble-done');
     container.classList.remove('closing');
-  }, 210);
+  }, 190);
 }
 
-btnClose.addEventListener('click', closeBubble);
+// Clicking anywhere on the bubble dismisses it smoothly
+container.addEventListener('click', () => {
+  closeBubble();
+});
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeBubble();
@@ -35,12 +36,6 @@ ipcRenderer.on('bubble-update', (event, payload) => {
   }
 
   container.classList.remove('closing');
-
-  if (payload.title) {
-    titleEl.textContent = payload.title;
-  } else {
-    titleEl.textContent = 'Wis';
-  }
 
   if (payload.progress) {
     progressEl.classList.remove('hidden');
@@ -59,9 +54,16 @@ ipcRenderer.on('bubble-update', (event, payload) => {
     payload.actions.forEach(action => {
       const btn = document.createElement('button');
       btn.className = 'action-btn';
-      btn.textContent = action.label || 'Aksi';
-      btn.addEventListener('click', () => {
-        ipcRenderer.send('bubble-action-click', action);
+      btn.textContent = action.label;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (action.type === 'open-url' && action.url) {
+          ipcRenderer.send('bubble-action-open-url', action.url);
+        } else if (action.type === 'run-sync') {
+          ipcRenderer.send('bubble-action-sync');
+        } else if (action.type === 'copy' && action.copyText) {
+          navigator.clipboard.writeText(action.copyText);
+        }
         if (action.autoClose !== false) {
           closeBubble();
         }
@@ -73,15 +75,14 @@ ipcRenderer.on('bubble-update', (event, payload) => {
     actionsEl.innerHTML = '';
   }
 
-  // Auto-hide if duration specified (e.g. 8000ms)
-  if (payload.duration && payload.duration > 0) {
+  const duration = payload.duration || 4500;
+  if (duration > 0) {
     autoHideTimer = setTimeout(() => {
       closeBubble();
-    }, payload.duration);
+    }, duration);
   }
 });
 
 ipcRenderer.on('bubble-close-request', () => {
   closeBubble();
 });
-

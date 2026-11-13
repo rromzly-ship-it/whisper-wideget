@@ -18,9 +18,11 @@ const whatsappSkill = require('./whatsapp');
 const telegramSkill = require('./telegram');
 const filesSkill = require('./files');
 const macroSkill = require('./macro');
+const appsKnowledgeSkill = require('./apps-knowledge');
 
 const SKILL_MODULES = [
   greetingSkill,
+  appsKnowledgeSkill,
   browserSkill,
   mediaSkill,
   brightnessSkill,

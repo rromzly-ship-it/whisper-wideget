@@ -2,111 +2,6 @@
   "facts": [],
   "history": [
     {
-      "ts": "2026-11-12T13:11:45.871Z",
-      "user": "Tem",
-      "summary": "Ada yang bisa saya bantu?",
-      "app": "chrome ((351) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
-      "action": "chat_reply"
-    },
-    {
-      "ts": "2026-11-12T13:11:54.109Z",
-      "user": "Buka Powder Whisper",
-      "summary": "buka pencarian",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
-      "ts": "2026-11-12T13:12:03.484Z",
-      "user": "Tidak, maksud saya adalah buka",
-      "summary": "buka pencarian",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
-      "ts": "2026-11-12T13:12:06.365Z",
-      "user": "folder, whisper",
-      "summary": "Oke",
-      "app": "Browser",
-      "action": "chat_reply"
-    },
-    {
-      "ts": "2026-11-12T13:12:11.369Z",
-      "user": "Start",
-      "summary": "Oke",
-      "app": "Browser",
-      "action": "chat_reply"
-    },
-    {
-      "ts": "2026-11-12T13:12:25.719Z",
-      "user": "tolong gulir ke bawah sampai saya suruh henti",
-      "summary": "Gulir ke bawah",
-      "app": "Browser",
-      "action": "scroll_auto"
-    },
-    {
-      "ts": "2026-11-12T13:12:45.696Z",
-      "user": "gulir keatas",
-      "summary": "gulir ke atas",
-      "app": "Browser",
-      "action": "scroll"
-    },
-    {
-      "ts": "2026-11-12T13:12:52.725Z",
-      "user": "tolong scroll ke atas sampai",
-      "summary": "scroll ke atas",
-      "app": "Browser",
-      "action": "scroll"
-    },
-    {
-      "ts": "2026-11-12T13:12:56.787Z",
-      "user": "lagi",
-      "summary": "Gulir ke bawah",
-      "app": "Browser",
-      "action": "scroll"
-    },
-    {
-      "ts": "2026-11-12T14:03:24.943Z",
-      "user": "tolong pause musik ini",
-      "summary": "Pause/Play video",
-      "app": "",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-12T14:03:32.473Z",
-      "user": "Kecilkan volume",
-      "summary": "volume mute",
-      "app": "chrome ((351) eńau feat. Ari Lesmana - Sesi Potret (Official Music Video) - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-12T14:03:58.418Z",
-      "user": "Kurangi volume",
-      "summary": "volume mute",
-      "app": "chrome ((351) eńau feat. Ari Lesmana - Sesi Potret (Official Music Video) - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-12T14:04:08.607Z",
-      "user": "kurangi volume",
-      "summary": "volume mute",
-      "app": "chrome ((351) eńau feat. Ari Lesmana - Sesi Potret (Official Music Video) - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-13T00:05:41.161Z",
-      "user": "Hai Wisper, buka chrome dan buka youtube",
-      "summary": "Buka Chrome dan YouTube",
-      "app": "Browser",
-      "action": "open_app"
-    },
-    {
-      "ts": "2026-11-13T00:45:58.265Z",
-      "user": "Hai Wis",
-      "summary": "Halo, ada yang bisa Wis bantu?",
-      "app": "",
-      "action": "chat_reply"
-    },
-    {
       "ts": "2026-11-13T00:46:09.142Z",
       "user": "tolong buka aplikasi whatsapp ya",
       "summary": "Buka WhatsApp",
@@ -175,11 +70,116 @@
       "summary": "tutup tab",
       "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
       "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T01:26:38.810Z",
+      "user": "pause video",
+      "summary": "Pause/Play video",
+      "app": "",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T01:27:07.884Z",
+      "user": "Tolong buka Youtube ya",
+      "summary": "Buka YouTube",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-13T01:27:19.120Z",
+      "user": "Klik video argumentasi dimensi",
+      "summary": "Buka YouTube",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-13T01:27:47.291Z",
+      "user": "Play video argumentasi dimensi",
+      "summary": "Buka YouTube",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-13T01:28:16.607Z",
+      "user": "Tolong naikkan volume ke 50%",
+      "summary": "naikkan volume",
+      "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T01:28:23.856Z",
+      "user": "turunkan volume ke 50%",
+      "summary": "turunkan volume",
+      "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T01:28:28.418Z",
+      "user": "turunkan lagi",
+      "summary": "volume mute",
+      "app": "chrome ((352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome)",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T01:29:00.659Z",
+      "user": "Hai Wisper, cari tutorial cara membuat kue",
+      "summary": "Cari tutorial",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-13T01:29:06.805Z",
+      "user": "Scroll ke bawah",
+      "summary": "Scroll down",
+      "app": "Browser",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-13T01:29:09.843Z",
+      "user": "Lagi",
+      "summary": "Scroll lagi",
+      "app": "chrome ((363) cara membuat kue - YouTube - Google Chrome)",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-13T01:29:14.319Z",
+      "user": "Scroll ke bawah lagi",
+      "summary": "Scroll ke bawah",
+      "app": "chrome ((363) cara membuat kue - YouTube - Google Chrome)",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-13T01:29:18.494Z",
+      "user": "Gulir ke bawah lagi",
+      "summary": "Gulir ke bawah",
+      "app": "chrome ((363) cara membuat kue - YouTube - Google Chrome)",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-13T01:29:37.954Z",
+      "user": "Tolong screenshot layar",
+      "summary": "Buka Snipping Tool untuk screenshot area layar (Win+Shift+S)",
+      "app": "chrome ((363) cara membuat kue - YouTube - Google Chrome)",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T01:37:08.053Z",
+      "user": "buka chrome",
+      "summary": "Buka chrome",
+      "app": "chrome",
+      "action": "open_app"
+    },
+    {
+      "ts": "2026-11-13T01:37:13.309Z",
+      "user": "Cari Artaks",
+      "summary": "Cari Artaks",
+      "app": "Browser",
+      "action": "open_url"
     }
   ],
   "activeApp": {
-    "process": "chrome",
-    "title": "(352) Fourtwnty - Argumentasi Dimensi (Live Session) - YouTube - Google Chrome",
-    "updatedAt": "2026-11-13T00:55:03.815Z"
+    "process": "electron",
+    "title": "Wis Speech Bubble",
+    "updatedAt": "2026-11-13T01:37:54.183Z"
   }
 }

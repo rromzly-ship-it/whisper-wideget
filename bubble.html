@@ -8,28 +8,18 @@
 </head>
 <body>
   <div id="bubble-container" class="bubble-container">
-    <div class="bubble-header">
-      <div class="bubble-title-group">
-        <span class="bubble-avatar">👁️</span>
-        <span id="bubble-title" class="bubble-title">Wis</span>
-      </div>
-      <button id="btn-close-bubble" class="bubble-close-btn" title="Tutup">✕</button>
-    </div>
-
-    <!-- Progress State (Visible during thinking, vision analysis, or web search) -->
+    <!-- Progress Indicator (During search/analysis) -->
     <div id="bubble-progress" class="bubble-progress hidden">
       <div class="progress-bar">
         <div class="progress-fill"></div>
       </div>
-      <div id="progress-text" class="progress-text">🔍 Sedang menganalisis...</div>
+      <div id="progress-text" class="progress-text">🔍 Sedang menelusuri...</div>
     </div>
 
-    <!-- Main Message Content -->
-    <div id="bubble-content" class="bubble-content">
-      Halo! Ada yang bisa saya bantu?
-    </div>
+    <!-- Pure Text Content (WhatsApp Bubble Style) -->
+    <div id="bubble-content" class="bubble-content"></div>
 
-    <!-- Interactive Action Buttons -->
+    <!-- Actions (Optional Pills) -->
     <div id="bubble-actions" class="bubble-actions hidden"></div>
 
     <!-- Tail pointing to Wis below -->
@@ -38,4 +28,3 @@
   <script src="bubble.js"></script>
 </body>
 </html>
-

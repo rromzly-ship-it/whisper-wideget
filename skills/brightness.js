@@ -26,7 +26,25 @@ module.exports = {
       }
     }
 
-    // 2. Preset: Redupkan layar (25%) / Terangkan layar (85%)
+    // 2. Relative adjustments (no specific number): "turunkan brightness", "naikkan kecerahan"
+    if (/^(?:turunkan|kurangi|rendahkan)\s+(?:brightness|kecerahan|pencahayaan)(?:\s+(?:layar|screen))?$/i.test(clean)) {
+      return {
+        steps: [{ action: 'set_brightness', delta: -20 }],
+        summary: 'Turunkan kecerahan layar',
+        replyLang: 'id',
+        reply: 'Kecerahan layar diturunkan'
+      };
+    }
+    if (/^(?:naikkan|tambah|tinggikan)\s+(?:brightness|kecerahan|pencahayaan)(?:\s+(?:layar|screen))?$/i.test(clean)) {
+      return {
+        steps: [{ action: 'set_brightness', delta: 20 }],
+        summary: 'Naikkan kecerahan layar',
+        replyLang: 'id',
+        reply: 'Kecerahan layar dinaikkan'
+      };
+    }
+
+    // 3. Preset: Redupkan layar (25%) / Terangkan layar (85%)
     if (/^(?:redupkan|gelapkan)\s+layar$/i.test(clean) || clean === 'redupkan') {
       return {
         steps: [{ action: 'set_brightness', percent: 25 }],
