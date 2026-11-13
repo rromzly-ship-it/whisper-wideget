@@ -12,6 +12,9 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
   - Membersihkan duplikasi elemen pada array `SKILL_MODULES`.
 - **Perbaikan SyntaxError di `eye.js`:**
   - Menghapus deklarasi ganda variabel renderer (`activeTtsAnalyser`, `lastInteractionTime`, `isAngry`, `angryTimer`).
+- **Pembersihan & Kompatibilitas `Whisper.exe`:**
+  - Memperbarui `launcher.cs` dan meng-compile ulang `Whisper.exe` agar secara eksplisit membersihkan variabel `ELECTRON_RUN_AS_NODE` di level process sehingga widget selalu muncul normal saat di-double click.
+  - Mematikan background task dev process sehingga tidak memblokir single-instance lock aplikasi.
 - **Resilience di `main.js` & `checkForGitHubUpdates`:**
   - Menambahkan impor `execSync` yang hilang di `child_process`.
   - Melindungi pengecekan git commit dan GitHub Updates dengan fallback aman dan timeout request agar tidak pernah mengalami uncaught error.

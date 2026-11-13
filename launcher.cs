@@ -6,6 +6,7 @@ using System.Windows.Forms;
 class WhisperLauncher {
     [STAThread]
     static void Main() {
+        Environment.SetEnvironmentVariable("ELECTRON_RUN_AS_NODE", null, EnvironmentVariableTarget.Process);
         string baseDir = AppDomain.CurrentDomain.BaseDirectory;
         string electronExe = Path.Combine(baseDir, "node_modules", "electron", "dist", "electron.exe");
 
