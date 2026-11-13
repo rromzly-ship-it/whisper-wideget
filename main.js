@@ -1,12 +1,21 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, clipboard, nativeImage, globalShortcut, screen, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { exec, execFile, spawn } = require('child_process');
+const { exec, execFile, spawn, execSync } = require('child_process');
 const { routeCommandWithGroq, listChromeTabs, probeApiQuota } = require('./assistant');
 const tts = require('./tts');
 const vision = require('./vision');
 const memory = require('./memory');
 const usage = require('./usage');
+
+process.on('uncaughtException', (err) => {
+  try { fs.appendFileSync(path.join(__dirname, 'main_crash.log'), `[UNCAUGHT] ${err.stack || err}\n`); } catch {}
+  console.error('[UNCAUGHT]', err);
+});
+process.on('unhandledRejection', (reason) => {
+  try { fs.appendFileSync(path.join(__dirname, 'main_crash.log'), `[REJECTION] ${reason?.stack || reason}\n`); } catch {}
+  console.error('[REJECTION]', reason);
+});
 
 // Ensure WebAudio never stays suspended when Wis is triggered via global shortcut
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
@@ -316,21 +325,25 @@ function hideSpeechBubble() {
 async function checkForGitHubUpdates() {
   try {
     const https = require('https');
-    const localCommit = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+    let localCommit = '';
+    try {
+      localCommit = execSync('git rev-parse HEAD', { encoding: 'utf8', timeout: 2000 }).trim();
+    } catch {}
+
     const options = {
       hostname: 'api.github.com',
       path: '/repos/rromzly-ship-it/whisper-wideget/commits/main',
       headers: { 'User-Agent': 'Whisper-Floating-Widget' }
     };
-    https.get(options, (res) => {
+    const req = https.get(options, (res) => {
       let data = '';
-      res.on('data', chunk => data += chunk);
+      res.on('data', chunk => { data += chunk; });
       res.on('end', () => {
         try {
           if (res.statusCode === 200) {
             const json = JSON.parse(data);
             const remoteSha = json.sha;
-            if (remoteSha && remoteSha !== localCommit) {
+            if (remoteSha && localCommit && remoteSha !== localCommit) {
               const msg = (json.commit && json.commit.message) ? json.commit.message.split('\n')[0] : 'Pembaruan terbaru';
               showSpeechBubble({
                 title: '🎉 Update Baru di GitHub!',
@@ -346,7 +359,9 @@ async function checkForGitHubUpdates() {
           }
         } catch (_) {}
       });
-    }).on('error', () => {});
+    });
+    req.on('error', () => {});
+    req.setTimeout(4000, () => { req.destroy(); });
   } catch (_) {}
 }
 
@@ -695,7 +710,8 @@ function openSettings() {
   }
 }
 
-function gracefulQuit() {
+function gracefulQuit(caller = 'unknown') {
+  try { fs.appendFileSync(path.join(__dirname, 'main_crash.log'), `[QUIT] gracefulQuit called by ${caller} at ${new Error().stack}\n`); } catch {}
   if (isQuittingFlow) return;
   isQuittingFlow = true;
   stopAutoScroll();
@@ -1405,6 +1421,7 @@ ipcMain.handle('paste-text', async (event, text) => {
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
+  try { fs.appendFileSync(path.join(__dirname, 'main_crash.log'), `[LOCK] Failed to acquire single instance lock at ${new Date().toISOString()}\n`); } catch {}
   app.quit();
 } else {
   app.on('second-instance', () => {

@@ -12,6 +12,9 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
   - Membersihkan duplikasi elemen pada array `SKILL_MODULES`.
 - **Perbaikan SyntaxError di `eye.js`:**
   - Menghapus deklarasi ganda variabel renderer (`activeTtsAnalyser`, `lastInteractionTime`, `isAngry`, `angryTimer`).
+- **Resilience di `main.js` & `checkForGitHubUpdates`:**
+  - Menambahkan impor `execSync` yang hilang di `child_process`.
+  - Melindungi pengecekan git commit dan GitHub Updates dengan fallback aman dan timeout request agar tidak pernah mengalami uncaught error.
 - **Verifikasi & Eksekusi:**
   - Seluruh file JS (`main.js`, `assistant.js`, `skills/index.js`, `eye.js`, dll.) telah divalidasi dengan `node -c` dan berhasil berjalan mulus tanpa popup error.
 
