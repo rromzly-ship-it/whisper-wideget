@@ -5,20 +5,50 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win portable",
+    "build": "electron-builder --win nsis",
+    "dist": "electron-builder --win nsis",
+    "dist:portable": "electron-builder --win portable",
     "sync": "node sync.js",
     "check-update": "node sync.js --check"
   },
   "build": {
     "appId": "com.whisper.floatingwidget",
     "productName": "WhisperWidget",
+    "directories": {
+      "output": "dist"
+    },
     "win": {
-      "target": "portable",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "icon.ico"
     },
-    "portable": {
-      "artifactName": "${productName}-Portable.exe"
-    }
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Whisper Widget",
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "uninstallDisplayName": "Whisper Widget"
+    },
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!scratch/**",
+      "!*.log",
+      "!config.json",
+      "!voice-profile.json"
+    ],
+    "asarUnpack": [
+      "piper/**/*",
+      "injector.exe"
+    ]
   },
   "keywords": [
     "whisper",
@@ -30,6 +60,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^33.2.1"
+    "electron": "^33.2.1",
+    "electron-builder": "^26.18.0"
   }
 }

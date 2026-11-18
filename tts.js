@@ -4,7 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-const piperDir = path.join(__dirname, 'piper');
+const baseDir = __dirname.replace('app.asar', 'app.asar.unpacked');
+const piperDir = path.join(baseDir, 'piper');
 const piperExeCandidates = [
   path.join(piperDir, 'piper', 'piper.exe'),
   path.join(piperDir, 'piper.exe')

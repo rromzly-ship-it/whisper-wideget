@@ -178,8 +178,8 @@
     }
   ],
   "activeApp": {
-    "process": "electron",
-    "title": "Wis Speech Bubble",
-    "updatedAt": "2026-11-16T09:21:54.071Z"
+    "process": "explorer",
+    "title": "whisper-floating-widget - File Explorer",
+    "updatedAt": "2026-11-18T09:19:03.006Z"
   }
 }

@@ -502,7 +502,7 @@ function stopTouchPenTracker() {
 
 function startTouchPenTracker() {
   stopTouchPenTracker();
-  const injPath = path.join(__dirname, 'injector.exe');
+  const injPath = path.join(__dirname.replace('app.asar', 'app.asar.unpacked'), 'injector.exe');
   if (!fs.existsSync(injPath)) return;
 
   try {

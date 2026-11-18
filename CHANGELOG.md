@@ -6,6 +6,17 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ## [v1.1.0] - 2026-11-18 (Pembaruan Terkini)
 
+### 📦 Windows Standalone Setup Installer (NSIS Package - Tanpa Perlu `npm install`):
+- **Installer Windows Mandiri (`WhisperWidget-Setup-1.1.0.exe`):**
+  - Mengonfigurasi `electron-builder` dengan target NSIS di [package.json](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/package.json) untuk menghasilkan installer Windows resmi (~212 MB).
+  - Pengguna di komputer lain kini **tidak perlu** menginstal Node.js, Git, atau menjalankan perintah `npm install`. Cukup mengunduh satu file `WhisperWidget-Setup-1.1.0.exe` dan melakukan klik ganda (*double click*) layaknya instalasi aplikasi Windows modern.
+  - Dilengkapi wizard instalasi standar: pemilihan direktori instalasi, opsi pembuatan shortcut Desktop dan Start Menu, serta uninstaller bersih di *Control Panel / Apps & Features*.
+- **Native Unpacked Architecture (`asarUnpack`):**
+  - Mengonfigurasi ekstrasi otomatis (*unpacked archive*) untuk binary native Windows: engine neural TTS offline [piper](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/piper) beserta model suara ONNX dan driver sentuh [injector.exe](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/injector.exe).
+  - Memperbarui resolusi path binary di [main.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/main.js) dan [tts.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/tts.js) menggunakan `.replace('app.asar', 'app.asar.unpacked')` agar binary tetap dieksekusi secara native tanpa konflik virtual file system Chromium.
+- **Proteksi Data Kredensial:**
+  - File rahasia `config.json` dan `voice-profile.json` secara ketat di-exclude dari proses packaging installer, menjaga keamanan API Key pengguna saat installer dibagikan.
+
 ### ✨ Wis Jump-To-Mic Swap Mode & Instant Zero-Delay Microphone Activation:
 - **Aktivasi Mikrofon Instan Tanpa Jeda / Delay (Zero Perceived Latency):**
   - Mengubah transisi status UI pada tombol mikrofon [widget.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/widget.js): `setState('recording')` kini dipanggil secara instan (0ms) begitu tombol diklik, sehingga tombol langsung berubah merah dengan ikon kotak tanpa menunggu hardware microphone selesai negosiasi.
