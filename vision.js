@@ -534,7 +534,12 @@ async function glideWisToTarget({ eyeWindow, widgetWindow, targetDipX, targetDip
 
     if (widgetWindow && !widgetWindow.isDestroyed()) {
       const [wx, wy] = widgetWindow.getPosition();
-      eyeWindow.setPosition(wx + eyeOffsetX, wy + eyeOffsetY);
+      if (!widgetWindow.isVisible()) {
+        // Wis is currently in mic slot mode
+        eyeWindow.setPosition(wx, wy);
+      } else {
+        eyeWindow.setPosition(wx + eyeOffsetX, wy + eyeOffsetY);
+      }
     } else {
       eyeWindow.setPosition(startX, startY);
     }

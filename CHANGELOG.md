@@ -4,7 +4,23 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.0.9] - 2026-11-18 (Pembaruan Terkini)
+## [v1.1.0] - 2026-11-18 (Pembaruan Terkini)
+
+### ✨ Wis Jump-To-Mic Swap Mode & Instant Zero-Delay Microphone Activation:
+- **Aktivasi Mikrofon Instan Tanpa Jeda / Delay (Zero Perceived Latency):**
+  - Mengubah transisi status UI pada tombol mikrofon [widget.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/widget.js): `setState('recording')` kini dipanggil secara instan (0ms) begitu tombol diklik, sehingga tombol langsung berubah merah dengan ikon kotak tanpa menunggu hardware microphone selesai negosiasi.
+  - Menerapkan teknik *Audio Stream Pre-Warming* pada event `pointerdown`: saat jari atau mouse menyentuh tombol, proses perolehan stream `getUserMedia` sudah berjalan di latar belakang selama durasi klik (~100-200ms), sehingga saat tombol dilepas (`pointerup`), hardware audio WASAPI sudah siap merekam tanpa jeda cold negotiation.
+  - Penggunaan kembali (*reuse*) instans `AudioContext` agar tidak membuang waktu membuat dan menutup konteks audio Windows berulang-ulang.
+- **Fitur Baru: Wis Jump & Replace Microphone (Karakter Menempati Posisi Mikrofon):**
+  - **Animasi Loncat Masuk (*Squash & Stretch Bounce*):** Saat Wis yang sedang bertengger/tidur di atas mikrofon diklik, Wis melompat turun dengan animasi kartun elastis (`@keyframes wis-jump-in`) menuju koordinat tombol mikrofon.
+  - **Mikrofon Tersembunyi Otomatis (*Auto-Hide*):** Jendela tombol mikrofon (`widgetWindow`) disembunyikan (*hidden*) saat Wis aktif, sehingga Wis sepenuhnya menggantikan posisi mikrofon.
+  - **Membesar Seukuran Mikrofon (58px / Window 80x80px):** Jendela Wis (`eyeWindow`) membesar dari 64x64px menjadi 80x80px, dan diameter lingkaran kepala Wis membesar dari 32px menjadi 58px (persis seukuran tombol mikrofon) dengan efek cahaya *blue glowing pulse* saat mendengarkan.
+  - **Animasi Loncat Kembali (*Jump-Out & Perch Return*):** Ketika sesi perintah selesai atau Wis dinonaktifkan (diklik lagi untuk berhenti atau idle timeout), Wis melompat kembali ke atas mikrofon (`@keyframes wis-jump-out`), ukurannya kembali ke 32px (64x64px), dan tombol mikrofon otomatis muncul kembali (*unhide*).
+  - Penyesuaian cerdas penempatan bubble ucapan [main.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/main.js) dan sinkronisasi teleportasi visual [vision.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/vision.js).
+
+---
+
+## [v1.0.9] - 2026-11-18
 
 ### 🚀 Perbaikan Startup Launcher (`Whisper.exe` & `Whisper.vbs`) dan Auto-Recovery Node Environment:
 - **Auto-Recovery dari `ELECTRON_RUN_AS_NODE` di `main.js`:**

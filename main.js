@@ -60,6 +60,7 @@ function logApp(msg) {
 
 let widgetWindow = null;
 let eyeWindow = null;
+let isWisInMicSlot = false;
 let menuWindow = null;
 let settingsWindow = null;
 let isSettingsLoaded = false;
@@ -320,11 +321,13 @@ function updateBubblePlacement() {
 
   const bw = 260;
   const bh = 85;
-  let bx = Math.round(ex + 32 - bw / 2);
-  let by = Math.round(ey - bh - 4);
+  const currentEyeWidth = isWisInMicSlot ? 80 : 64;
+  const currentEyeHeight = isWisInMicSlot ? 80 : 64;
+  let bx = Math.round(ex + currentEyeWidth / 2 - bw / 2);
+  let by = Math.round(ey - bh - 6);
 
   if (by < areaY) {
-    by = ey + 64 + 4;
+    by = ey + currentEyeHeight + 6;
   }
   bx = Math.max(areaX + 8, Math.min(areaX + areaW - bw - 8, bx));
   bubbleWindow.setBounds({ x: bx, y: by, width: bw, height: bh });
@@ -415,7 +418,11 @@ function moveWidgetTo(nx, ny) {
   }
   widgetWindow.setBounds({ x: rx, y: ry, width: 80, height: 80 });
   if (eyeWindow && !eyeWindow.isDestroyed()) {
-    eyeWindow.setBounds({ x: rx + EYE_OFFSET_X, y: ry + EYE_OFFSET_Y, width: 64, height: 64 });
+    if (isWisInMicSlot) {
+      eyeWindow.setBounds({ x: rx, y: ry, width: 80, height: 80 });
+    } else {
+      eyeWindow.setBounds({ x: rx + EYE_OFFSET_X, y: ry + EYE_OFFSET_Y, width: 64, height: 64 });
+    }
   }
   if (bubbleWindow && !bubbleWindow.isDestroyed() && bubbleWindow.isVisible()) {
     updateBubblePlacement();
@@ -928,6 +935,32 @@ ipcMain.on('open-radial-menu', () => {
 
 ipcMain.on('hide-radial-menu', () => {
   requestCloseMenu('mic-click');
+});
+
+// Wis Jump to Mic & Replace Microphone Slot Mode
+ipcMain.on('wis-enter-mic-slot', () => {
+  if (isWisInMicSlot) return;
+  isWisInMicSlot = true;
+  if (!widgetWindow || widgetWindow.isDestroyed() || !eyeWindow || eyeWindow.isDestroyed()) return;
+
+  const [wx, wy] = widgetWindow.getPosition();
+  widgetWindow.hide();
+  eyeWindow.setBounds({ x: wx, y: wy, width: 80, height: 80 });
+  eyeWindow.webContents.send('wis-slot-mode', { inSlot: true });
+  updateBubblePlacement();
+});
+
+ipcMain.on('wis-leave-mic-slot', () => {
+  if (!isWisInMicSlot) return;
+  isWisInMicSlot = false;
+  if (!widgetWindow || widgetWindow.isDestroyed() || !eyeWindow || eyeWindow.isDestroyed()) return;
+
+  const [ex, ey] = eyeWindow.getPosition();
+  widgetWindow.setBounds({ x: ex, y: ey, width: 80, height: 80 });
+  widgetWindow.show();
+  eyeWindow.setBounds({ x: ex + EYE_OFFSET_X, y: ey + EYE_OFFSET_Y, width: 64, height: 64 });
+  eyeWindow.webContents.send('wis-slot-mode', { inSlot: false });
+  updateBubblePlacement();
 });
 
 ipcMain.on('menu-will-quit', () => {

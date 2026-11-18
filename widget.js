@@ -11,6 +11,16 @@ let widgetAudioCtx = null;
 let widgetAnalyser = null;
 let peakDbRecorded = -100;
 let vadMonitorTimer = null;
+let warmStreamPromise = null;
+
+function cleanupWarmStream() {
+  if (warmStreamPromise) {
+    warmStreamPromise.then((s) => {
+      if (s) s.getTracks().forEach((t) => t.stop());
+    }).catch(() => {});
+    warmStreamPromise = null;
+  }
+}
 
 // Initial load config
 ipcRenderer.invoke('get-config').then(cfg => {
@@ -116,6 +126,11 @@ window.addEventListener('pointerdown', (e) => {
   moveInFlight = false;
   moveSettledTs = 0;
 
+  // Pre-warm microphone stream on pointerdown for instant 0ms recording latency upon click
+  if (currentState === 'idle' && !warmStreamPromise && appConfig && appConfig.apiKey) {
+    warmStreamPromise = getAudioStream().catch(() => null);
+  }
+
   if (e.pointerType === 'touch' || e.pointerType === 'pen') {
     cancelHoldTimers();
     holdVisualTimer = setTimeout(() => {
@@ -150,6 +165,7 @@ window.addEventListener('pointermove', async (e) => {
     if (dist <= threshold) return;
 
     // Enter DRAGGING mode: cancel hold timers/ring & hand off to 120Hz native main-process drag
+    cleanupWarmStream();
     gestureMode = 'dragging';
     cancelHoldTimers();
     try { btnContainer.setPointerCapture(e.pointerId); } catch {}
@@ -208,6 +224,7 @@ function finishPointerInteraction(e) {
 
 window.addEventListener('pointerup', finishPointerInteraction);
 window.addEventListener('pointercancel', (e) => {
+  cleanupWarmStream();
   if (gestureMode === 'dragging') lastDragEndTime = Date.now();
   dbgWidget(`pointercancel mode=${gestureMode} type=${e.pointerType}`);
   cancelHoldTimers();
@@ -277,15 +294,34 @@ async function startRecording() {
     return;
   }
 
+  // Instant visual state feedback (0ms perceived latency on click)
+  setState('recording');
+
   try {
-    const stream = await getAudioStream();
+    const stream = await (warmStreamPromise || getAudioStream());
+    warmStreamPromise = null;
+
+    if (!stream) {
+      throw new Error('Tidak dapat memperoleh stream audio mikrofon.');
+    }
+
+    // In case the user clicked to cancel while hardware was initializing
+    if (currentState !== 'recording') {
+      stream.getTracks().forEach(track => track.stop());
+      return;
+    }
 
     audioChunks = [];
     peakDbRecorded = -100;
 
-    // Attach Analyser for Noise Gate Level Tracking
+    // Attach Analyser for Noise Gate Level Tracking (reuse audio context)
     try {
-      widgetAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (!widgetAudioCtx || widgetAudioCtx.state === 'closed') {
+        widgetAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (widgetAudioCtx.state === 'suspended') {
+        await widgetAudioCtx.resume();
+      }
       const source = widgetAudioCtx.createMediaStreamSource(stream);
       widgetAnalyser = widgetAudioCtx.createAnalyser();
       widgetAnalyser.fftSize = 512;
@@ -318,17 +354,11 @@ async function startRecording() {
         clearInterval(vadMonitorTimer);
         vadMonitorTimer = null;
       }
-      if (widgetAudioCtx) {
-        try { await widgetAudioCtx.close(); } catch {}
-        widgetAudioCtx = null;
-        widgetAnalyser = null;
-      }
       stream.getTracks().forEach(track => track.stop());
       await processAudio();
     };
 
     mediaRecorder.start();
-    setState('recording');
   } catch (err) {
     console.error('Error accessing microphone:', err);
     alert('Tidak dapat mengakses mikrofon: ' + err.message);
@@ -337,9 +367,12 @@ async function startRecording() {
 }
 
 async function stopRecording() {
+  cleanupWarmStream();
   if (mediaRecorder && mediaRecorder.state !== 'inactive') {
     setState('processing');
     mediaRecorder.stop();
+  } else if (currentState === 'recording') {
+    setState('idle');
   }
 }
 

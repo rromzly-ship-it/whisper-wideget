@@ -50,6 +50,22 @@ ipcRenderer.on('eye-shrink-out', () => {
   container.classList.add('closing');
 });
 
+ipcRenderer.on('wis-slot-mode', (event, { inSlot }) => {
+  if (inSlot) {
+    container.classList.remove('is-sleeping');
+    container.classList.remove('jumping-out');
+    container.classList.add('in-mic-slot');
+  } else {
+    if (container.classList.contains('in-mic-slot')) {
+      container.classList.remove('in-mic-slot');
+      container.classList.add('jumping-out');
+      setTimeout(() => {
+        container.classList.remove('jumping-out');
+      }, 350);
+    }
+  }
+});
+
 // =========================================================================
 // Wis Orbiting Pointer & Glide / Vanish / Reappear Visuals
 // =========================================================================
@@ -784,6 +800,13 @@ async function startAssistantSession() {
     return;
   }
 
+  // Wis loncat ke posisi mikrofon dan menggantikan tombol mikrofon
+  container.classList.remove('is-sleeping');
+  container.classList.remove('jumping-out');
+  container.classList.add('in-mic-slot');
+  expression = 'senang';
+  ipcRenderer.send('wis-enter-mic-slot');
+
   try {
     await initMicAnalyser();
     activeSession = true;
@@ -807,6 +830,17 @@ function stopAssistantSession(reason = 'user') {
     dbgLog(`session stop reason=${reason}`);
   }
   activeSession = false;
+
+  // Wis loncat kembali ke posisi bertengger di atas mikrofon
+  if (container.classList.contains('in-mic-slot')) {
+    container.classList.remove('in-mic-slot');
+    container.classList.add('jumping-out');
+    setTimeout(() => {
+      container.classList.remove('jumping-out');
+    }, 350);
+  }
+  ipcRenderer.send('wis-leave-mic-slot');
+
   vadHasSpoken = false;
   segmentSeq++;
   ignoreNextStop = true;
