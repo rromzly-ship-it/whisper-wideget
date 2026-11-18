@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+const { cleanWhisperTranscript } = require('./whisper-cleaner');
 
 const btnContainer = document.getElementById('btn-container');
 const btnCircle = document.getElementById('btn-circle');
@@ -397,6 +398,8 @@ async function processAudio() {
     formData.append('file', audioBlob, 'speech.webm');
     formData.append('model', appConfig.model || 'whisper-large-v3-turbo');
     formData.append('response_format', 'json');
+    formData.append('temperature', '0.0');
+    formData.append('prompt', 'Dikte suara bahasa Indonesia dan English. Teks langsung dan akurat tanpa teks penutup.');
     if (appConfig.language && appConfig.language !== 'auto') {
       formData.append('language', appConfig.language);
     }
@@ -415,11 +418,15 @@ async function processAudio() {
     }
 
     const result = await response.json();
-    const transcribedText = result.text ? result.text.trim() : '';
+    const rawText = result.text ? result.text.trim() : '';
+    const transcribedText = cleanWhisperTranscript(rawText);
+    dbgWidget(`Whisper raw="${rawText}" cleaned="${transcribedText}"`);
 
     if (transcribedText) {
       // Auto-inject text into active application
       await ipcRenderer.invoke('paste-text', transcribedText);
+    } else if (rawText) {
+      dbgWidget(`Discarded silence or hallucination: "${rawText}"`);
     }
   } catch (err) {
     console.error('Groq Whisper transcription failed:', err);

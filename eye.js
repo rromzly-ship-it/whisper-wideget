@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+const { cleanWhisperTranscript } = require('./whisper-cleaner');
 
 const container = document.getElementById('eye-container');
 const eyeCircle = document.getElementById('eye-circle');
@@ -1069,6 +1070,7 @@ async function processVoiceCommand(audioBlob, segPeak = 0) {
     formData.append('file', audioBlob, 'command.webm');
     formData.append('model', appConfig.model || 'whisper-large-v3');
     formData.append('response_format', 'verbose_json');
+    formData.append('temperature', '0.0');
     formData.append('prompt', promptHints || 'Wis ID & EN: Chrome, CorelDRAW, YouTube, WhatsApp, Word, iTrade, EsteraOne, telusuri, scroll, berhenti, zoom in, zoom out.');
     if (appConfig.language && appConfig.language !== 'auto') {
       formData.append('language', appConfig.language);
@@ -1088,7 +1090,8 @@ async function processVoiceCommand(audioBlob, segPeak = 0) {
     }
 
     const result = await response.json();
-    const transcript = result.text ? result.text.trim() : '';
+    const rawTranscript = result.text ? result.text.trim() : '';
+    const transcript = cleanWhisperTranscript(rawTranscript);
     const detectedLang = String(result.language || '').trim().toLowerCase();
     const audioDurationSec = Number(result.duration || 0);
     const segs = Array.isArray(result.segments) ? result.segments : [];
@@ -1108,7 +1111,7 @@ async function processVoiceCommand(audioBlob, segPeak = 0) {
     const hasCoreCommandWord = /\b(buka|klik|putar|play|pause|post|telusuri|cari|scroll|zoom|chrome|youtube|whatsapp|corel|word|alt|tab|stop|berhenti|ingat|belajar|pelajari|minimize|maximize|fullscreen|layar penuh|wis|wish|high|hai|halo|hi|back|kembali)\b/i.test(transcript);
     const isUnexpectedScript = /[\u0400-\u04FF\u0600-\u06FF\u0900-\u0E7F\u1EA0-\u1EFF\u01A0\u01AF\u0110\u0111\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF¡¿ãõ]/i.test(transcript);
     const isForeignLangNoise = isAutoLang && !isAllowedLang && (segPeak < 0.095 || words.length > 7 || !hasCoreCommandWord);
-    const isCommonHallucination = /^(3d printing|thank you|thank you for watching|thanks for watching|please subscribe|subscribe to my channel|like and subscribe|subtitles by|wondering why|wondering what|mbc|bye|you|okay|in|on|at|to|it|is|the|a|an|ing|e a[ií]|ol[aá]|hmm+|uh+|um+|ah+)$/i.test(cleanForNoise);
+    const isCommonHallucination = /^(3d printing|terima kasih.*|thank you.*|thanks.*|please subscribe|subscribe.*|like and subscribe|subtitles by.*|hai|halo|bye|you|okay|in|on|at|to|it|is|the|a|an|ing|e a[ií]|ol[aá]|hmm+|uh+|um+|ah+)$/i.test(cleanForNoise);
     const isPromptEcho = /\b(wis id|zoom in.*zoom out|chrome.*coreldraw.*youtube|scroll.*berhenti)\b/i.test(cleanForNoise) && segPeak < 0.08;
     const isTinyFragment = words.length === 1 && cleanForNoise.length <= 2 && !/^(ok|no|ya|hi)$/i.test(cleanForNoise);
     const isVideoPlaybackNarration = (words.length >= 16 && /^(verification of|watching this video|in this video|subscribe|welcome back)/i.test(transcript));

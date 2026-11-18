@@ -4,6 +4,7 @@ package-lock.json
 
 # Environment & Sensitive Configs
 config.json
+voice-profile.json
 *.env
 *.env.local
 

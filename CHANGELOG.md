@@ -4,7 +4,29 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.0.7] - 2026-11-13 (Pembaruan Terkini)
+## [v1.0.8] - 2026-11-18 (Pembaruan Terkini)
+
+### 🛡️ Eliminasi Total Halusinasi Jeda Hening ("Hai", "Terima Kasih") & Repetition Loop Whisper:
+- **Investigasi Akar Masalah Halusinasi Whisper:**
+  - Whisper OpenAI adalah model sequence-to-sequence autoregresif yang dilatih dari ratusan ribu jam video publik (YouTube) lengkap dengan teks penutup dan pembuka.
+  - Saat mikrofon diaktifkan namun ada jeda diam (*silence/low energy*) atau klik mikrofon di awal/akhir rekaman, model memprediksi token probabilitas tertinggi dari korpus internet: kata pembuka *"Hai"* / *"Halo"* dan kata penutup video *"Terima kasih"* / *"Terima kasih sudah menonton"* / *"Thank you for watching"*.
+  - Dalam kondisi entropi rendah (audio hening/desis), decoder autoregresif terjebak dalam *degeneration loop*, menghasilkan pengulangan token tak berujung seperti *"hai hai hai hai..."*.
+- **Solusi Berlapis 3 Tingkat (Three-Layer Protection):**
+  1. **Sampling Deterministik (`temperature: 0.0`) & Prompt Conditioning:**
+     - Menambahkan parameter `temperature: '0.0'` pada request API Whisper di [widget.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/widget.js) dan [eye.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/eye.js) guna mengunci decoding greedy dan mematikan stochastic sampling saat audio hening.
+     - Menyematkan prompt conditioning dikte (*"Dikte suara bahasa Indonesia dan English. Teks langsung dan akurat tanpa teks penutup."*) agar model fokus pada teks lisan murni dan tidak memunculkan teks outro/subtitle YouTube.
+  2. **Modul Pembersih Halusinasi Khusus ([whisper-cleaner.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/whisper-cleaner.js)):**
+     - *Solitary Filter:* Mendeteksi dan membuang total (menjadi string kosong `""`) jika hasil transkripsi hanya berupa kata hening tunggal (*"Hai"*, *"Halo"*, *"Terima kasih"*, *"Terima kasih sudah menonton"*, *"Thank you for watching"*, *"Please subscribe"*, *"3d printing"*, dll).
+     - *Repetition Loop Buster:* Memotong dan membersihkan pola perulangan kata beruntun seperti `hai hai hai...`, `dan dan dan...`, dsb.
+     - *Leading & Trailing Scrub:* Menghapus kata sapaan/penutup liar yang menempel di ujung kalimat akibat jeda hening sesaat sebelum/sesudah pengguna berbicara.
+  3. **Auto-Discard Guard di Widget Dikte:**
+     - Hasil transkripsi yang terdeteksi sebagai halusinasi/hening otomatis dibuang sehingga tidak ada teks sampah yang ter-paste ke aplikasi pengguna.
+- **Privasi Profil Akustik:**
+  - Menambahkan `voice-profile.json` ke `.gitignore` agar sidik suara biometrik pribadi pengguna tidak ter-commit ke repositori publik.
+
+---
+
+## [v1.0.7] - 2026-11-13
 
 ### 🚀 Redesign Side Menu Pengaturan, Noise Gate (Tahap 1), & Voice Identity Kunci Suara Pemilik (Tahap 2):
 - **Redesign UI Menu Pengaturan: Side Menu Modern & Collapsible:**

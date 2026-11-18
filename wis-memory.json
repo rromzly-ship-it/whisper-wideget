@@ -2,90 +2,6 @@
   "facts": [],
   "history": [
     {
-      "ts": "2026-11-13T01:29:09.843Z",
-      "user": "Lagi",
-      "summary": "Scroll lagi",
-      "app": "chrome ((363) cara membuat kue - YouTube - Google Chrome)",
-      "action": "scroll"
-    },
-    {
-      "ts": "2026-11-13T01:29:14.319Z",
-      "user": "Scroll ke bawah lagi",
-      "summary": "Scroll ke bawah",
-      "app": "chrome ((363) cara membuat kue - YouTube - Google Chrome)",
-      "action": "scroll"
-    },
-    {
-      "ts": "2026-11-13T01:29:18.494Z",
-      "user": "Gulir ke bawah lagi",
-      "summary": "Gulir ke bawah",
-      "app": "chrome ((363) cara membuat kue - YouTube - Google Chrome)",
-      "action": "scroll"
-    },
-    {
-      "ts": "2026-11-13T01:29:37.954Z",
-      "user": "Tolong screenshot layar",
-      "summary": "Buka Snipping Tool untuk screenshot area layar (Win+Shift+S)",
-      "app": "chrome ((363) cara membuat kue - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-13T01:37:08.053Z",
-      "user": "buka chrome",
-      "summary": "Buka chrome",
-      "app": "chrome",
-      "action": "open_app"
-    },
-    {
-      "ts": "2026-11-13T01:37:13.309Z",
-      "user": "Cari Artaks",
-      "summary": "Cari Artaks",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
-      "ts": "2026-11-13T01:45:02.430Z",
-      "user": "Hai Wis, buka chrome",
-      "summary": "Buka chrome",
-      "app": "chrome",
-      "action": "open_app"
-    },
-    {
-      "ts": "2026-11-13T01:45:09.118Z",
-      "user": "buka youtube yang udah ada aja di tab ini",
-      "summary": "Buka YouTube cari yang udah ada  di tab ini",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
-      "ts": "2026-11-13T01:45:18.863Z",
-      "user": "cari 420",
-      "summary": "Buka pencarian",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
-      "ts": "2026-11-13T01:45:27.286Z",
-      "user": "bullet ke bawah",
-      "summary": "Scroll ke bawah",
-      "app": "chrome ((363) 420 - YouTube - Google Chrome)",
-      "action": "scroll"
-    },
-    {
-      "ts": "2026-11-13T01:45:31.687Z",
-      "user": "Play",
-      "summary": "Putar video",
-      "app": "chrome ((363) 420 - YouTube - Google Chrome)",
-      "action": "hotkey"
-    },
-    {
-      "ts": "2026-11-13T01:45:36.286Z",
-      "user": "Video Argumentasi Dimensi",
-      "summary": "Putar video",
-      "app": "chrome ((363) 420 - YouTube - Google Chrome)",
-      "action": "vision_click"
-    },
-    {
       "ts": "2026-11-13T01:46:13.242Z",
       "user": "Klik Payung Teduh Untuk Perempuan",
       "summary": "Buka YouTube",
@@ -175,11 +91,95 @@
       "summary": "Video dijeda",
       "app": "chrome ((368) YouTube - Google Chrome)",
       "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T08:23:17.201Z",
+      "user": "buka youtube dan",
+      "summary": "Buka YouTube cari dan",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-13T08:23:25.444Z",
+      "user": "pause video",
+      "summary": "Jeda video",
+      "app": "Browser",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-13T08:23:30.221Z",
+      "user": "cari pori peng",
+      "summary": "cari pori peng",
+      "app": "chrome ((368) dan - YouTube - Google Chrome)",
+      "action": "vision_click"
+    },
+    {
+      "ts": "2026-11-14T14:45:05.174Z",
+      "user": "lakukan pengambilan gambar layar",
+      "summary": "Buka SnippingTool",
+      "app": "SnippingTool",
+      "action": "open_app"
+    },
+    {
+      "ts": "2026-11-14T14:45:10.545Z",
+      "user": "pause video",
+      "summary": "Jeda video",
+      "app": "SnippingTool",
+      "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-16T09:20:50.551Z",
+      "user": "Hai Wis, buka Youtube",
+      "summary": "Buka YouTube",
+      "app": "Browser",
+      "action": "open_url"
+    },
+    {
+      "ts": "2026-11-16T09:21:02.009Z",
+      "user": "for repaint",
+      "summary": "Refresh layar",
+      "app": "chrome ((453) YouTube - Google Chrome)",
+      "action": "window_control"
+    },
+    {
+      "ts": "2026-11-16T09:21:13.970Z",
+      "user": "Coba telusuri di Youtube",
+      "summary": "Cari video",
+      "app": "chrome ((453) YouTube - Google Chrome)",
+      "action": "vision_click_and_type"
+    },
+    {
+      "ts": "2026-11-16T09:21:33.803Z",
+      "user": "Tolong scroll ke bawah",
+      "summary": "Scroll down",
+      "app": "chrome ((453) Coba telusuri di Youtube - YouTube - Google Chrome)",
+      "action": "scroll"
+    },
+    {
+      "ts": "2026-11-16T09:21:40.931Z",
+      "user": "Play musik album nostalgia",
+      "summary": "musik nostalgia",
+      "app": "Browser",
+      "action": "youtube_search"
+    },
+    {
+      "ts": "2026-11-16T09:23:22.342Z",
+      "user": "Hi Wis",
+      "summary": "Halo, ada yang bisa Wis bantu?",
+      "app": "electron (Wis Speech Bubble)",
+      "action": "chat_reply"
+    },
+    {
+      "ts": "2026-11-16T09:23:30.580Z",
+      "user": "naikkan volume ke",
+      "summary": "volume naik",
+      "app": "electron (Wis Speech Bubble)",
+      "action": "hotkey"
     }
   ],
   "activeApp": {
-    "process": "chrome",
-    "title": "(368) YouTube - Google Chrome",
-    "updatedAt": "2026-11-13T08:03:59.557Z"
+    "process": "electron",
+    "title": "Wis Speech Bubble",
+    "updatedAt": "2026-11-16T09:21:54.071Z"
   }
 }
