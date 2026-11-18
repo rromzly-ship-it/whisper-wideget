@@ -4,7 +4,22 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.0.8] - 2026-11-18 (Pembaruan Terkini)
+## [v1.0.9] - 2026-11-18 (Pembaruan Terkini)
+
+### 🚀 Perbaikan Startup Launcher (`Whisper.exe` & `Whisper.vbs`) dan Auto-Recovery Node Environment:
+- **Auto-Recovery dari `ELECTRON_RUN_AS_NODE` di `main.js`:**
+  - Menambahkan mekanisme pendeteksi otomatis di baris awal [main.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/main.js#L1-L20): jika dijalankan dari environment VS Code / terminal yang mengekspor variabel `ELECTRON_RUN_AS_NODE=1`, aplikasi tidak lagi crash melainkan otomatis membersihkan environment dan me-relaunch proses ke mode GUI Electron resmi secara instan dan mulus.
+  - Memperbaiki deklarasi ganda modul `path` dan `fs`.
+- **Perbaikan Peluncur Windows (`Whisper.exe` & `Whisper.vbs`):**
+  - Mengoreksi penanganan window mode pada [Whisper.vbs](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/Whisper.vbs) dari mode tersembunyi (*SW_HIDE / 0*) ke mode tampilan aktif (*SW_SHOWNORMAL / 1*).
+  - Memperbarui [launcher.cs](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/launcher.cs) dengan mematikan `CreateNoWindow` agar Chromium dapat menginisialisasi subsistem jendela desktop tanpa hambatan.
+  - Meng-compile ulang [Whisper.exe](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/Whisper.exe) dengan target Windows GUI Executable dan ikon aplikasi.
+- **Focus On Second-Instance:**
+  - Jika aplikasi sudah berjalan dan pengguna mengklik ulang `Whisper.exe`, widget suara dan Wis langsung direstore dan difokuskan ke bagian depan layar (*bring to front*).
+
+---
+
+## [v1.0.8] - 2026-11-18
 
 ### 🛡️ Eliminasi Total Halusinasi Jeda Hening ("Hai", "Terima Kasih") & Repetition Loop Whisper:
 - **Investigasi Akar Masalah Halusinasi Whisper:**

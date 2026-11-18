@@ -1,6 +1,26 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, clipboard, nativeImage, globalShortcut, screen, shell } = require('electron');
+const electron = require('electron');
 const path = require('path');
 const fs = require('fs');
+
+// If executed in Node mode (e.g. ELECTRON_RUN_AS_NODE is active or via node main.js),
+// gracefully relaunch in real GUI Electron mode without ELECTRON_RUN_AS_NODE.
+if (typeof electron === 'string') {
+  const { spawn } = require('child_process');
+  const env = { ...process.env };
+  for (const k of Object.keys(env)) {
+    if (k.toLowerCase() === 'electron_run_as_node') delete env[k];
+  }
+  const child = spawn(electron, ['.'], {
+    cwd: __dirname,
+    env,
+    detached: true,
+    stdio: 'ignore'
+  });
+  child.unref();
+  process.exit(0);
+}
+
+const { app, BrowserWindow, Tray, Menu, ipcMain, clipboard, nativeImage, globalShortcut, screen, shell } = electron;
 const { exec, execFile, spawn, execSync } = require('child_process');
 const { routeCommandWithGroq, listChromeTabs, probeApiQuota } = require('./assistant');
 const tts = require('./tts');
@@ -19,7 +39,9 @@ process.on('unhandledRejection', (reason) => {
 });
 
 // Ensure WebAudio never stays suspended when Wis is triggered via global shortcut
-app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+if (app && app.commandLine) {
+  app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+}
 
 function getLogFilePath() {
   return path.join(app.getPath('userData'), 'assistant.log');
@@ -1516,11 +1538,12 @@ if (!gotTheLock) {
   app.quit();
 } else {
   app.on('second-instance', () => {
-    if (widgetWindow) {
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
       if (widgetWindow.isMinimized()) widgetWindow.restore();
       widgetWindow.show();
+      widgetWindow.focus();
     }
-    if (eyeWindow) {
+    if (eyeWindow && !eyeWindow.isDestroyed()) {
       eyeWindow.show();
     }
   });

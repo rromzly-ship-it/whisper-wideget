@@ -25,7 +25,7 @@ class WhisperLauncher {
         psi.Arguments = ".";
         psi.WorkingDirectory = baseDir;
         psi.UseShellExecute = false;
-        psi.CreateNoWindow = true;
+        psi.CreateNoWindow = false;
 
         if (psi.EnvironmentVariables.ContainsKey("ELECTRON_RUN_AS_NODE")) {
             psi.EnvironmentVariables.Remove("ELECTRON_RUN_AS_NODE");
