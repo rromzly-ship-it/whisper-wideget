@@ -9,17 +9,19 @@ module.exports = {
   description: 'Membalas sapaan seperti Hai Wis, Halo Wis, atau Apa Kabar secara instan (0 token).',
   examples: ['Hai Wis', 'High wish', 'Halo Wis', 'Apa kabar Wis'],
 
-  matchFastPlan({ rawLow }) {
+  matchFastPlan({ raw, rawLow, clean }) {
     if (
-      /^(?:hai|halo|hei|hi|hey|high)\s*(?:wis|wish|wiz|whiz)?$/i.test(rawLow) ||
-      /^(?:selamat\s+(?:pagi|siang|sore|malam)|apa\s+kabar|gimana\s+kabarnya)(?:\s+(?:wis|wish|wiz))?$/i.test(rawLow) ||
-      /^(?:tes|test|pagi|siang|malam)$/i.test(rawLow)
+      /^(?:hai|halo|hei|hi|hey|high)\s*(?:wis|wish|wiz|whiz|whisper|wisper)?$/i.test(rawLow) ||
+      /^(?:whisper|wisper|wis|wish|wiz)$/i.test(rawLow) ||
+      /^(?:(?:selamat\s+)?(?:pagi|siang|sore|malam)|apa\s+kabar|gimana\s+kabarnya)(?:\s+(?:wis|wish|wiz|whiz|whisper|wisper))?$/i.test(rawLow) ||
+      /^(?:tes|test|pagi|siang|malam)$/i.test(rawLow) ||
+      clean === ''
     ) {
       return {
-        steps: [{ action: 'chat_reply', reply: 'Halo, ada yang bisa Wis bantu?' }],
-        summary: 'Sapaan',
+        steps: [{ action: 'chat_reply', reply: 'Halo! Ada yang bisa Wis bantu?' }],
+        summary: 'Sapaan ramah',
         replyLang: 'id',
-        reply: 'Halo, ada yang bisa Wis bantu?'
+        reply: 'Halo! Ada yang bisa Wis bantu?'
       };
     }
     return null;

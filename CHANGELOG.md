@@ -4,7 +4,29 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.1.0] - 2026-11-18 (Pembaruan Terkini)
+## [v1.1.1] - 2026-11-18 (Pembaruan Terkini)
+
+### 🧠 Peningkatan Kecerdasan Memilah Variasi Perintah YouTube & Pencarian (Smart NLP Intent Parsing):
+- **Skenario 1 - Hanya Membuka YouTube:**
+  - Perintah natural seperti *"tolong buka Youtube"*, *"buka web youtube"*, *"buka youtube dong"* dieksekusi secara instan dengan membuka halaman utama YouTube (`open_url: https://www.youtube.com`).
+- **Skenario 2 - Membuka YouTube Sekaligus Mencari Konten:**
+  - Perintah natural seperti *"tolong buka Youtube cari lagu Fourtwnty"*, *"buka youtube cari video masak rendang"*, *"buka youtube tolong searching lagu noah"* otomatis dipetakan ke aksi `youtube_search` dengan query pencarian bersih dan alias cerdas (misal: "420" / "four twenty" -> "Fourtwnty").
+- **Skenario 3 - Pencarian Saat Sudah di YouTube / Di Kolom Pencarian:**
+  - Perintah manusiawi seperti *"Whisper tolong carikan saya video cara membuat rendang"*, *"tolong di kolom pencarian carikan saya lagu fourtwnty"*, *"tulis di kolom telusuri lagu slank"*, *"searching di youtube lagu dewa 19"*, *"carikan saya video tutorial blender"* kini dipetakan secara cerdas dan akurat ke `youtube_search`.
+  - Jika jendela atau tab YouTube sudah terbuka di layar, aplikasi tidak membuka tab baru yang menumpuk, melainkan langsung beralih ke YouTube, memfokuskan kotak pencarian/telusuri (`/`), menempelkan teks, dan menekan Enter.
+
+### 🛡️ Perbaikan Halusinasi Sapaan "Hai Whisper" (Eliminasi Jawaban "Sip di putra ya"):
+- **Investigasi & Akar Masalah:**
+  1. Pada [whisper-cleaner.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/whisper-cleaner.js), sapaan pembuka "Hai" dibersihkan sehingga menyisakan kata panggilan tunggal *"Whisper"*.
+  2. Modul sapaan [skills/greeting.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/skills/greeting.js) sebelumnya hanya mencocokkan *"Wis"*, *"Wish"*, *"Wiz"*, sehingga kata *"Whisper"* lolos tanpa tertangkap fast-plan.
+  3. Pada [assistant.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/assistant.js), template skema contoh JSON sistem prompt mencantumkan nilai default `"reply": "Sip, diputar ya"`. Karena input sapaan tidak memiliki aksi alat, model LLM menyalin contoh default tersebut berulang-ulang, yang kemudian dibaca oleh suara TTS Piper menjadi *"Sip, diputar ya"* (terdengar seperti *"sip di putra ya"*).
+- **Solusi Tuntas:**
+  1. Memperluas deteksi sapaan di [skills/greeting.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/skills/greeting.js) untuk mengenali *"Whisper"*, *"Wisper"*, *"Hai Whisper"*, *"Halo Whisper"*, *"Selamat pagi/siang/malam Whisper"*, maupun kata sapaan murni apa pun (`clean === ''`). Respon langsung instan: *"Halo! Ada yang bisa Wis bantu?"* (0 token, 0ms latency).
+  2. Menghapus contoh statis `"Sip, diputar ya"` dari template skema prompt di [assistant.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/assistant.js) dan menyematkan instruksi tegas agar respon selalu relevan dengan konteks instruksi pengguna.
+
+---
+
+## [v1.1.0] - 2026-11-18
 
 ### 📦 Windows Standalone Setup Installer (NSIS Package - Tanpa Perlu `npm install`):
 - **Installer Windows Mandiri (`WhisperWidget-Setup-1.1.0.exe`):**

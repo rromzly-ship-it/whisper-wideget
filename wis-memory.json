@@ -2,13 +2,6 @@
   "facts": [],
   "history": [
     {
-      "ts": "2026-11-13T01:46:13.242Z",
-      "user": "Klik Payung Teduh Untuk Perempuan",
-      "summary": "Buka YouTube",
-      "app": "Browser",
-      "action": "open_url"
-    },
-    {
       "ts": "2026-11-13T02:21:04.449Z",
       "user": "Buka Chrome",
       "summary": "Buka chrome",
@@ -175,11 +168,18 @@
       "summary": "volume naik",
       "app": "electron (Wis Speech Bubble)",
       "action": "hotkey"
+    },
+    {
+      "ts": "2026-11-18T10:48:47.192Z",
+      "user": "tolong buka youtube",
+      "summary": "Buka YouTube",
+      "app": "Browser",
+      "action": "open_url"
     }
   ],
   "activeApp": {
-    "process": "explorer",
-    "title": "whisper-floating-widget - File Explorer",
-    "updatedAt": "2026-11-18T09:19:03.006Z"
+    "process": "chrome",
+    "title": "(519) YouTube - Google Chrome",
+    "updatedAt": "2026-11-18T10:49:04.242Z"
   }
 }

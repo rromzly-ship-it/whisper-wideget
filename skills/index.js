@@ -45,7 +45,7 @@ function tryMatchFastSkill(transcript) {
 
   const rawLow = raw.toLowerCase().replace(/[.!?]+$/g, '').trim();
   const clean = rawLow
-    .replace(/^(?:(?:hai|halo|hei|hi|hey|high|oke|coba|tolong|wis|kawan|bro|sis)\s*[,.!]?\s*)+/i, '')
+    .replace(/^(?:(?:hai|halo|hei|hi|hey|high|oke|coba|tolong|wis|whisper|wisper|wish|wiz|kawan|bro|sis)\s*[,.!]?\s*)+/i, '')
     .replace(/[.!?]+$/g, '')
     .trim();
 

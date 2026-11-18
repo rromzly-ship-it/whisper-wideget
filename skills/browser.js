@@ -42,30 +42,51 @@ module.exports = {
 
   matchFastPlan({ clean }) {
     // 1. Buka YouTube langsung jika diminta eksplisit
-    if (/^(?:buka|ke|tampilkan|jalankan)\s+(?:situs\s+|halaman\s+|aplikasi\s+|tab\s+)?(?:youtube|yutub)(?:\s+(?:saja|aja|dong|ya))?$/i.test(clean)) {
+    if (/^(?:buka|ke|tampilkan|jalankan)\s+(?:situs\s+|halaman\s+|aplikasi\s+|tab\s+|web\s+|website\s+)?(?:youtube|yutub)(?:\s+(?:saja|aja|dong|ya))?$/i.test(clean)) {
       return { steps: [{ action: 'open_url', url: 'https://www.youtube.com' }], summary: 'Buka YouTube', replyLang: 'id', reply: 'Sip, membuka YouTube ya' };
     }
 
-    // 2. Buka YouTube + langsung cari konten HANYA jika diminta eksplisit mencari di YouTube dari awal
+    // 2. Pencarian YouTube (Buka + Cari, Cari di YouTube, atau Pencarian di Kolom Telusuri/Pencarian)
     let ytQuery = null;
-    const ytMatch1 = clean.match(/^(?:buka\s+)?(?:youtube|yutub)[\s,]+(?:dan\s+)?(?:buka\s+)?(?:cari\s+|search\s+|konten\s+|content\s+|channel\s+)?(.+)$/i);
-    if (ytMatch1 && ytMatch1[1]) {
-      ytQuery = ytMatch1[1];
-    } else {
-      const ytMatch2 = clean.match(/^(?:cari|search)\s+(.+?)\s+di\s+(?:youtube|yutub)$/i);
-      if (ytMatch2 && ytMatch2[1]) {
-        ytQuery = ytMatch2[1];
+
+    // Pattern A: "buka youtube cari/searching lagu X" / "youtube tolong cari video X"
+    const m1 = clean.match(/^(?:buka\s+)?(?:youtube|yutub)[\s,]+(?:dan\s+)?(?:tolong\s+|coba\s+)?(?:cari(?:kan(?:\s+saya)?)?|searching|search|putar|tampilkan)\s*(?:konten\s+|video\s+|lagu\s+|musik\s+)?(.+)$/i);
+    if (m1 && m1[1]) {
+      ytQuery = m1[1];
+    }
+
+    // Pattern B: "cari X di youtube" / "searching X di youtube"
+    if (!ytQuery) {
+      const m2 = clean.match(/^(?:cari(?:kan(?:\s+saya)?)?|searching|search|putar)\s+(.+?)\s+di\s+(?:youtube|yutub)$/i);
+      if (m2 && m2[1]) {
+        ytQuery = m2[1];
+      }
+    }
+
+    // Pattern C: "searching di youtube lagu X" / "cari di youtube video X"
+    if (!ytQuery) {
+      const m3 = clean.match(/^(?:cari(?:kan(?:\s+saya)?)?|searching|search)\s+di\s+(?:youtube|yutub)\s+(?:lagu\s+|video\s+|musik\s+)?(.+)$/i);
+      if (m3 && m3[1]) {
+        ytQuery = m3[1];
+      }
+    }
+
+    // Pattern D: "di kolom pencarian carikan lagu X" / "tulis di kolom pencarian/telusuri X" / "carikan saya video X" / "carikan lagu X"
+    if (!ytQuery) {
+      const m4 = clean.match(/^(?:(?:tolong|coba)\s+)?(?:di\s+kolom\s+(?:pencarian|telusuri)\s+)?(?:carikan(?:\s+saya)?|cari|searching|search|telusuri|tulis(?:\s+di\s+kolom\s+(?:pencarian|telusuri))?|ketik(?:\s+di\s+kolom\s+(?:pencarian|telusuri))?)\s*(?:kan)?\s*(?:saya\s+)?(?:video|lagu|musik)?\s*(.+)$/i);
+      if (m4 && m4[1]) {
+        ytQuery = m4[1];
       }
     }
 
     if (ytQuery) {
       let cleanYt = ytQuery.replace(/\b(ya|dong|saja|aja|tolong|coba|nih|kan)\b/gi, '').trim();
-      cleanYt = cleanYt.replace(/^(?:buka\s+(?:konten|content)\s+|konten\s+|content\s+|cari\s+|search\s+)/i, '').trim();
+      cleanYt = cleanYt.replace(/^(?:buka\s+(?:konten|content)\s+|konten\s+|content\s+|cari\s+|search\s+|searching\s+|video\s+|lagu\s+|musik\s+)/i, '').trim();
       if (cleanYt.length >= 2 && !/^(ini|itu|semua)$/i.test(cleanYt)) {
         const finalQuery = applyQueryAliases(cleanYt);
         return {
-          steps: [{ action: 'open_url', url: `https://www.youtube.com/results?search_query=${encodeURIComponent(finalQuery)}` }],
-          summary: `Buka YouTube cari ${finalQuery}`,
+          steps: [{ action: 'youtube_search', query: finalQuery }],
+          summary: `Cari di YouTube: ${finalQuery}`,
           replyLang: 'id',
           reply: `Sip, mencari ${finalQuery} di YouTube ya`
         };

@@ -628,7 +628,7 @@ async function planCommandWithGroq(transcript, apiKey, onUsage = null) {
   ].filter(Boolean).join('\n');
 
   const systemPrompt = `Wis, asisten desktop Windows yang ramah dan santai. Balas HANYA JSON:
-{"steps":[...],"summary":"3-4 kata","replyLang":"id","reply":"Sip, diputar ya"}
+{"steps":[...],"summary":"Ringkasan aksi","replyLang":"id","reply":"Jawaban atau konfirmasi santai sesuai instruksi"}
 Aksi Inti: chat_reply{reply} | open_app{appName} | open_url{url} | switch_window{hwnd,label} | window_control{op:"minimize|maximize|restore|fullscreen|close",hwnd?,label?} | hotkey{keys:"k|f|m|space|f11|browser_back|browser_forward|ctrl+w|ctrl+t|ctrl+tab|ctrl+shift+tab|media_play_pause|volume_mute|lain"} | scroll{direction:"down|up|left|right"} | scroll_auto{direction,speed:"slow|medium|fast"} | scroll_stop{} | zoom{mode:"in|out|reset"} | type_text{text} | unknown{reason}
 ${skillModules.length ? `Aksi Tambahan: ${skillModules.join(' | ')}\n` : ''}Aturan:
 - EKSEKUSI LANGSUNG tanpa tanya balik/klarifikasi. Pertanyaan murni->chat_reply (dilarang steps:[]).
@@ -639,7 +639,13 @@ ${skillModules.length ? `Aksi Tambahan: ${skillModules.join(' | ')}\n` : ''}Atur
 - GAYA BAHASA SANTAI & AKRAB (BUKAN MILITER):
   Gunakan bahasa Indonesia yang santai, akrab, ramah, dan luwes layaknya teman ngobrol sehari-hari.
   DILARANG KERAS menggunakan kata kaku, formal, atau bernada militer seperti "Siap", "Siap laksanakan", "Siap, ...", dsb.
-  Gunakan konfirmasi santai seperti: "Sip, lagi diputar nih", "Beres, videonya jalan ya", "Sip, aku klik ya", "Beres, kecerahan diturunin ya", "Iya, lagi dibuka nih", "Bentar ya". DILARANG hanya menjawab kata tunggal "Oke".
+  Sesuaikan respon reply dengan instruksi pengguna!
+  - Buka YouTube: "Sip, membuka YouTube ya"
+  - Cari di YouTube: "Sip, mencari [judul] di YouTube ya"
+  - Putar video: "Beres, videonya diputar ya"
+  - Jeda video: "Sip, videonya dipause ya"
+  - Sapaan: "Halo! Ada yang bisa Wis bantu?"
+  DILARANG KERAS menjawab "Sip, diputar ya" KECUALI pengguna memang menyuruh memutar video!
 - Video & YouTube: pause/lanjut->hotkey:"k", mute->"m", fullscreen->"f". Jika pengguna meminta putar/tonton video tertentu atau klik video di samping/rekomendasi, gunakan vision_click{targetDescription:"..."} pada layar yang sedang aktif.
 - Browser: tab baru->"ctrl+t", tutup->"ctrl+w", kembali->"browser_back", pindah tab->chrome_select_tab.
 - App di Win->switch_window atau open_app. Terapkan Alias jika cocok.
@@ -726,6 +732,9 @@ async function routeCommandWithGroq(transcript, apiKey, runtimeCtx = {}) {
         w => !/^(Whisper Widget|Menu Widget|Pengaturan .*|Karakter Mata|Whisper Agent.*|Wis Grid Canvas)$/i.test(w.title)
       );
       installedApps = getInstalledApps();
+    }
+    if (fastPlan.steps.some(s => s.action === 'youtube_search' || s.action === 'chrome_select_tab')) {
+      chromeTabs = await listChromeTabs();
     }
     plan = fastPlan;
   } else if (exactSkill && Array.isArray(exactSkill.steps) && exactSkill.steps.length > 0) {
@@ -1040,13 +1049,21 @@ async function executeStep(step, visibleWindows, installedApps, chromeTabs, apiK
       const query = String(step.query || '').trim();
       if (!query) return { ok: false, message: 'Kata pencarian YouTube kosong' };
 
-      const hasYouTubeTab = Array.isArray(chromeTabs) && chromeTabs.some(
+      // Cek apakah YouTube sudah terbuka di tab Chrome atau di jendela aktif
+      let hasYouTube = Array.isArray(chromeTabs) && chromeTabs.some(
         t => (t.name || '').toLowerCase().includes('youtube')
       );
-      if (hasYouTubeTab) {
+      if (!hasYouTube) {
+        try {
+          const wins = await listRunningWindows();
+          hasYouTube = wins.some(w => /youtube/i.test(w.title || ''));
+        } catch {}
+      }
+
+      if (hasYouTube) {
         const sel = await runInjector(['chrome_select_tab', 'youtube'], 4000);
         if (sel.stdout === 'OK') {
-          await new Promise(r => setTimeout(r, 120));
+          await new Promise(r => setTimeout(r, 150));
           await runInjector(['hotkey', 'slash'], 2000);
           await new Promise(r => setTimeout(r, 120));
           await runInjector(['hotkey', 'ctrl+a'], 2000);
