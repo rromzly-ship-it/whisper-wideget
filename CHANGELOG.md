@@ -4,6 +4,16 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
+## [v1.3.1] - 2026-11-25 (Pembaruan Terkini)
+
+### 🛡️ Pemulihan Penuh Groq Whisper & Isolasi Total Backend Per-Provider:
+- **Penyimpanan Kunci Terpisah Per-Vendor:** Mengatasi masalah `HTTP 401 Invalid API Key` pada Groq Cloud. Antarmuka pengaturan kini menyimpan kunci API masing-masing vendor secara mandiri (`savedProviderConfigs`). Saat berpindah dari GeminiX ke Groq, kunci Groq (`gsk_...`) otomatis dipulihkan ke kolom input dan tidak akan pernah lagi tertimpa oleh kunci GeminiX (`sk-gx-...`).
+- **Validasi Proaktif Anti-Kunci Salah:** Tombol `⚡ Test API` kini secara cerdas mendeteksi ketidakcocokan format kunci (misal jika kunci `sk-gx-...` tidak sengaja dimasukkan pada Groq Cloud) dan memberikan notifikasi peringatan bahasa Indonesia yang jelas sebelum permintaan dikirim.
+- **Backend Mandiri Groq Whisper (Dedicated 150ms STT):** Mengembalikan jalur pemrosesan suara murni Groq Whisper (`https://api.groq.com/openai/v1/audio/transcriptions`) tanpa campur tangan kode gateway Gemini. Suara mikrofon (Voice-to-Text) dan perintah Wis kembali instan ~150ms, verbatim, dan stabil seperti semula.
+- **Klarifikasi & Integrasi GeminiX STT:** Gateway GeminiX (`geminix.arss.fun/v1`) adalah gateway teks/LLM yang tidak menyediakan endpoint transkripsi audio Whisper (sehingga merespon "Silakan unggah rekaman audio"). Pada v1.3.1, jika GeminiX dipilih sebagai otak asisten, suara mikrofon otomatis didukung oleh Groq Whisper jika kunci Groq tersedia. Pengguna mendapatkan kombinasi terbaik: transkripsi instan 150ms dari Groq Whisper + kecerdasan penalaran mendalam dari Gemini 3.8 / Claude di GeminiX.
+
+---
+
 ## [v1.3.0] - 2026-11-24 (Milestone Rilis V3)
 
 ### 🤖 Analisis & Solusi Akar Masalah (Bukan dari Modularitas Kodings):

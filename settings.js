@@ -17,6 +17,7 @@ const linkProvider = document.getElementById('link-provider');
 const apiKeyInput = document.getElementById('api-key');
 const toggleKeyBtn = document.getElementById('toggle-key-visibility');
 const btnTestApi = document.getElementById('btn-test-api');
+const providerDescNote = document.getElementById('provider-desc-note');
 const modelSelect = document.getElementById('model-select');
 const customModelInput = document.getElementById('custom-model-input');
 const btnFetchModels = document.getElementById('btn-fetch-models');
@@ -222,26 +223,53 @@ const PROVIDER_PRESETS = {
 };
 
 let activeModelsList = [];
+let savedProviderConfigs = {
+  groq: {
+    apiKey: '',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    model: 'openai/gpt-oss-20b'
+  },
+  geminix: {
+    apiKey: '',
+    baseUrl: 'https://geminix.arss.fun/v1',
+    model: 'gemini-3.8-flash-high'
+  },
+  openai: {
+    apiKey: '',
+    baseUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4o-mini'
+  },
+  custom: {
+    apiKey: '',
+    baseUrl: '',
+    model: ''
+  }
+};
+let activeProvider = 'groq';
 
 function updateProviderUi(providerKey) {
   const preset = PROVIDER_PRESETS[providerKey] || PROVIDER_PRESETS.custom;
-  if (providerKey !== 'custom' && preset.baseUrl) {
-    apiBaseUrlInput.value = preset.baseUrl;
-  }
   endpointHint.textContent = preset.hint || 'Format: https://domain/v1';
   apiKeyInput.placeholder = preset.keyPlaceholder || 'Masukkan API Key...';
   
+  if (providerDescNote) {
+    if (providerKey === 'groq') {
+      providerDescNote.textContent = '⚡ Penyedia Resmi Whisper: Dedicated LPU untuk transkripsi suara 150ms instan & akurat + LLM Cerdas.';
+    } else if (providerKey === 'geminix') {
+      providerDescNote.textContent = '✨ Otak Asisten (LLM & Vision): Pemrosesan teks, penalaran, & mata visual (Vision). Transkripsi suara mikrofon otomatis memakai Whisper Groq jika kunci Groq tersedia.';
+    } else if (providerKey === 'openai') {
+      providerDescNote.textContent = '🤖 OpenAI: Endpoint resmi ChatGPT dan Whisper-1.';
+    } else {
+      providerDescNote.textContent = '🌐 Custom Endpoint kompatibel OpenAI.';
+    }
+  }
+
   if (preset.dashboardUrl && preset.dashboardLabel) {
     linkProvider.textContent = preset.dashboardLabel;
     linkProvider.href = preset.dashboardUrl;
     linkProvider.classList.remove('hidden');
   } else {
     linkProvider.classList.add('hidden');
-  }
-
-  // Populate models for the selected provider preset
-  if (preset.defaultModels?.length > 0) {
-    populateModelOptions(preset.defaultModels, preset.defaultModel);
   }
 }
 
@@ -304,6 +332,32 @@ async function fetchApiModels(silent = false) {
 
   if (!rawBase) {
     if (!silent) setApiStatus('error', 'Base URL kosong');
+    return;
+  }
+
+  // Proactive validation: detect wrong key pasted into the wrong provider
+  if (prov === 'groq' && apiKey.startsWith('sk-gx-')) {
+    setApiStatus('error', '🔴 Kunci Salah: Anda memasukkan Kunci GeminiX (sk-gx-...) pada Groq Cloud. Masukkan kunci Groq (gsk_...).');
+    if (btnTestApi) {
+      btnTestApi.textContent = '✕ Kunci Salah';
+      btnTestApi.classList.add('btn-failed');
+      setTimeout(() => {
+        btnTestApi.textContent = '⚡ Test API';
+        btnTestApi.classList.remove('btn-failed');
+      }, 3000);
+    }
+    return;
+  }
+  if (prov === 'geminix' && apiKey.startsWith('gsk_')) {
+    setApiStatus('error', '🔴 Kunci Salah: Anda memasukkan Kunci Groq (gsk_...) pada GeminiX. Masukkan kunci GeminiX (sk-gx-...).');
+    if (btnTestApi) {
+      btnTestApi.textContent = '✕ Kunci Salah';
+      btnTestApi.classList.add('btn-failed');
+      setTimeout(() => {
+        btnTestApi.textContent = '⚡ Test API';
+        btnTestApi.classList.remove('btn-failed');
+      }, 3000);
+    }
     return;
   }
 
@@ -375,10 +429,35 @@ async function fetchApiModels(silent = false) {
 }
 
 apiProviderSelect.addEventListener('change', () => {
-  activeModelsList = [];
-  updateProviderUi(apiProviderSelect.value);
+  const newProv = apiProviderSelect.value;
+  
+  // 1. Save outgoing provider's current inputs
+  if (activeProvider && savedProviderConfigs[activeProvider]) {
+    savedProviderConfigs[activeProvider].apiKey = apiKeyInput.value.trim();
+    savedProviderConfigs[activeProvider].baseUrl = apiBaseUrlInput.value.trim();
+    savedProviderConfigs[activeProvider].model = (modelSelect.value === '__custom__' ? customModelInput.value.trim() : modelSelect.value);
+  }
+
+  // 2. Set new active provider
+  activeProvider = newProv;
+
+  // 3. Load incoming provider's saved credentials
+  const provConf = savedProviderConfigs[newProv] || {};
+  apiBaseUrlInput.value = provConf.baseUrl || PROVIDER_PRESETS[newProv]?.baseUrl || '';
+  apiKeyInput.value = provConf.apiKey || '';
+
+  // 4. Update UI labels and hints
+  updateProviderUi(newProv);
+
+  // 5. Populate models for new provider
+  const targetModel = provConf.model || PROVIDER_PRESETS[newProv]?.defaultModel || '';
+  populateModelOptions(PROVIDER_PRESETS[newProv]?.defaultModels || [], targetModel);
+
+  // 6. Test only if key is present for THIS provider
   if (apiKeyInput.value.trim()) {
     fetchApiModels(false);
+  } else {
+    setApiStatus('idle', 'Belum Terhubung');
   }
 });
 
@@ -439,30 +518,54 @@ async function loadMicrophoneDevices(selectedId) {
 async function loadConfig() {
   currentConfig = await ipcRenderer.invoke('get-config') || {};
   
-  // Detect provider
-  let prov = currentConfig.provider;
-  if (!prov) {
-    if (currentConfig.baseUrl?.includes('geminix') || currentConfig.apiKey?.startsWith('sk-gx-')) {
-      prov = 'geminix';
-    } else if (currentConfig.apiKey?.startsWith('gsk_')) {
-      prov = 'groq';
-    } else if (currentConfig.apiKey?.startsWith('sk-')) {
-      prov = 'openai';
-    } else {
-      prov = 'geminix';
+  // Merge saved credentials from currentConfig.providers
+  if (currentConfig.providers) {
+    savedProviderConfigs = {
+      ...savedProviderConfigs,
+      ...currentConfig.providers
+    };
+  }
+  if (currentConfig.groqApiKey) {
+    savedProviderConfigs.groq.apiKey = currentConfig.groqApiKey;
+  }
+  if (currentConfig.geminixApiKey) {
+    savedProviderConfigs.geminix.apiKey = currentConfig.geminixApiKey;
+  }
+  if (currentConfig.apiKey) {
+    if (currentConfig.apiKey.startsWith('gsk_')) {
+      savedProviderConfigs.groq.apiKey = currentConfig.apiKey;
+    } else if (currentConfig.apiKey.startsWith('sk-gx-')) {
+      savedProviderConfigs.geminix.apiKey = currentConfig.apiKey;
+    } else if (currentConfig.apiKey.startsWith('sk-')) {
+      savedProviderConfigs.openai.apiKey = currentConfig.apiKey;
     }
   }
+
+  // Detect active provider: default to groq for rock-solid Whisper
+  let prov = currentConfig.provider;
+  if (!prov) {
+    if (currentConfig.apiKey?.startsWith('sk-gx-') || currentConfig.baseUrl?.includes('geminix')) {
+      prov = 'geminix';
+    } else {
+      prov = 'groq';
+    }
+  }
+  activeProvider = prov;
   apiProviderSelect.value = prov;
   updateProviderUi(prov);
 
-  if (currentConfig.baseUrl) {
-    apiBaseUrlInput.value = currentConfig.baseUrl;
+  const provConf = savedProviderConfigs[prov] || {};
+  apiBaseUrlInput.value = currentConfig.baseUrl || provConf.baseUrl || PROVIDER_PRESETS[prov]?.baseUrl || '';
+  apiKeyInput.value = provConf.apiKey || (currentConfig.apiKey && !currentConfig.apiKey.startsWith('sk-gx-') && prov === 'groq' ? currentConfig.apiKey : '');
+  if (!apiKeyInput.value && prov === 'geminix' && currentConfig.apiKey?.startsWith('sk-gx-')) {
+    apiKeyInput.value = currentConfig.apiKey;
   }
-  apiKeyInput.value = currentConfig.apiKey || '';
-  
-  let savedModel = currentConfig.model || PROVIDER_PRESETS[prov]?.defaultModel || 'gemini-3.8-flash-high';
+
+  let savedModel = currentConfig.model || provConf.model || PROVIDER_PRESETS[prov]?.defaultModel || '';
   if (prov === 'geminix' && (savedModel.startsWith('whisper-') || !savedModel)) {
     savedModel = 'gemini-3.8-flash-high';
+  } else if (prov === 'groq' && (savedModel.startsWith('gemini-') || !savedModel)) {
+    savedModel = 'openai/gpt-oss-20b';
   }
   populateModelOptions(PROVIDER_PRESETS[prov]?.defaultModels || [], savedModel);
 
@@ -507,8 +610,15 @@ btnSave.addEventListener('click', async () => {
   const rawBase = apiBaseUrlInput.value.trim();
   const cleanBase = rawBase.replace(/\/+$/, '').replace(/\/chat\/completions$/i, '');
 
+  // Save current active provider data into savedProviderConfigs
+  if (activeProvider && savedProviderConfigs[activeProvider]) {
+    savedProviderConfigs[activeProvider].apiKey = apiKeyInput.value.trim();
+    savedProviderConfigs[activeProvider].baseUrl = cleanBase;
+    savedProviderConfigs[activeProvider].model = selectedModel;
+  }
+
   const updated = {
-    provider: apiProviderSelect.value,
+    provider: activeProvider,
     baseUrl: cleanBase,
     apiKey: apiKeyInput.value.trim(),
     model: selectedModel,
@@ -516,6 +626,10 @@ btnSave.addEventListener('click', async () => {
     deviceId: micSelect.value,
     voiceAssistant: voiceAssistantToggle.checked,
     autoStart: autoStartToggle.checked,
+    // Per-provider saved credentials
+    providers: savedProviderConfigs,
+    groqApiKey: savedProviderConfigs.groq?.apiKey || '',
+    geminixApiKey: savedProviderConfigs.geminix?.apiKey || '',
     // Tahap 1
     noiseGateEnabled: noiseGateToggle.checked,
     noiseGateThreshold: Number(noiseGateThreshold.value),

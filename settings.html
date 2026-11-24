@@ -132,7 +132,7 @@
           <span id="badge-update-available" class="nav-badge update-badge hidden">Baru</span>
         </button>
       </nav>
-      <footer id="app-version-footer">Whisper Agent (Wis) · v1.3.0</footer>
+      <footer id="app-version-footer">Whisper Agent (Wis) · v1.3.1</footer>
     </aside>
 
     <!-- Main Content Area -->
@@ -173,11 +173,12 @@
               <label class="full">
                 Penyedia AI (Provider)
                 <select id="api-provider">
-                  <option value="geminix">✨ GeminiX Gateway (geminix.arss.fun) — Rekomendasi</option>
-                  <option value="groq">⚡ Groq Cloud (Super Cepat Whisper &amp; LLM)</option>
+                  <option value="groq">⚡ Groq Cloud (Dedicated Whisper 150ms &amp; LLM Cepat) — Rekomendasi Utama</option>
+                  <option value="geminix">✨ GeminiX Gateway (Otak Asisten Gemini 3.8 &amp; Vision)</option>
                   <option value="openai">🤖 OpenAI Resmi (ChatGPT &amp; Whisper)</option>
                   <option value="custom">🌐 Custom OpenAI-Compatible Endpoint</option>
                 </select>
+                <small id="provider-desc-note" class="model-hint" style="color: #94a3b8; display: block; margin-top: 5px;"></small>
               </label>
 
               <label class="full">
@@ -606,7 +607,7 @@
             <div class="update-info-grid">
               <div class="metric-card">
                 <small>Versi Terpasang</small>
-                <strong id="update-current-version">v1.3.0</strong>
+                <strong id="update-current-version">v1.3.1</strong>
               </div>
               <div class="metric-card">
                 <small>Versi GitHub Terbaru</small>

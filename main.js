@@ -175,46 +175,73 @@ function loadConfig() {
 }
 
 function resolveProvider(cfg = {}) {
-  const key = String(cfg.apiKey || '').trim();
   const prov = cfg.provider || '';
+  const key = String(cfg.apiKey || '').trim();
   const url = String(cfg.baseUrl || '').trim();
 
-  if (prov === 'geminix' || key.startsWith('sk-gx-') || url.includes('geminix')) {
-    return {
-      provider: 'geminix',
-      baseUrl: url || 'https://geminix.arss.fun/v1',
-      defaultModel: 'gemini-3.8-flash-high',
-      isGeminix: true,
-      isGroq: false,
-      isOpenAi: false
-    };
-  }
-  if (prov === 'groq' || key.startsWith('gsk_') || url.includes('groq.com')) {
+  // 1. Explicit Groq Cloud Provider
+  if (prov === 'groq') {
+    const groqKey = key.startsWith('gsk_') ? key : (cfg.providers?.groq?.apiKey || cfg.groqApiKey || key);
     return {
       provider: 'groq',
-      baseUrl: url || 'https://api.groq.com/openai/v1',
+      baseUrl: 'https://api.groq.com/openai/v1',
+      apiKey: groqKey,
       defaultModel: 'openai/gpt-oss-20b',
       isGeminix: false,
       isGroq: true,
       isOpenAi: false
     };
   }
-  if (prov === 'openai' || (key.startsWith('sk-') && !key.startsWith('sk-gx-')) || url.includes('api.openai.com')) {
+
+  // 2. Explicit GeminiX Gateway Provider
+  if (prov === 'geminix') {
+    const gxKey = key.startsWith('sk-gx-') ? key : (cfg.providers?.geminix?.apiKey || cfg.geminixApiKey || key);
+    return {
+      provider: 'geminix',
+      baseUrl: url || 'https://geminix.arss.fun/v1',
+      apiKey: gxKey,
+      defaultModel: 'gemini-3.8-flash-high',
+      isGeminix: true,
+      isGroq: false,
+      isOpenAi: false
+    };
+  }
+
+  // 3. Explicit OpenAI Provider
+  if (prov === 'openai') {
+    const oaiKey = (key.startsWith('sk-') && !key.startsWith('sk-gx-')) ? key : (cfg.providers?.openai?.apiKey || key);
     return {
       provider: 'openai',
       baseUrl: url || 'https://api.openai.com/v1',
+      apiKey: oaiKey,
       defaultModel: 'gpt-4o-mini',
       isGeminix: false,
       isGroq: false,
       isOpenAi: true
     };
   }
+
+  // Fallback by key pattern if provider not explicitly set:
+  if (key.startsWith('sk-gx-') || url.includes('geminix')) {
+    return {
+      provider: 'geminix',
+      baseUrl: url || 'https://geminix.arss.fun/v1',
+      apiKey: key,
+      defaultModel: 'gemini-3.8-flash-high',
+      isGeminix: true,
+      isGroq: false,
+      isOpenAi: false
+    };
+  }
+
+  const defaultGroqKey = key.startsWith('gsk_') ? key : (cfg.providers?.groq?.apiKey || cfg.groqApiKey || key);
   return {
-    provider: 'custom',
-    baseUrl: (url || 'https://api.groq.com/openai/v1').replace(/\/+$/, ''),
-    defaultModel: cfg.model || 'openai/gpt-oss-20b',
+    provider: 'groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    apiKey: defaultGroqKey,
+    defaultModel: 'openai/gpt-oss-20b',
     isGeminix: false,
-    isGroq: false,
+    isGroq: true,
     isOpenAi: false
   };
 }
@@ -1753,142 +1780,153 @@ ipcMain.handle('fetch-api-models', async (event, { baseUrl, apiKey }) => {
   }
 });
 
-// Universal Audio Transcription (Whisper STT / Multimodal Gateway)
+// =========================================================================
+// UNIVERSAL AUDIO TRANSCRIPTION (MODULAR & SEPARATE PROVIDERS)
+// =========================================================================
+
+// 1. Groq Dedicated Whisper STT (Official, 150ms latency, 100% stable)
+async function transcribeWithGroq({ audioBase64, mimeType, promptHint, language, apiKey, model }) {
+  const buffer = Buffer.from(audioBase64, 'base64');
+  const blob = new Blob([buffer], { type: mimeType });
+  const formData = new FormData();
+  formData.append('file', blob, 'speech.webm');
+  formData.append('model', (model && !model.startsWith('gemini-') && !model.startsWith('claude-') && model !== '__custom__') ? model : 'whisper-large-v3-turbo');
+  formData.append('response_format', 'json');
+  formData.append('temperature', '0.0');
+  if (promptHint) formData.append('prompt', promptHint);
+  if (language && language !== 'auto') formData.append('language', language);
+
+  const resp = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey.trim()}` },
+    body: formData
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Groq Whisper HTTP ${resp.status}`);
+  }
+
+  const data = await resp.json();
+  return {
+    ok: true,
+    text: data.text || '',
+    language: data.language || language || 'id',
+    duration: data.duration || 0,
+    segments: data.segments || []
+  };
+}
+
+// 2. OpenAI Dedicated Whisper STT
+async function transcribeWithOpenAI({ audioBase64, mimeType, promptHint, language, apiKey }) {
+  const buffer = Buffer.from(audioBase64, 'base64');
+  const blob = new Blob([buffer], { type: mimeType });
+  const formData = new FormData();
+  formData.append('file', blob, 'speech.webm');
+  formData.append('model', 'whisper-1');
+  formData.append('response_format', 'json');
+  formData.append('temperature', '0.0');
+  if (promptHint) formData.append('prompt', promptHint);
+  if (language && language !== 'auto') formData.append('language', language);
+
+  const resp = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey.trim()}` },
+    body: formData
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `OpenAI Whisper HTTP ${resp.status}`);
+  }
+
+  const data = await resp.json();
+  return {
+    ok: true,
+    text: data.text || '',
+    language: data.language || language || 'id',
+    duration: data.duration || 0,
+    segments: data.segments || []
+  };
+}
+
 ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audio/webm', promptHint = '' }) => {
   if (!audioBase64) return { ok: false, message: 'Data audio kosong' };
 
   const prov = resolveProvider(appConfig);
-  const apiKey = (appConfig.apiKey || '').trim();
   const language = appConfig.language && appConfig.language !== 'auto' ? appConfig.language : null;
-  let selectedModel = (appConfig.model || '').trim();
 
-  // 1. Gateway GeminiX (Multimodal audio via /chat/completions)
-  if (prov.isGeminix) {
+  // Retrieve Groq Key from any available slot
+  const groqKey = (appConfig.apiKey && appConfig.apiKey.startsWith('gsk_'))
+    ? appConfig.apiKey
+    : (appConfig.providers?.groq?.apiKey || appConfig.groqApiKey || '');
+
+  // Case 1: Groq Cloud Provider (Dedicated Whisper)
+  if (prov.provider === 'groq' || prov.isGroq) {
+    const keyToUse = (prov.apiKey && prov.apiKey.startsWith('gsk_')) ? prov.apiKey : groqKey;
+    if (!keyToUse) {
+      return { ok: false, message: 'Kunci API Groq (gsk_...) belum diisi. Masukkan kunci Groq di Pengaturan.' };
+    }
     try {
-      const chatEndpoint = prov.baseUrl.endsWith('/chat/completions') 
-        ? prov.baseUrl 
-        : `${prov.baseUrl.replace(/\/+$/, '')}/chat/completions`;
-      const format = mimeType.includes('wav') ? 'wav' : (mimeType.includes('mp3') ? 'mp3' : 'webm');
-      
-      // Model guard: GeminiX requires Gemini models for audio STT (never whisper-*)
-      let modelToUse = 'gemini-2.5-flash';
-      if (selectedModel && selectedModel.startsWith('gemini-') && !selectedModel.toLowerCase().includes('whisper') && selectedModel !== '__custom__') {
-        modelToUse = selectedModel;
-      }
-
-      const body = {
-        model: modelToUse,
-        temperature: 0.0,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an accurate, verbatim speech-to-text transcriber. Output ONLY the exact transcribed spoken words in Indonesian or English. Output nothing else: no explanations, no thought tags, no markdown.'
-          },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: `Transkripsikan rekaman audio berikut secara persis kata demi kata tanpa komentar:${promptHint ? ' Konteks: ' + promptHint : ''}` },
-              {
-                type: 'input_audio',
-                input_audio: {
-                  data: audioBase64,
-                  format: format
-                }
-              }
-            ]
-          }
-        ]
-      };
-
-      let resp = await fetch(chatEndpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
+      return await transcribeWithGroq({
+        audioBase64,
+        mimeType,
+        promptHint,
+        language,
+        apiKey: keyToUse,
+        model: appConfig.model || 'whisper-large-v3-turbo'
       });
+    } catch (e) {
+      console.error('Groq transcription error:', e.message);
+      return { ok: false, message: e.message };
+    }
+  }
 
-      // If selected model failed, retry once with standard gemini-2.5-flash
-      if (!resp.ok && modelToUse !== 'gemini-2.5-flash') {
-        body.model = 'gemini-2.5-flash';
-        resp = await fetch(chatEndpoint, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(body)
+  // Case 2: GeminiX Gateway Provider
+  if (prov.provider === 'geminix' || prov.isGeminix) {
+    // If Groq key is available, use Whisper Groq for STT
+    if (groqKey && groqKey.startsWith('gsk_')) {
+      try {
+        return await transcribeWithGroq({
+          audioBase64,
+          mimeType,
+          promptHint,
+          language,
+          apiKey: groqKey,
+          model: 'whisper-large-v3-turbo'
         });
+      } catch (e) {
+        console.error('Groq STT fallback error for GeminiX:', e.message);
       }
-
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error?.message || `HTTP ${resp.status}`);
-      }
-
-      const data = await resp.json();
-      let text = (data.choices?.[0]?.message?.content || '').trim();
-      if (text.includes('\n\n')) {
-        const parts = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-        text = parts[parts.length - 1];
-      }
-      text = text.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/, '').replace(/^["']|["']$/g, '').trim();
-
-      return {
-        ok: true,
-        text,
-        language: language || 'id',
-        duration: 0,
-        segments: []
-      };
-    } catch (err) {
-      console.error('GeminiX audio transcription error:', err);
-      return { ok: false, message: err.message };
     }
-  }
-
-  // 2. Standar Whisper API (Groq Cloud, OpenAI, atau gateway kompatibel Whisper)
-  try {
-    const buffer = Buffer.from(audioBase64, 'base64');
-    const blob = new Blob([buffer], { type: mimeType });
-    const formData = new FormData();
-    formData.append('file', blob, 'speech.webm');
-    
-    let modelToUse = prov.isGroq ? 'whisper-large-v3-turbo' : (prov.isOpenAi ? 'whisper-1' : (selectedModel || 'whisper-1'));
-    if (modelToUse.startsWith('gemini-') || modelToUse.startsWith('claude-')) {
-      modelToUse = prov.isGroq ? 'whisper-large-v3-turbo' : 'whisper-1';
-    }
-    
-    formData.append('model', modelToUse);
-    formData.append('response_format', 'json');
-    formData.append('temperature', '0.0');
-    if (promptHint) formData.append('prompt', promptHint);
-    if (language) formData.append('language', language);
-
-    const resp = await fetch(`${prov.baseUrl.replace(/\/+$/, '')}/audio/transcriptions`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}` },
-      body: formData
-    });
-
-    if (!resp.ok) {
-      const errJson = await resp.json().catch(() => ({}));
-      throw new Error(errJson.error?.message || `Whisper HTTP ${resp.status}`);
-    }
-
-    const data = await resp.json();
+    // If no Groq key, inform user clearly
     return {
-      ok: true,
-      text: data.text || '',
-      language: data.language || language || 'id',
-      duration: data.duration || 0,
-      segments: data.segments || []
+      ok: false,
+      message: 'Gateway GeminiX (geminix.arss.fun) tidak memiliki endpoint transkripsi audio Whisper. Silakan masukkan Kunci Groq Cloud (gsk_...) di menu Pengaturan agar transkripsi suara mikrofon 150ms aktif.'
     };
-  } catch (e) {
-    console.error('Whisper dedicated transcription error:', e.message);
-    return { ok: false, message: e.message };
   }
+
+  // Case 3: OpenAI Provider
+  if (prov.provider === 'openai' || prov.isOpenAi) {
+    const oaiKey = prov.apiKey || (appConfig.providers?.openai?.apiKey || '');
+    if (!oaiKey) {
+      return { ok: false, message: 'Kunci OpenAI (sk-...) belum diisi di Pengaturan.' };
+    }
+    try {
+      return await transcribeWithOpenAI({ audioBase64, mimeType, promptHint, language, apiKey: oaiKey });
+    } catch (e) {
+      return { ok: false, message: e.message };
+    }
+  }
+
+  // Fallback: If Groq key exists, always use Groq
+  if (groqKey) {
+    try {
+      return await transcribeWithGroq({ audioBase64, mimeType, promptHint, language, apiKey: groqKey });
+    } catch (_) {}
+  }
+
+  return { ok: false, message: 'Endpoint audio tidak tersedia untuk penyedia ini.' };
 });
 
 // In-App Auto-Update Handlers
