@@ -144,6 +144,7 @@ function loadConfig() {
     voiceAssistant: true,
     model: 'gemini-3.8-flash-high',
     deviceId: 'default',
+    setupCompleted: false,
     posX: null,
     posY: null
   };
@@ -152,6 +153,9 @@ function loadConfig() {
     if (fs.existsSync(targetPath)) {
       const data = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
       // Backward compatibility auto-detection
+      if (data.apiKey && data.setupCompleted === undefined) {
+        data.setupCompleted = true;
+      }
       if (!data.baseUrl) {
         if (data.apiKey?.startsWith('sk-gx-')) {
           data.provider = 'geminix';
@@ -728,6 +732,63 @@ function createSettingsWindow() {
     settingsWindow = null;
     isSettingsLoaded = false;
   });
+}
+
+let onboardingWindow = null;
+
+function createOnboardingWindow() {
+  if (onboardingWindow && !onboardingWindow.isDestroyed()) {
+    onboardingWindow.show();
+    onboardingWindow.focus();
+    return;
+  }
+
+  onboardingWindow = new BrowserWindow({
+    width: 720,
+    height: 620,
+    minWidth: 640,
+    minHeight: 560,
+    title: 'Setup Whisper Agent · ARSS',
+    icon: path.join(__dirname, 'icon.ico'),
+    show: false,
+    frame: false,
+    transparent: false,
+    backgroundColor: '#141414',
+    resizable: false,
+    center: true,
+    alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+
+  onboardingWindow.setMenu(null);
+  onboardingWindow.loadFile('onboarding.html');
+
+  onboardingWindow.once('ready-to-show', () => {
+    onboardingWindow.show();
+    onboardingWindow.focus();
+  });
+
+  onboardingWindow.on('closed', () => {
+    onboardingWindow = null;
+  });
+}
+
+function createDesktopShortcut() {
+  try {
+    const targetExe = process.execPath;
+    const desktopDir = path.join(process.env.USERPROFILE || process.env.HOME || '', 'Desktop');
+    const shortcutPath = path.join(desktopDir, 'Whisper Widget.lnk');
+    const iconPath = path.join(__dirname, 'icon.ico');
+    const ps = `$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut('${shortcutPath.replace(/'/g, "''")}'); $s.TargetPath = '${targetExe.replace(/'/g, "''")}'; $s.Description = 'Whisper Floating Widget by ARSS'; $s.WorkingDirectory = '${path.dirname(targetExe).replace(/'/g, "''")}'; if (Test-Path '${iconPath.replace(/'/g, "''")}') { $s.IconLocation = '${iconPath.replace(/'/g, "''")}' }; $s.Save()`;
+    execSync(`powershell -NoProfile -Command "${ps}"`, { timeout: 4000 });
+    return true;
+  } catch (e) {
+    console.warn('Failed to create desktop shortcut:', e.message);
+    return false;
+  }
 }
 
 function openSettings() {
@@ -1864,6 +1925,57 @@ ipcMain.handle('apply-app-update', async (event, { downloadUrl }) => {
   return { ok: false, message: 'Tautan pembaruan tidak ditemukan' };
 });
 
+// Onboarding & First-Run IPC Handlers
+ipcMain.on('close-onboarding', () => {
+  if (onboardingWindow && !onboardingWindow.isDestroyed()) {
+    onboardingWindow.close();
+  }
+});
+
+ipcMain.on('minimize-onboarding', () => {
+  if (onboardingWindow && !onboardingWindow.isDestroyed()) {
+    onboardingWindow.minimize();
+  }
+});
+
+ipcMain.handle('open-onboarding', () => {
+  createOnboardingWindow();
+  return true;
+});
+
+ipcMain.handle('finish-onboarding', async (event, configData) => {
+  try {
+    const { createShortcut, ...savedConfig } = configData;
+    appConfig = { ...appConfig, ...savedConfig, setupCompleted: true };
+    saveConfig(appConfig);
+
+    if (createShortcut) {
+      createDesktopShortcut();
+    }
+    if (appConfig.autoStart) {
+      setAutoStart(true);
+    }
+
+    if (onboardingWindow && !onboardingWindow.isDestroyed()) {
+      onboardingWindow.close();
+      onboardingWindow = null;
+    }
+
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
+      widgetWindow.show();
+    }
+    if (appConfig.voiceAssistant !== false && eyeWindow && !eyeWindow.isDestroyed()) {
+      eyeWindow.show();
+    }
+
+    dispatchTtsNonBlocking('Halo! Selamat datang di Whisper Agent oleh ARSS.', 'id', false);
+    return { ok: true };
+  } catch (err) {
+    console.error('Error finishing onboarding:', err);
+    return { ok: false, message: err.message };
+  }
+});
+
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
@@ -1917,10 +2029,11 @@ if (!gotTheLock) {
       console.warn('Could not register global shortcut:', e);
     }
 
-    if (!appConfig.apiKey) {
+    const isFirstRun = !appConfig.apiKey || appConfig.setupCompleted === false;
+    if (isFirstRun) {
       setTimeout(() => {
-        openSettings();
-      }, 500);
+        createOnboardingWindow();
+      }, 400);
     }
   });
 

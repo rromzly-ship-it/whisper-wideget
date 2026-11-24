@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Setup Whisper Agent · ARSS</title>
+  <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+  <!-- Embedded SVG Icons -->
+  <svg aria-hidden="true" style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="mic-icon" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3m-3 0h6"/></symbol>
+    <symbol id="rocket-icon" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09zM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></symbol>
+    <symbol id="desktop-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></symbol>
+    <symbol id="api-icon" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol>
+    <symbol id="check-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="close-icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="arrow-right" viewBox="0 0 24 24"><path d="M5 12h14m-7-7l7 7-7 7"/></symbol>
+    <symbol id="arrow-left" viewBox="0 0 24 24"><path d="M19 12H5m7 7l-7-7 7-7"/></symbol>
+  </svg>
+
+  <div class="window-shell">
+    <!-- Draggable Header -->
+    <header class="window-header">
+      <div class="header-branding">
+        <span class="header-icon"><svg><use href="#mic-icon"/></svg></span>
+        <span class="header-title">Whisper Agent Setup</span>
+        <span class="header-badge">ARSS Official</span>
+      </div>
+      <div class="header-controls">
+        <button type="button" id="btn-minimize-window" class="win-btn" title="Kecilkan Window">─</button>
+        <button type="button" id="btn-close-window" class="win-btn close" title="Tutup">✕</button>
+      </div>
+    </header>
+
+    <!-- Top Stepper Indicator -->
+    <div class="stepper-bar">
+      <div class="step-item active" data-step="1">
+        <span class="step-num">1</span>
+        <span class="step-label">Sambutan</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" data-step="2">
+        <span class="step-num">2</span>
+        <span class="step-label">Penyedia AI</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" data-step="3">
+        <span class="step-num">3</span>
+        <span class="step-label">Preferensi</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item" data-step="4">
+        <span class="step-num">4</span>
+        <span class="step-label">Mulai</span>
+      </div>
+    </div>
+
+    <!-- Main Step Pages Container -->
+    <main class="wizard-content">
+      <!-- STEP 1: SAMBUTAN (WELCOME) -->
+      <section class="step-page active" id="step-1">
+        <div class="hero-welcome">
+          <div class="hero-avatar-wrap">
+            <div class="wis-avatar-orb">
+              <div class="wis-avatar-pupil"></div>
+            </div>
+            <div class="wis-avatar-pulse"></div>
+          </div>
+          <h1>Selamat Datang di Whisper Agent</h1>
+          <p class="hero-subtitle">Asisten Suara Mengambang Cerdas &amp; Pengetikan Suara Otomatis</p>
+          <div class="hero-author-pill">
+            <span>Dikembangkan oleh <strong>ARSS</strong> · Versi v1.2.0</span>
+          </div>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <span class="feat-icon">🎙️</span>
+            <div>
+              <strong>Dikte Suara Instan</strong>
+              <small>Ketik dokumen, chat, dan kode di aplikasi apa pun cukup dengan suara Anda.</small>
+            </div>
+          </div>
+          <div class="feature-card">
+            <span class="feat-icon">🧠</span>
+            <div>
+              <strong>Otak AI GeminiX Gateway</strong>
+              <small>Terhubung langsung ke API Gateway GeminiX dengan model penalaran super cepat.</small>
+            </div>
+          </div>
+          <div class="feature-card">
+            <span class="feat-icon">👁️</span>
+            <div>
+              <strong>Wis Desktop Assistant</strong>
+              <small>Karakter mata interaktif yang bisa melihat layar dan menavigasi Windows.</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-footer single-action">
+          <button type="button" class="btn primary" id="btn-next-1">
+            Mulai Pengaturan Cepat
+            <svg class="btn-arrow"><use href="#arrow-right"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 2: PENYEDIA AI & MODEL (GEMINIX GATEWAY) -->
+      <section class="step-page" id="step-2">
+        <div class="step-header">
+          <h2>Koneksi AI Gateway &amp; Model</h2>
+          <p>Konfigurasi endpoint API Anda. Secara default terhubung ke <strong>GeminiX Gateway by ARSS</strong>.</p>
+        </div>
+
+        <div class="form-card">
+          <div class="form-row">
+            <label for="ob-provider">Penyedia AI (Gateway)</label>
+            <select id="ob-provider" class="custom-input">
+              <option value="geminix" selected>GeminiX Gateway (ARSS) - Rekomendasi</option>
+              <option value="groq">Groq Cloud (Whisper &amp; LLaMA)</option>
+              <option value="openai">OpenAI Official</option>
+              <option value="custom">Custom OpenAI-Compatible Gateway</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="ob-base-url">Base URL / Endpoint API</label>
+            <input type="text" id="ob-base-url" class="custom-input" value="https://geminix.arss.fun/v1" placeholder="https://geminix.arss.fun/v1">
+            <small class="field-hint" id="ob-endpoint-hint">Endpoint default GeminiX: https://geminix.arss.fun/v1</small>
+          </div>
+
+          <div class="form-row">
+            <div class="label-flex">
+              <label for="ob-api-key" id="ob-api-key-label">API Key GeminiX</label>
+              <a href="https://geminix.arss.fun" id="ob-link-provider" target="_blank" class="subtle-link">Buka Dashboard ARSS ↗</a>
+            </div>
+            <div class="key-input-wrapper">
+              <input type="password" id="ob-api-key" class="custom-input" placeholder="sk-gx-...">
+              <button type="button" id="ob-toggle-key" class="btn-icon-addon" title="Lihat/Sembunyikan Key">👁</button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="label-flex">
+              <label for="ob-model-select">Pilihan Model AI</label>
+              <button type="button" id="ob-btn-fetch-models" class="btn-mini-action">🔄 Cek &amp; Muat Model</button>
+            </div>
+            <div class="model-select-group">
+              <select id="ob-model-select" class="custom-input">
+                <option value="gemini-3.8-flash-high" selected>gemini-3.8-flash-high (Cepat &amp; Hemat - Default)</option>
+                <option value="gemini-3-flash">gemini-3-flash (Sangat Cepat)</option>
+                <option value="gemini-3.8-pro-high">gemini-3.8-pro-high (Penalaran Mendalam)</option>
+                <option value="claude-sonnet-4-6">claude-sonnet-4-6 (Spesialis Coding)</option>
+                <option value="claude-opus-4-6-thinking">claude-opus-4-6-thinking</option>
+              </select>
+              <span id="ob-api-status" class="api-status-badge status-idle">Belum Terhubung</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-footer">
+          <button type="button" class="btn secondary" id="btn-prev-2">
+            <svg class="btn-arrow left"><use href="#arrow-left"/></svg>
+            Kembali
+          </button>
+          <button type="button" class="btn primary" id="btn-next-2">
+            Lanjut ke Preferensi
+            <svg class="btn-arrow"><use href="#arrow-right"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 3: PREFERENSI & INTEGRASI WINDOWS -->
+      <section class="step-page" id="step-3">
+        <div class="step-header">
+          <h2>Preferensi &amp; Integrasi Windows</h2>
+          <p>Sesuaikan cara kerja Whisper di desktop Anda.</p>
+        </div>
+
+        <div class="preferences-list">
+          <label class="pref-switch-card">
+            <div class="pref-icon">🖥️</div>
+            <div class="pref-content">
+              <strong>Buat Pintasan di Desktop</strong>
+              <small>Membuat shortcut "Whisper Widget" di layar Desktop untuk akses cepat.</small>
+            </div>
+            <input type="checkbox" id="ob-pref-shortcut" checked>
+            <span class="custom-slider"></span>
+          </label>
+
+          <label class="pref-switch-card">
+            <div class="pref-icon">⚡</div>
+            <div class="pref-content">
+              <strong>Jalankan Otomatis saat Windows Menyala</strong>
+              <small>Whisper langsung siap digunakan setiap kali komputer dihidupkan (Auto-start).</small>
+            </div>
+            <input type="checkbox" id="ob-pref-autostart" checked>
+            <span class="custom-slider"></span>
+          </label>
+
+          <label class="pref-switch-card">
+            <div class="pref-icon">👁️</div>
+            <div class="pref-content">
+              <strong>Aktifkan Karakter Asisten Wis (Floating Eye)</strong>
+              <small>Menampilkan karakter mata interaktif yang mendampingi tombol mikrofon.</small>
+            </div>
+            <input type="checkbox" id="ob-pref-voice-assistant" checked>
+            <span class="custom-slider"></span>
+          </label>
+
+          <div class="pref-normal-card">
+            <div class="pref-icon">🎙️</div>
+            <div class="pref-content">
+              <strong>Bahasa Ucapan Utama</strong>
+              <small>Bahasa yang diprioritaskan saat mentranskripsikan suara.</small>
+            </div>
+            <select id="ob-pref-language" class="custom-input mini">
+              <option value="auto" selected>Otomatis (Indonesia &amp; Inggris)</option>
+              <option value="id">Bahasa Indonesia Saja</option>
+              <option value="en">English Saja</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="step-footer">
+          <button type="button" class="btn secondary" id="btn-prev-3">
+            <svg class="btn-arrow left"><use href="#arrow-left"/></svg>
+            Kembali
+          </button>
+          <button type="button" class="btn primary" id="btn-next-3">
+            Lanjut ke Konfirmasi
+            <svg class="btn-arrow"><use href="#arrow-right"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 4: SELESAI & MULAI (CONFIRMATION & LAUNCH) -->
+      <section class="step-page" id="step-4">
+        <div class="ready-container">
+          <div class="celebrate-badge">
+            <svg class="celebrate-icon"><use href="#check-icon"/></svg>
+          </div>
+          <h2>Konfigurasi Selesai!</h2>
+          <p class="ready-desc">Whisper Agent siap mendengarkan suara Anda dan bekerja di desktop Windows.</p>
+
+          <div class="summary-box">
+            <div class="summary-item">
+              <span class="summary-label">Penyedia AI</span>
+              <strong id="sum-provider">GeminiX Gateway (ARSS)</strong>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Model Aktif</span>
+              <strong id="sum-model" class="text-blue">gemini-3.8-flash-high</strong>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Shortcut &amp; Startup</span>
+              <strong id="sum-integrations" class="text-green">Desktop Shortcut, Auto-start</strong>
+            </div>
+          </div>
+
+          <div class="tips-box">
+            <div class="tips-header">
+              <span class="tip-bulb">💡</span>
+              <strong>Cara Cepat Menggunakan:</strong>
+            </div>
+            <ul>
+              <li>Tekan tombol pintas <strong>Alt + Shift + V</strong> di mana saja untuk mulai dikte.</li>
+              <li>Klik karakter <strong>Wis</strong> untuk memberi perintah suara navigasi komputer.</li>
+              <li>Klik kanan pada tombol mikrofon untuk membuka menu <strong>Pengaturan</strong>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step-footer">
+          <button type="button" class="btn secondary" id="btn-prev-4">
+            <svg class="btn-arrow left"><use href="#arrow-left"/></svg>
+            Kembali
+          </button>
+          <button type="button" class="btn primary btn-launch" id="btn-finish-launch">
+            <svg class="btn-icon"><use href="#rocket-icon"/></svg>
+            Selesaikan &amp; Buka Whisper Widget
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="onboarding.js"></script>
+</body>
+</html>

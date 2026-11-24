@@ -30,6 +30,7 @@ const disableAgcToggle = document.getElementById('disable-agc-toggle');
 const voiceAssistantToggle = document.getElementById('voice-assistant');
 const autoStartToggle = document.getElementById('auto-start');
 const btnSave = document.getElementById('btn-save');
+const btnOpenOnboarding = document.getElementById('btn-open-onboarding');
 const btnRestart = document.getElementById('btn-restart-app');
 const btnQuit = document.getElementById('btn-quit-app');
 
@@ -465,6 +466,12 @@ btnQuit.addEventListener('click', () => {
     ipcRenderer.send('quit-app');
   }
 });
+
+if (btnOpenOnboarding) {
+  btnOpenOnboarding.addEventListener('click', () => {
+    ipcRenderer.invoke('open-onboarding');
+  });
+}
 
 // =========================================================================
 // 3. VOICE IDENTITY & SPEAKER VERIFICATION (TAHAP 2)

@@ -9,6 +9,15 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 ### 🏷️ Penandatanganan Digital Resmi Publisher "ARSS" (Authenticode Code Signing):
 - Mengonfigurasi tanda tangan digital resmi Authenticode dengan subject `CN=ARSS` pada binary instalasi Windows.
 - Dialog keamanan Windows (SmartScreen & UAC) kini menampilkan nama penerbit resmi: **Publisher: ARSS** (menggantikan status *"Unknown publisher"*).
+- Menyediakan script launcher sekali klik `Install-Whisper.bat` yang secara otomatis melepas atribut Mark-of-the-Web (`Unblock-File`) sehingga file `.exe` dapat langsung berjalan mulus tanpa terhalang dialog peringatan SmartScreen.
+
+### 🎨 First-Run Onboarding Setup Wizard Khas Whisper (Modern Dark UI):
+- Jendela wizard sambutan dan setup awal bertema gelap (`onboarding.html`, `onboarding.css`, `onboarding.js`) dengan 4 langkah interaktif:
+  1. **Langkah 1 (Sambutan):** Avatar visual Wis menyala, ringkasan fitur asisten AI suara & dikte.
+  2. **Langkah 2 (Koneksi AI Gateway / GeminiX):** Input Base URL, API Key, dan pilihan model langsung dengan pengetesan koneksi interaktif.
+  3. **Langkah 3 (Preferensi Windows):** Opsi pintasan keyboard, buat shortcut di desktop, dan jalankan otomatis saat Windows startup.
+  4. **Langkah 4 (Selesai):** Ringkasan konfigurasi siap pakai, tombol langsung mulai ke widget melayang, dan sapaan suara selamat datang.
+- Otomatis aktif saat pertama kali aplikasi dibuka di komputer baru jika belum dikonfigurasi, dan dapat dibuka kembali kapan saja via tombol **"Setup Awal"** di menu Pengaturan.
 
 ### 🌐 Integrasi Universal AI Gateway & Dukungan Penuh GeminiX Gateway (`geminix.arss.fun`):
 - **Universal Provider Preset & Dynamic Model Selector:**
