@@ -320,11 +320,15 @@ function parseRetryAfterMs(errMsg) {
   return m[2].toLowerCase() === 's' ? Math.ceil(val * 1000) : Math.ceil(val);
 }
 
-async function callGroqChat({ apiKey, model, systemPrompt, userPrompt, jsonMode = false, maxTokens = 550, _attempt = 0, onUsage = null, phase = 'planner' }) {
-  const activeModel = model || 'openai/gpt-oss-20b';
+async function callGroqChat({ apiKey, baseUrl, model, systemPrompt, userPrompt, jsonMode = false, maxTokens = 550, _attempt = 0, onUsage = null, phase = 'planner' }) {
+  const activeBaseUrl = (baseUrl || 'https://geminix.arss.fun/v1').replace(/\/+$/, '');
+  const chatEndpoint = activeBaseUrl.endsWith('/chat/completions') ? activeBaseUrl : `${activeBaseUrl}/chat/completions`;
+  const isGeminix = activeBaseUrl.includes('geminix');
+  const isGroq = activeBaseUrl.includes('groq.com');
+  const activeModel = model || (isGeminix ? 'gemini-3.8-flash-high' : 'openai/gpt-oss-20b');
+
   const body = {
     model: activeModel,
-    reasoning_effort: 'low',
     temperature: jsonMode ? 0 : 0.3,
     max_tokens: maxTokens,
     messages: [
@@ -332,11 +336,14 @@ async function callGroqChat({ apiKey, model, systemPrompt, userPrompt, jsonMode 
       { role: 'user', content: userPrompt }
     ]
   };
+  if (isGroq) {
+    body.reasoning_effort = 'low';
+  }
   if (jsonMode) {
     body.response_format = { type: 'json_object' };
   }
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await fetch(chatEndpoint, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey.trim()}`,
@@ -354,18 +361,18 @@ async function callGroqChat({ apiKey, model, systemPrompt, userPrompt, jsonMode 
     }
 
     if (response.status === 429 && _attempt < 2) {
-      if (_attempt === 0) {
+      if (_attempt === 0 && isGroq) {
         const nextModel = activeModel === 'openai/gpt-oss-20b' ? 'openai/gpt-oss-120b' : 'openai/gpt-oss-20b';
-        return await callGroqChat({ apiKey, model: nextModel, systemPrompt, userPrompt, jsonMode, maxTokens, _attempt: 1, onUsage, phase });
+        return await callGroqChat({ apiKey, baseUrl, model: nextModel, systemPrompt, userPrompt, jsonMode, maxTokens, _attempt: 1, onUsage, phase });
       }
       const waitMs = parseRetryAfterMs(errMsg);
       if (waitMs > 0 && waitMs <= 3500) {
         await new Promise(r => setTimeout(r, waitMs + 140));
-        return await callGroqChat({ apiKey, model: 'openai/gpt-oss-20b', systemPrompt, userPrompt, jsonMode, maxTokens, _attempt: 2, onUsage, phase });
+        return await callGroqChat({ apiKey, baseUrl, model: activeModel, systemPrompt, userPrompt, jsonMode, maxTokens, _attempt: 2, onUsage, phase });
       }
     }
-    if (_attempt === 0 && activeModel !== 'openai/gpt-oss-20b') {
-      return await callGroqChat({ apiKey, model: 'openai/gpt-oss-20b', systemPrompt, userPrompt, jsonMode, maxTokens, _attempt: 1, onUsage, phase });
+    if (_attempt === 0 && isGroq && activeModel !== 'openai/gpt-oss-20b') {
+      return await callGroqChat({ apiKey, baseUrl, model: 'openai/gpt-oss-20b', systemPrompt, userPrompt, jsonMode, maxTokens, _attempt: 1, onUsage, phase });
     }
     throw new Error(errMsg);
   }
@@ -454,7 +461,7 @@ async function glideAndActOnVisualTarget(targetDescription, apiKey, runtimeCtx, 
   const ctx = runtimeCtx || {};
   const { dataUrl, bounds, uiContext } = await captureDesktopWithGrid(ctx.eyeWindow, ctx.widgetWindow);
   memory.setScreenSnapshot(uiContext);
-  const loc = await locateTargetWithVision(targetDescription, dataUrl, apiKey, uiContext, ctx.onUsage || null);
+  const loc = await locateTargetWithVision(targetDescription, dataUrl, apiKey, uiContext, ctx.onUsage || null, { baseUrl: ctx.baseUrl, model: ctx.model });
   logAssistant(`Vision locate("${targetDescription}") uiEls=${uiContext?.elements?.length || 0} -> ${JSON.stringify(loc)} bounds=${JSON.stringify(bounds)}`);
   if (!loc || !loc.found) {
     return {
@@ -539,7 +546,7 @@ function findMatchingRunningWindow(appQuery, visibleWindows) {
   return bestScore >= 60 ? best : null;
 }
 
-async function planCommandWithGroq(transcript, apiKey, onUsage = null) {
+async function planCommandWithGroq(transcript, apiKey, onUsage = null, runtimeCtx = {}) {
   const lowT = String(transcript || '').toLowerCase();
 
   // Intent signals for Progressive Skill Disclosure & Volatile Context Pruning
@@ -657,7 +664,8 @@ ${contextLines}`;
 
   const rawContent = await callGroqChat({
     apiKey,
-    model: 'openai/gpt-oss-20b',
+    baseUrl: runtimeCtx.baseUrl,
+    model: runtimeCtx.model,
     systemPrompt,
     userPrompt: transcript,
     jsonMode: true,
@@ -753,7 +761,7 @@ async function routeCommandWithGroq(transcript, apiKey, runtimeCtx = {}) {
     };
   } else {
     runtimeCtx.onStage?.('Memahami perintah (AI)...');
-    const planned = await planCommandWithGroq(transcript, apiKey, runtimeCtx.onUsage || null);
+    const planned = await planCommandWithGroq(transcript, apiKey, runtimeCtx.onUsage || null, runtimeCtx);
     plan = planned.plan;
     visibleWindows = planned.visibleWindows;
     installedApps = planned.installedApps;
@@ -854,7 +862,7 @@ async function executeStep(step, visibleWindows, installedApps, chromeTabs, apiK
       const ctx = runtimeCtx || {};
       const { dataUrl, uiContext } = await captureDesktopWithGrid(ctx.eyeWindow, ctx.widgetWindow);
       memory.setScreenSnapshot(uiContext);
-      const answer = await inspectScreenWithVision(question, dataUrl, apiKey, uiContext, step.replyLang || 'id', ctx.onUsage || null);
+      const answer = await inspectScreenWithVision(question, dataUrl, apiKey, uiContext, step.replyLang || 'id', ctx.onUsage || null, { baseUrl: ctx.baseUrl, model: ctx.model });
       return { ok: true, isChat: true, message: answer || 'Wis sudah melihat layar, ada bagian tertentu yang mau diklik?' };
     }
 

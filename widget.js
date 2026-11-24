@@ -427,30 +427,20 @@ async function processAudio() {
   }
 
   try {
-    const formData = new FormData();
-    formData.append('file', audioBlob, 'speech.webm');
-    formData.append('model', appConfig.model || 'whisper-large-v3-turbo');
-    formData.append('response_format', 'json');
-    formData.append('temperature', '0.0');
-    formData.append('prompt', 'Dikte suara bahasa Indonesia dan English. Teks langsung dan akurat tanpa teks penutup.');
-    if (appConfig.language && appConfig.language !== 'auto') {
-      formData.append('language', appConfig.language);
-    }
+    const arrayBuffer = await audioBlob.arrayBuffer();
+    const audioBase64 = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = audioBlob.type || 'audio/webm';
 
-    const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${appConfig.apiKey.trim()}`
-      },
-      body: formData
+    const result = await ipcRenderer.invoke('transcribe-audio', {
+      audioBase64,
+      mimeType,
+      promptHint: 'Dikte suara bahasa Indonesia dan English. Teks langsung dan akurat tanpa teks penutup.'
     });
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error?.message || `HTTP error ${response.status}`);
+    if (!result || !result.ok) {
+      throw new Error(result?.message || 'Gagal mentranskripsi suara');
     }
 
-    const result = await response.json();
     const rawText = result.text ? result.text.trim() : '';
     const transcribedText = cleanWhisperTranscript(rawText);
     dbgWidget(`Whisper raw="${rawText}" cleaned="${transcribedText}"`);
@@ -462,7 +452,7 @@ async function processAudio() {
       dbgWidget(`Discarded silence or hallucination: "${rawText}"`);
     }
   } catch (err) {
-    console.error('Groq Whisper transcription failed:', err);
+    console.error('Whisper transcription failed:', err);
     alert('Gagal mentranskripsi suara:\n' + err.message);
   } finally {
     setState('idle');

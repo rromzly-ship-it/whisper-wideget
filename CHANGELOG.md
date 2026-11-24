@@ -4,7 +4,34 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.1.1] - 2026-11-18 (Pembaruan Terkini)
+## [v1.2.0] - 2026-11-24 (Pembaruan Terkini)
+
+### 🌐 Integrasi Universal AI Gateway & Dukungan Penuh GeminiX Gateway (`geminix.arss.fun`):
+- **Universal Provider Preset & Dynamic Model Selector:**
+  - Menghubungkan Whisper Widget ke API Gateway kustom **GeminiX** (`https://geminix.arss.fun/v1`) buatan pengguna yang berbasis OpenAI-compatible API standar.
+  - Mendukung 4 preset penyedia utama: **GeminiX Gateway**, **Groq Cloud**, **OpenAI Official**, dan **Custom Endpoint** dengan Base URL fleksibel.
+  - **Auto-Fetch Models (`GET /v1/models`):** Tombol **"🔄 Cek & Muat Model"** secara otomatis menghubungi gateway dan memuat semua model AI yang tersedia (seperti `gemini-3.8-flash-high`, `gemini-3-flash`, `gemini-3.8-pro-high`, `claude-sonnet-4-6`, `claude-opus-4-6-thinking`, dll.) ke dalam dropdown pilihan model beserta indikator status koneksi visual real-time (🟢 Terhubung / 🔴 Error).
+- **Arsitektur Tunggal Terpadu (Single Unified API Configuration):**
+  - Menggabungkan konfigurasi STT (Audio Transcription) dan LLM Reasoning/Planning ke dalam satu konfigurasi API tunggal (tanpa multi-konfigurasi terpisah sesuai permintaan pengguna).
+  - Perekaman audio Whisper pada widget dan mode asisten (Wis) kini menggunakan endpoint terpadu:
+    - Menghubungi `${baseUrl}/audio/transcriptions` untuk provider yang mendukung Whisper langsung (Groq/OpenAI).
+    - Melakukan fallback otomatis ke `${baseUrl}/chat/completions` dengan payload multimodal `input_audio` jika endpoint transkripsi audio tidak tersedia (kompatibel langsung dengan GeminiX).
+  - Pemanggilan reasoning perencana di [assistant.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/assistant.js) dan modul vision di [vision.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/vision.js) kini secara otomatis menggunakan model dan endpoint gateway aktif.
+
+### 🔄 In-App Auto-Updater & GitHub Release Sync (Tanpa Install Ulang):
+- **Menu Baru "Pembaruan" di Sidebar Pengaturan:**
+  - Menambahkan menu **Pembaruan** tepat di bawah menu **Panduan** pada [settings.html](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/settings.html) lengkap dengan ikon SVG pembaruan dan badge notifikasi biru.
+- **Pemeriksaan Versi & Update Sekali Klik (One-Click Update & Relaunch):**
+  - Tombol **"Periksa Pembaruan Sekarang"** mengecek rilis terbaru di GitHub (`rromzly-ship-it/whisper-wideget`) dan membandingkan versi semver.
+  - Menampilkan ringkasan status versi saat ini, versi terbaru di GitHub, tanggal rilis, dan catatan rilis (*release notes*).
+  - **Update Instan Tanpa Install Manual:**
+    - Jika dijalankan dari clone Git / repositori, tombol **"Perbarui Otomatis & Relaunch"** langsung menjalankan `git pull origin main`, memperbarui seluruh file tanpa installer, dan merestart aplikasi (`app.relaunch()`) langsung ke versi terbaru.
+    - Jika dijalankan sebagai installer NSIS mandiri, aplikasi mengunduh installer update terbaru di latar belakang dan memasangnya secara hening (*silent update* `/S`).
+  - Latar belakang background-check otomatis setelah 3 detik untuk menyalakan badge pembaruan jika versi baru tersedia.
+
+---
+
+## [v1.1.1] - 2026-11-18
 
 ### 🧠 Peningkatan Kecerdasan Memilah Variasi Perintah YouTube & Pencarian (Smart NLP Intent Parsing):
 - **Skenario 1 - Hanya Membuka YouTube:**

@@ -8,12 +8,20 @@ const sections = document.querySelectorAll('.content > section');
 const sectionTitleEl = document.getElementById('section-name');
 const btnCloseWindow = document.getElementById('btn-close-window');
 
-// DOM Elements - Settings (Tahap 1)
+// DOM Elements - Settings (Tahap 1 & Universal Gateway)
+const apiProviderSelect = document.getElementById('api-provider');
+const apiBaseUrlInput = document.getElementById('api-base-url');
+const endpointHint = document.getElementById('endpoint-hint');
+const apiKeyLabel = document.getElementById('api-key-label');
+const linkProvider = document.getElementById('link-provider');
 const apiKeyInput = document.getElementById('api-key');
 const toggleKeyBtn = document.getElementById('toggle-key-visibility');
-const linkGroq = document.getElementById('link-groq');
+const modelSelect = document.getElementById('model-select');
+const customModelInput = document.getElementById('custom-model-input');
+const btnFetchModels = document.getElementById('btn-fetch-models');
+const apiStatusBadge = document.getElementById('api-status-badge');
+const modelDescHint = document.getElementById('model-desc-hint');
 const languageSelect = document.getElementById('language');
-const modelSelect = document.getElementById('model');
 const micSelect = document.getElementById('mic-select');
 const noiseGateToggle = document.getElementById('noise-gate-toggle');
 const noiseGateThreshold = document.getElementById('noise-gate-threshold');
@@ -84,6 +92,24 @@ const metricDayRem = document.getElementById('metric-day-rem');
 const guideSearchInput = document.getElementById('guide-search');
 const guideListContainer = document.getElementById('guide-list');
 
+// DOM Elements - Update Page
+const btnCheckUpdate = document.getElementById('btn-check-update');
+const btnApplyUpdate = document.getElementById('btn-apply-update');
+const updateStatusBadge = document.getElementById('update-status-badge');
+const updateCurrentVersion = document.getElementById('update-current-version');
+const updateLatestVersion = document.getElementById('update-latest-version');
+const updateMethodLabel = document.getElementById('update-method-label');
+const updateProgressText = document.getElementById('update-progress-text');
+const updateProgressBarWrap = document.getElementById('update-progress-bar-wrap');
+const updateProgressFill = document.getElementById('update-progress-fill');
+const cardReleaseNotes = document.getElementById('card-release-notes');
+const releaseNotesTitle = document.getElementById('release-notes-title');
+const releaseNotesContent = document.getElementById('release-notes-content');
+const releaseDatePill = document.getElementById('release-date-pill');
+const badgeUpdateAvailable = document.getElementById('badge-update-available');
+const autoCheckUpdateToggle = document.getElementById('auto-check-update-toggle');
+let latestUpdateInfo = null;
+
 // Internal State
 let currentConfig = {};
 let currentKnowledgeList = [];
@@ -116,6 +142,7 @@ navButtons.forEach(btn => {
     if (targetPage === 'log-page') loadCommandLogs();
     if (targetPage === 'quota-page') loadUsageSummary();
     if (targetPage === 'guide-page') renderGuideModules();
+    if (targetPage === 'update-page') loadUpdatePageView();
   });
 });
 
@@ -130,17 +157,193 @@ window.addEventListener('keydown', (e) => {
 });
 
 // =========================================================================
-// 2. GENERAL SETTINGS & TAHAP 1 NOISE GATE
+// 2. GENERAL SETTINGS, UNIVERSAL GATEWAY & TAHAP 1 NOISE GATE
 // =========================================================================
+const PROVIDER_PRESETS = {
+  geminix: {
+    name: 'GeminiX Gateway',
+    baseUrl: 'https://geminix.arss.fun/v1',
+    hint: 'Contoh: https://geminix.arss.fun/v1',
+    keyPlaceholder: 'sk-gx-...',
+    defaultModel: 'gemini-3.8-flash-high',
+    dashboardUrl: 'https://geminix.arss.fun',
+    dashboardLabel: 'Buka Dashboard GeminiX ↗',
+    defaultModels: [
+      { id: 'gemini-3.8-flash-high', desc: 'Penalaran Adaptif (~3.5s) - Rekomendasi' },
+      { id: 'gemini-3-flash', desc: 'Super Cepat (~1.0s) - Respons Kilat' },
+      { id: 'gemini-2.5-flash', desc: 'Stabil & Cepat (~1.2s)' },
+      { id: 'gemini-3.8-pro-high', desc: 'Flagship Pro Complex Reasoning' },
+      { id: 'claude-sonnet-4-6', desc: 'Claude 3.5 Sonnet (~2.5s)' },
+      { id: 'claude-opus-4-6-thinking', desc: 'Claude Opus Thinking Mode' },
+      { id: 'gemini-4-hydrogen-sonar', desc: 'Gemini 4 Hydrogen Sonar' },
+      { id: 'gpt-oss-120b-medium', desc: 'GPT OSS 120B Model' }
+    ]
+  },
+  groq: {
+    name: 'Groq Cloud',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    hint: 'https://api.groq.com/openai/v1',
+    keyPlaceholder: 'gsk_...',
+    defaultModel: 'openai/gpt-oss-20b',
+    dashboardUrl: 'https://console.groq.com/keys',
+    dashboardLabel: 'Ambil Kunci Groq Gratis ↗',
+    defaultModels: [
+      { id: 'openai/gpt-oss-20b', desc: 'GPT OSS 20B (Cepat & Cerdas)' },
+      { id: 'openai/gpt-oss-120b', desc: 'GPT OSS 120B (Penalaran Kompleks)' },
+      { id: 'llama-3.3-70b-versatile', desc: 'Llama 3.3 70B Versatile' }
+    ]
+  },
+  openai: {
+    name: 'OpenAI Resmi',
+    baseUrl: 'https://api.openai.com/v1',
+    hint: 'https://api.openai.com/v1',
+    keyPlaceholder: 'sk-...',
+    defaultModel: 'gpt-4o-mini',
+    dashboardUrl: 'https://platform.openai.com/api-keys',
+    dashboardLabel: 'Buka OpenAI Dashboard ↗',
+    defaultModels: [
+      { id: 'gpt-4o-mini', desc: 'GPT-4o Mini (Cepat & Hemat)' },
+      { id: 'gpt-4o', desc: 'GPT-4o (Akurasi Tinggi)' },
+      { id: 'o1-mini', desc: 'o1-mini (Reasoning)' }
+    ]
+  },
+  custom: {
+    name: 'Custom Endpoint',
+    baseUrl: '',
+    hint: 'Contoh: http://localhost:11434/v1 atau https://openrouter.ai/api/v1',
+    keyPlaceholder: 'Masukkan API Key...',
+    defaultModel: '',
+    dashboardUrl: '',
+    dashboardLabel: '',
+    defaultModels: []
+  }
+};
+
+let activeModelsList = [];
+
+function updateProviderUi(providerKey) {
+  const preset = PROVIDER_PRESETS[providerKey] || PROVIDER_PRESETS.custom;
+  if (providerKey !== 'custom' && preset.baseUrl) {
+    apiBaseUrlInput.value = preset.baseUrl;
+  }
+  endpointHint.textContent = preset.hint || 'Format: https://domain/v1';
+  apiKeyInput.placeholder = preset.keyPlaceholder || 'Masukkan API Key...';
+  
+  if (preset.dashboardUrl && preset.dashboardLabel) {
+    linkProvider.textContent = preset.dashboardLabel;
+    linkProvider.href = preset.dashboardUrl;
+    linkProvider.classList.remove('hidden');
+  } else {
+    linkProvider.classList.add('hidden');
+  }
+
+  // Pre-populate default models if empty
+  if (activeModelsList.length === 0 && preset.defaultModels?.length > 0) {
+    populateModelOptions(preset.defaultModels, preset.defaultModel);
+  }
+}
+
+function setApiStatus(type, text) {
+  apiStatusBadge.className = `api-status-badge status-${type}`;
+  apiStatusBadge.textContent = text;
+}
+
+function populateModelOptions(models, selectedModel) {
+  activeModelsList = Array.isArray(models) ? models : [];
+  modelSelect.innerHTML = '';
+
+  let hasMatch = false;
+  activeModelsList.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    opt.textContent = m.desc ? `${m.id} — ${m.desc}` : m.id;
+    if (m.id === selectedModel) {
+      opt.selected = true;
+      hasMatch = true;
+    }
+    modelSelect.appendChild(opt);
+  });
+
+  // Custom option
+  const customOpt = document.createElement('option');
+  customOpt.value = '__custom__';
+  customOpt.textContent = 'Custom / Ketik Model Lain...';
+  if (!hasMatch && selectedModel) {
+    customOpt.selected = true;
+    customModelInput.value = selectedModel;
+    customModelInput.classList.remove('hidden');
+  } else {
+    customModelInput.classList.add('hidden');
+  }
+  modelSelect.appendChild(customOpt);
+
+  if (hasMatch) {
+    customModelInput.classList.add('hidden');
+  }
+}
+
+async function fetchApiModels(silent = false) {
+  const rawBase = (apiBaseUrlInput.value || '').trim();
+  const apiKey = (apiKeyInput.value || '').trim();
+
+  if (!rawBase) {
+    if (!silent) setApiStatus('error', 'Base URL kosong');
+    return;
+  }
+
+  if (!silent) setApiStatus('loading', '🟡 Mengambil model...');
+  btnFetchModels.textContent = '⏳ Mengambil...';
+  btnFetchModels.disabled = true;
+
+  try {
+    const res = await ipcRenderer.invoke('fetch-api-models', { baseUrl: rawBase, apiKey });
+    if (res && res.ok && Array.isArray(res.models) && res.models.length > 0) {
+      const currentSelected = modelSelect.value === '__custom__' ? customModelInput.value.trim() : modelSelect.value;
+      populateModelOptions(res.models, currentSelected);
+      setApiStatus('success', `🟢 Terhubung (${res.models.length} Model)`);
+    } else {
+      setApiStatus('error', `🔴 ${res?.message || 'Gagal mengambil model'}`);
+    }
+  } catch (err) {
+    setApiStatus('error', `🔴 ${err.message}`);
+  } finally {
+    btnFetchModels.textContent = '🔄 Cek & Muat Model';
+    btnFetchModels.disabled = false;
+  }
+}
+
+apiProviderSelect.addEventListener('change', () => {
+  updateProviderUi(apiProviderSelect.value);
+  if (apiKeyInput.value.trim()) {
+    fetchApiModels(false);
+  }
+});
+
+btnFetchModels.addEventListener('click', () => {
+  fetchApiModels(false);
+});
+
+modelSelect.addEventListener('change', () => {
+  if (modelSelect.value === '__custom__') {
+    customModelInput.classList.remove('hidden');
+    customModelInput.focus();
+  } else {
+    customModelInput.classList.add('hidden');
+  }
+});
+
+linkProvider.addEventListener('click', (e) => {
+  e.preventDefault();
+  const url = linkProvider.href;
+  if (url && url.startsWith('http')) {
+    shell.openExternal(url);
+  }
+});
+
 toggleKeyBtn.addEventListener('click', () => {
   isKeyVisible = !isKeyVisible;
   apiKeyInput.type = isKeyVisible ? 'text' : 'password';
   toggleKeyBtn.textContent = isKeyVisible ? '🙈' : '👁';
-});
-
-linkGroq.addEventListener('click', (e) => {
-  e.preventDefault();
-  shell.openExternal('https://console.groq.com/keys');
 });
 
 noiseGateThreshold.addEventListener('input', () => {
@@ -166,9 +369,32 @@ async function loadMicrophoneDevices(selectedId) {
 
 async function loadConfig() {
   currentConfig = await ipcRenderer.invoke('get-config') || {};
+  
+  // Detect provider
+  let prov = currentConfig.provider;
+  if (!prov) {
+    if (currentConfig.baseUrl?.includes('geminix') || currentConfig.apiKey?.startsWith('sk-gx-')) {
+      prov = 'geminix';
+    } else if (currentConfig.apiKey?.startsWith('gsk_')) {
+      prov = 'groq';
+    } else if (currentConfig.apiKey?.startsWith('sk-')) {
+      prov = 'openai';
+    } else {
+      prov = 'geminix';
+    }
+  }
+  apiProviderSelect.value = prov;
+  updateProviderUi(prov);
+
+  if (currentConfig.baseUrl) {
+    apiBaseUrlInput.value = currentConfig.baseUrl;
+  }
   apiKeyInput.value = currentConfig.apiKey || '';
+  
+  const savedModel = currentConfig.model || PROVIDER_PRESETS[prov]?.defaultModel || 'gemini-3.8-flash-high';
+  populateModelOptions(PROVIDER_PRESETS[prov]?.defaultModels || [], savedModel);
+
   languageSelect.value = currentConfig.language || 'auto';
-  modelSelect.value = currentConfig.model || 'whisper-large-v3-turbo';
   voiceAssistantToggle.checked = currentConfig.voiceAssistant !== false;
   autoStartToggle.checked = currentConfig.autoStart !== false;
 
@@ -185,13 +411,27 @@ async function loadConfig() {
   updateVoiceLockBadge(currentConfig.lockToOwnerVoice);
 
   await loadMicrophoneDevices(currentConfig.deviceId);
+
+  // Auto fetch models if key is present
+  if (apiKeyInput.value.trim()) {
+    fetchApiModels(true);
+  }
 }
 
 btnSave.addEventListener('click', async () => {
+  const selectedModel = modelSelect.value === '__custom__' 
+    ? (customModelInput.value.trim() || 'gemini-3.8-flash-high') 
+    : modelSelect.value;
+
+  const rawBase = apiBaseUrlInput.value.trim();
+  const cleanBase = rawBase.replace(/\/+$/, '').replace(/\/chat\/completions$/i, '');
+
   const updated = {
+    provider: apiProviderSelect.value,
+    baseUrl: cleanBase,
     apiKey: apiKeyInput.value.trim(),
+    model: selectedModel,
     language: languageSelect.value,
-    model: modelSelect.value,
     deviceId: micSelect.value,
     voiceAssistant: voiceAssistantToggle.checked,
     autoStart: autoStartToggle.checked,
@@ -755,6 +995,142 @@ guideSearchInput.addEventListener('input', () => {
 });
 
 // =========================================================================
+// 7. IN-APP UPDATE & GITHUB SYNC
+// =========================================================================
+function setUpdateStatus(type, text) {
+  if (!updateStatusBadge) return;
+  updateStatusBadge.className = `api-status-badge status-${type}`;
+  updateStatusBadge.textContent = text;
+}
+
+async function checkForUpdates(manual = false) {
+  if (manual) {
+    setUpdateStatus('loading', '🟡 Memeriksa...');
+    if (btnCheckUpdate) {
+      btnCheckUpdate.disabled = true;
+      btnCheckUpdate.textContent = '⏳ Memeriksa...';
+    }
+    if (updateProgressText) updateProgressText.textContent = 'Menghubungkan ke GitHub...';
+  }
+
+  try {
+    const res = await ipcRenderer.invoke('check-app-update');
+    if (!res || !res.ok) {
+      if (manual) {
+        setUpdateStatus('error', '🔴 Gagal Cek Update');
+        if (updateProgressText) updateProgressText.textContent = res?.message || 'Tidak dapat menghubungi GitHub';
+      }
+      return;
+    }
+
+    latestUpdateInfo = res;
+    if (updateCurrentVersion) updateCurrentVersion.textContent = res.currentVersion;
+    if (updateLatestVersion) updateLatestVersion.textContent = res.latestVersion || res.currentVersion;
+    if (updateMethodLabel) updateMethodLabel.textContent = res.isGit ? 'Git Instant Sync' : 'Installer Otomatis';
+
+    if (res.hasUpdate) {
+      setUpdateStatus('success', '🟢 Update Tersedia!');
+      if (badgeUpdateAvailable) badgeUpdateAvailable.classList.remove('hidden');
+      if (btnApplyUpdate) {
+        btnApplyUpdate.classList.remove('hidden');
+        btnApplyUpdate.textContent = res.isGit ? '🚀 Perbarui Otomatis & Relaunch' : '⬇️ Unduh & Perbarui Otomatis';
+      }
+      if (updateProgressText) {
+        updateProgressText.textContent = res.isGit
+          ? `Tersedia pembaruan di GitHub (${res.gitBehind || 1} commit baru). Klik perbarui untuk reload langsung!`
+          : `Versi baru ${res.latestVersion} tersedia di GitHub!`;
+      }
+
+      if (res.releaseNotes && cardReleaseNotes) {
+        cardReleaseNotes.classList.remove('hidden');
+        if (releaseNotesTitle) releaseNotesTitle.textContent = res.releaseTitle || `Catatan Rilis ${res.latestVersion}`;
+        if (releaseNotesContent) releaseNotesContent.textContent = res.releaseNotes;
+        if (releaseDatePill && res.publishedAt) {
+          try {
+            releaseDatePill.textContent = new Date(res.publishedAt).toLocaleDateString('id-ID', { dateStyle: 'medium' });
+          } catch {
+            releaseDatePill.textContent = '';
+          }
+        }
+      }
+    } else {
+      setUpdateStatus('idle', 'Aplikasi Terkini');
+      if (badgeUpdateAvailable) badgeUpdateAvailable.classList.add('hidden');
+      if (btnApplyUpdate) btnApplyUpdate.classList.add('hidden');
+      if (manual && updateProgressText) {
+        updateProgressText.textContent = 'Aplikasi sudah menggunakan versi terbaru.';
+      }
+    }
+  } catch (err) {
+    if (manual) {
+      setUpdateStatus('error', '🔴 Error');
+      if (updateProgressText) updateProgressText.textContent = err.message;
+    }
+  } finally {
+    if (manual && btnCheckUpdate) {
+      btnCheckUpdate.disabled = false;
+      btnCheckUpdate.textContent = '🔄 Periksa Pembaruan Sekarang';
+    }
+  }
+}
+
+async function applyUpdate() {
+  if (!latestUpdateInfo) return;
+
+  if (btnApplyUpdate) {
+    btnApplyUpdate.disabled = true;
+    btnApplyUpdate.textContent = '⏳ Memproses Pembaruan...';
+  }
+  if (btnCheckUpdate) btnCheckUpdate.disabled = true;
+
+  if (updateProgressText) {
+    updateProgressText.textContent = latestUpdateInfo.isGit 
+      ? 'Sedang menarik kode terbaru dari GitHub (git pull origin main)...'
+      : 'Sedang mengunduh file update dari GitHub...';
+  }
+
+  if (updateProgressBarWrap) {
+    updateProgressBarWrap.classList.remove('hidden');
+    if (updateProgressFill) updateProgressFill.style.width = '45%';
+  }
+
+  try {
+    const res = await ipcRenderer.invoke('apply-app-update', { downloadUrl: latestUpdateInfo.downloadUrl });
+    if (res && res.ok) {
+      if (updateProgressFill) updateProgressFill.style.width = '100%';
+      setUpdateStatus('success', '🟢 Berhasil!');
+      if (updateProgressText) updateProgressText.textContent = res.message || 'Pembaruan berhasil! Merestart aplikasi...';
+    } else {
+      if (updateProgressBarWrap) updateProgressBarWrap.classList.add('hidden');
+      setUpdateStatus('error', '🔴 Gagal');
+      if (updateProgressText) updateProgressText.textContent = res?.message || 'Gagal menerapkan pembaruan';
+      if (btnApplyUpdate) btnApplyUpdate.disabled = false;
+      if (btnCheckUpdate) btnCheckUpdate.disabled = false;
+    }
+  } catch (err) {
+    if (updateProgressBarWrap) updateProgressBarWrap.classList.add('hidden');
+    setUpdateStatus('error', '🔴 Error');
+    if (updateProgressText) updateProgressText.textContent = err.message;
+    if (btnApplyUpdate) btnApplyUpdate.disabled = false;
+    if (btnCheckUpdate) btnCheckUpdate.disabled = false;
+  }
+}
+
+function loadUpdatePageView() {
+  if (!latestUpdateInfo) {
+    checkForUpdates(true);
+  }
+}
+
+if (btnCheckUpdate) {
+  btnCheckUpdate.addEventListener('click', () => checkForUpdates(true));
+}
+
+if (btnApplyUpdate) {
+  btnApplyUpdate.addEventListener('click', () => applyUpdate());
+}
+
+// =========================================================================
 // INITIALIZATION
 // =========================================================================
 window.addEventListener('DOMContentLoaded', async () => {
@@ -764,4 +1140,5 @@ window.addEventListener('DOMContentLoaded', async () => {
   loadCommandLogs();
   loadUsageSummary();
   renderGuideModules();
+  setTimeout(() => checkForUpdates(false), 3000);
 });

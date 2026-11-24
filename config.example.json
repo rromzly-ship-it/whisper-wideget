@@ -1,9 +1,11 @@
 {
-  "apiKey": "YOUR_GROQ_API_KEY",
+  "provider": "geminix",
+  "baseUrl": "https://geminix.arss.fun/v1",
+  "apiKey": "sk-gx-YOUR_API_KEY",
+  "model": "gemini-3.8-flash-high",
   "language": "auto",
   "autoStart": true,
   "voiceAssistant": true,
-  "model": "whisper-large-v3",
   "deviceId": "default",
   "noiseGateEnabled": true,
   "noiseGateThreshold": -38,

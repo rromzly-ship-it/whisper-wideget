@@ -228,8 +228,12 @@ async function captureDesktopWithGrid(eyeWindow, widgetWindow) {
   return { dataUrl: griddedUrl, bounds, uiContext };
 }
 
-async function callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode = true, maxTokens = 320, onUsage = null } = {}) {
-  const activeModel = 'qwen/qwen3.8-27b';
+async function callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode = true, maxTokens = 320, onUsage = null, baseUrl = null, model = null } = {}) {
+  const activeBaseUrl = (baseUrl || 'https://geminix.arss.fun/v1').replace(/\/+$/, '');
+  const chatEndpoint = activeBaseUrl.endsWith('/chat/completions') ? activeBaseUrl : `${activeBaseUrl}/chat/completions`;
+  const isGeminix = activeBaseUrl.includes('geminix');
+  const activeModel = model || (isGeminix ? 'gemini-3.8-flash-high' : 'qwen/qwen3.8-27b');
+
   const body = {
     model: activeModel,
     temperature: jsonMode ? 0 : 0.2,
@@ -248,7 +252,7 @@ async function callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode = true,
     body.response_format = { type: 'json_object' };
   }
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await fetch(chatEndpoint, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey.trim()}`,
@@ -402,7 +406,7 @@ function cellToPct(cellStr, posX, posY) {
   };
 }
 
-async function locateTargetWithVision(targetDescription, griddedDataUrl, apiKey, uiContext = null, onUsage = null) {
+async function locateTargetWithVision(targetDescription, griddedDataUrl, apiKey, uiContext = null, onUsage = null, options = {}) {
   const direct = findBestUiMatch(targetDescription, uiContext);
   if (direct) {
     return direct;
@@ -423,7 +427,7 @@ Rules:
 - For sidebar / recommendation items ("di samping", "sebelah kanan", "yang lain"): look at the right sidebar (cols D-E) next to the main video player.
 JSON ONLY: {"found":true,"cell":"A1..E4","pos_in_cell_x":0..100,"pos_in_cell_y":0..100,"label":"short"} OR {"found":false,"reason":"singkat ID"}`;
 
-  const raw = await callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode: true, maxTokens: 280, onUsage });
+  const raw = await callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode: true, maxTokens: 280, onUsage, ...options });
   const match = raw.match(/\{[\s\S]*\}/);
   const parsed = JSON.parse(match ? match[0] : raw);
   if (!parsed || !parsed.found) return parsed;
@@ -437,7 +441,7 @@ JSON ONLY: {"found":true,"cell":"A1..E4","pos_in_cell_x":0..100,"pos_in_cell_y":
   return parsed;
 }
 
-async function inspectScreenWithVision(question, griddedDataUrl, apiKey, uiContext = null, replyLang = 'id', onUsage = null) {
+async function inspectScreenWithVision(question, griddedDataUrl, apiKey, uiContext = null, replyLang = 'id', onUsage = null, options = {}) {
   const uiNames = uiContext && Array.isArray(uiContext.elements) && uiContext.elements.length > 0
     ? uiContext.elements.slice(0, 28).map(e => String(e.name || '').slice(0, 40)).filter(Boolean).join(' | ')
     : '';
@@ -448,7 +452,7 @@ async function inspectScreenWithVision(question, griddedDataUrl, apiKey, uiConte
 
   const prompt = `Wis inspecting screenshot. Question: "${question}"${uiList}\n${langInstruction}`;
 
-  return await callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode: false, maxTokens: 280, onUsage });
+  return await callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode: false, maxTokens: 280, onUsage, ...options });
 }
 
 function easeInOutCubic(t) {

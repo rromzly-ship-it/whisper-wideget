@@ -935,6 +935,133 @@ input[type="range"] {
   display: none !important;
 }
 
+/* Universal AI Provider & Gateway Styles */
+.card-header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.card-subtitle {
+  color: #888888;
+  font-size: 12px;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+.api-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.status-idle {
+  background: #262626;
+  color: #a3a3a3;
+  border: 1px solid #383838;
+}
+
+.status-loading {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.status-success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.status-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.btn-mini-action {
+  background: #222222;
+  color: #e5e5e5;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-mini-action:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.subtle-hint {
+  font-size: 11px;
+  color: #737373;
+}
+
+.model-hint {
+  font-size: 11px;
+  color: #888888;
+  margin-top: 5px;
+  display: block;
+}
+
+.model-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Update Page Styles */
+.update-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 640px) {
+  .update-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.update-notes-body {
+  background: #181818;
+  border: 1px solid #2e2e2e;
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: #d4d4d4;
+  font-size: 13px;
+  line-height: 1.6;
+  max-height: 240px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.update-badge {
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
 @media (max-width: 720px) {
   .shell {
     grid-template-columns: 58px minmax(0, 1fr);

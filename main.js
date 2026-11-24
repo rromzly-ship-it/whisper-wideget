@@ -136,11 +136,13 @@ function getConfigFilePath() {
 
 function loadConfig() {
   const defaultConfig = {
+    provider: 'geminix',
+    baseUrl: 'https://geminix.arss.fun/v1',
     apiKey: '',
     language: 'auto', // 'auto' for multilingual, 'id', 'en'
     autoStart: false,
     voiceAssistant: true,
-    model: 'whisper-large-v3',
+    model: 'gemini-3.8-flash-high',
     deviceId: 'default',
     posX: null,
     posY: null
@@ -149,6 +151,19 @@ function loadConfig() {
     const targetPath = getConfigFilePath();
     if (fs.existsSync(targetPath)) {
       const data = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
+      // Backward compatibility auto-detection
+      if (!data.baseUrl) {
+        if (data.apiKey?.startsWith('sk-gx-')) {
+          data.provider = 'geminix';
+          data.baseUrl = 'https://geminix.arss.fun/v1';
+        } else if (data.apiKey?.startsWith('gsk_')) {
+          data.provider = 'groq';
+          data.baseUrl = 'https://api.groq.com/openai/v1';
+        } else {
+          data.provider = 'geminix';
+          data.baseUrl = 'https://geminix.arss.fun/v1';
+        }
+      }
       return { ...defaultConfig, ...data };
     }
   } catch (e) {
@@ -346,6 +361,33 @@ function hideSpeechBubble() {
   if (bubbleWindow && !bubbleWindow.isDestroyed() && bubbleWindow.isVisible()) {
     bubbleWindow.webContents.send('bubble-close-request');
   }
+}
+
+function getGitExecutable() {
+  const possiblePaths = [
+    'git',
+    path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Packages', 'Git.MinGit_Microsoft.Winget.Source_8wekyb3d8bbwe', 'cmd', 'git.exe'),
+    'C:\\Program Files\\Git\\cmd\\git.exe',
+    'C:\\Program Files (x86)\\Git\\cmd\\git.exe'
+  ];
+  for (const p of possiblePaths) {
+    try {
+      execSync(`"${p}" --version`, { stdio: 'ignore' });
+      return `"${p}"`;
+    } catch (_) {}
+  }
+  return 'git';
+}
+
+function isVersionNewer(remoteVer, currentVer) {
+  if (!remoteVer || !currentVer) return false;
+  const parse = v => String(v).replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
+  const [rMaj, rMin, rPat] = parse(remoteVer);
+  const [cMaj, cMin, cPat] = parse(currentVer);
+  if (rMaj > cMaj) return true;
+  if (rMaj === cMaj && rMin > cMin) return true;
+  if (rMaj === cMaj && rMin === cMin && rPat > cPat) return true;
+  return false;
 }
 
 async function checkForGitHubUpdates() {
@@ -1291,6 +1333,8 @@ async function runSingleCommandEntry(entry) {
       eyeOffsetX: EYE_OFFSET_X,
       eyeOffsetY: EYE_OFFSET_Y,
       scrollController,
+      baseUrl: appConfig.baseUrl,
+      model: appConfig.model,
       onImmediateSpeech: (immediateReply, immediateLang) => {
         spokeImmediate = true;
         dispatchTtsNonBlocking(immediateReply, immediateLang || 'id', true);
@@ -1562,6 +1606,262 @@ ipcMain.handle('paste-text', async (event, text) => {
   }
 
   return true;
+});
+
+// Universal API Gateway - Fetch Models
+ipcMain.handle('fetch-api-models', async (event, { baseUrl, apiKey }) => {
+  if (!baseUrl) return { ok: false, message: 'Base URL kosong' };
+  try {
+    const cleanBase = baseUrl.replace(/\/+$/, '').replace(/\/chat\/completions$/i, '');
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey.trim()}`;
+    }
+    const resp = await fetch(`${cleanBase}/models`, { method: 'GET', headers });
+    if (!resp.ok) {
+      return { ok: false, message: `HTTP ${resp.status}: Gagal memuat daftar model` };
+    }
+    const data = await resp.json();
+    let models = [];
+    if (Array.isArray(data.data)) {
+      models = data.data.map(m => typeof m === 'string' ? m : (m.id || m.name)).filter(Boolean);
+    } else if (Array.isArray(data)) {
+      models = data.map(m => typeof m === 'string' ? m : (m.id || m.name)).filter(Boolean);
+    }
+    return { ok: true, models };
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+});
+
+// Universal Audio Transcription (Whisper STT / Multimodal Gateway)
+ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audio/webm', promptHint = '' }) => {
+  if (!audioBase64) return { ok: false, message: 'Data audio kosong' };
+
+  const baseUrl = (appConfig.baseUrl || 'https://geminix.arss.fun/v1').replace(/\/+$/, '');
+  const apiKey = (appConfig.apiKey || '').trim();
+  const selectedModel = appConfig.model || 'gemini-3.8-flash-high';
+  const language = appConfig.language && appConfig.language !== 'auto' ? appConfig.language : null;
+
+  // 1. Try standard /audio/transcriptions endpoint (Groq, OpenAI, Whisper API gateways)
+  const isDedicatedTranscribe = !baseUrl.includes('geminix');
+  if (isDedicatedTranscribe) {
+    try {
+      const buffer = Buffer.from(audioBase64, 'base64');
+      const blob = new Blob([buffer], { type: mimeType });
+      const formData = new FormData();
+      formData.append('file', blob, 'speech.webm');
+      formData.append('model', selectedModel || 'whisper-large-v3-turbo');
+      formData.append('response_format', 'verbose_json');
+      formData.append('temperature', '0.0');
+      if (promptHint) formData.append('prompt', promptHint);
+      if (language) formData.append('language', language);
+
+      const resp = await fetch(`${baseUrl}/audio/transcriptions`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}` },
+        body: formData
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        return {
+          ok: true,
+          text: data.text || '',
+          language: data.language || '',
+          duration: data.duration || 0,
+          segments: data.segments || []
+        };
+      }
+    } catch (e) {
+      console.warn('Dedicated transcriptions endpoint failed, falling back to chat/completions:', e.message);
+    }
+  }
+
+  // 2. Fallback: Use /chat/completions with input_audio (GeminiX / OpenAI-compatible multimodal)
+  try {
+    const chatEndpoint = baseUrl.endsWith('/chat/completions') ? baseUrl : `${baseUrl}/chat/completions`;
+    const format = mimeType.includes('wav') ? 'wav' : (mimeType.includes('mp3') ? 'mp3' : 'webm');
+    const promptText = `Transkripsikan rekaman audio berikut ke dalam teks bahasa Indonesia/Inggris secara persis apa adanya tanpa format markdown, tanpa tanda kutip, tanpa teks pembuka atau penutup, dan tanpa penjelasan apapun.\nPetunjuk konteks perintah: ${promptHint || 'navigasi komputer, browsing, youtube, aplikasi'}`;
+
+    const body = {
+      model: selectedModel || 'gemini-3.8-flash-high',
+      temperature: 0.0,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: promptText },
+            {
+              type: 'input_audio',
+              input_audio: {
+                data: audioBase64,
+                format: format
+              }
+            }
+          ]
+        }
+      ]
+    };
+
+    const resp = await fetch(chatEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    let text = (data.choices?.[0]?.message?.content || '').trim();
+    text = text.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/, '').replace(/^["']|["']$/g, '').trim();
+
+    return {
+      ok: true,
+      text,
+      language: language || 'id',
+      duration: 0,
+      segments: []
+    };
+  } catch (err) {
+    console.error('Unified audio transcription error:', err);
+    return { ok: false, message: err.message };
+  }
+});
+
+// In-App Auto-Update Handlers
+ipcMain.handle('check-app-update', async () => {
+  const currentVersion = app.getVersion() || require('./package.json').version;
+  const isGitRepo = fs.existsSync(path.join(__dirname, '.git'));
+  
+  let gitBehind = 0;
+  let gitLatestCommitMsg = '';
+
+  if (isGitRepo) {
+    try {
+      const gitCmd = getGitExecutable();
+      execSync(`${gitCmd} fetch origin main --quiet`, { timeout: 8000, stdio: 'ignore' });
+      const revCount = execSync(`${gitCmd} rev-list HEAD..origin/main --count`, { encoding: 'utf8', timeout: 4000 }).trim();
+      gitBehind = parseInt(revCount, 10) || 0;
+      if (gitBehind > 0) {
+        gitLatestCommitMsg = execSync(`${gitCmd} log -1 origin/main --pretty=format:"%s"`, { encoding: 'utf8', timeout: 3000 }).trim();
+      }
+    } catch (e) {
+      console.warn('Git fetch check warning:', e.message);
+    }
+  }
+
+  // Check GitHub Releases
+  try {
+    const resp = await fetch('https://api.github.com/repos/rromzly-ship-it/whisper-wideget/releases/latest', {
+      headers: {
+        'User-Agent': 'WhisperWidget-App',
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (resp.ok) {
+      const rel = await resp.json();
+      const latestTag = (rel.tag_name || '').replace(/^v/i, '');
+      const hasReleaseUpdate = isVersionNewer(latestTag, currentVersion);
+      const hasUpdate = hasReleaseUpdate || gitBehind > 0;
+
+      let downloadUrl = rel.html_url;
+      if (Array.isArray(rel.assets)) {
+        const exeAsset = rel.assets.find(a => a.name.endsWith('.exe'));
+        if (exeAsset && exeAsset.browser_download_url) {
+          downloadUrl = exeAsset.browser_download_url;
+        }
+      }
+
+      return {
+        ok: true,
+        currentVersion: `v${currentVersion}`,
+        latestVersion: rel.tag_name || `v${latestTag}`,
+        hasUpdate,
+        releaseTitle: rel.name || `Whisper Widget ${rel.tag_name}`,
+        releaseNotes: rel.body || 'Pembaruan stabilitas dan peningkatan performa.',
+        publishedAt: rel.published_at || '',
+        downloadUrl,
+        isGit: isGitRepo,
+        gitBehind,
+        gitLatestCommitMsg
+      };
+    }
+  } catch (err) {
+    console.warn('GitHub API release check failed:', err.message);
+  }
+
+  return {
+    ok: true,
+    currentVersion: `v${currentVersion}`,
+    latestVersion: gitBehind > 0 ? `v${currentVersion}+${gitBehind}` : `v${currentVersion}`,
+    hasUpdate: gitBehind > 0,
+    releaseTitle: gitBehind > 0 ? `Pembaruan Git (${gitBehind} commit baru)` : 'Versi Terkini',
+    releaseNotes: gitLatestCommitMsg || 'Aplikasi sudah menggunakan versi terbaru.',
+    publishedAt: new Date().toISOString(),
+    downloadUrl: 'https://github.com/rromzly-ship-it/whisper-wideget',
+    isGit: isGitRepo,
+    gitBehind,
+    gitLatestCommitMsg
+  };
+});
+
+ipcMain.handle('apply-app-update', async (event, { downloadUrl }) => {
+  const isGitRepo = fs.existsSync(path.join(__dirname, '.git'));
+
+  if (isGitRepo) {
+    try {
+      const gitCmd = getGitExecutable();
+      const pullOut = execSync(`${gitCmd} pull origin main`, { encoding: 'utf8', timeout: 15000 });
+      console.log('Update pull output:', pullOut);
+      setTimeout(() => {
+        app.relaunch();
+        app.exit(0);
+      }, 1200);
+      return { ok: true, method: 'git', message: 'Pembaruan berhasil ditarik dari GitHub! Aplikasi sedang me-relaunch...' };
+    } catch (e) {
+      return { ok: false, message: `Gagal memperbarui via git: ${e.message}` };
+    }
+  }
+
+  if (downloadUrl && downloadUrl.endsWith('.exe')) {
+    try {
+      const os = require('os');
+      const tempExe = path.join(os.tmpdir(), `WhisperWidget-Update-${Date.now()}.exe`);
+      
+      const res = await fetch(downloadUrl);
+      if (!res.ok) throw new Error(`Download installer gagal: HTTP ${res.status}`);
+
+      const arrayBuf = await res.arrayBuffer();
+      fs.writeFileSync(tempExe, Buffer.from(arrayBuf));
+
+      const { spawn } = require('child_process');
+      const child = spawn(tempExe, ['/S'], { detached: true, stdio: 'ignore' });
+      child.unref();
+
+      setTimeout(() => {
+        app.exit(0);
+      }, 1200);
+
+      return { ok: true, method: 'installer', message: 'Installer berhasil diunduh! Aplikasi akan segera restart ke versi baru...' };
+    } catch (dlErr) {
+      return { ok: false, message: `Gagal mengunduh installer: ${dlErr.message}` };
+    }
+  }
+
+  if (downloadUrl) {
+    shell.openExternal(downloadUrl);
+    return { ok: true, method: 'browser', message: 'Membuka tautan rilis di browser...' };
+  }
+
+  return { ok: false, message: 'Tautan pembaruan tidak ditemukan' };
 });
 
 // Single instance lock

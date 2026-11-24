@@ -1100,30 +1100,20 @@ async function processVoiceCommand(audioBlob, segPeak = 0) {
 
   try {
     const promptHints = await ipcRenderer.invoke('get-whisper-prompt').catch(() => '');
-    const formData = new FormData();
-    formData.append('file', audioBlob, 'command.webm');
-    formData.append('model', appConfig.model || 'whisper-large-v3');
-    formData.append('response_format', 'verbose_json');
-    formData.append('temperature', '0.0');
-    formData.append('prompt', promptHints || 'Wis ID & EN: Chrome, CorelDRAW, YouTube, WhatsApp, Word, iTrade, EsteraOne, telusuri, scroll, berhenti, zoom in, zoom out.');
-    if (appConfig.language && appConfig.language !== 'auto') {
-      formData.append('language', appConfig.language);
-    }
+    const arrayBuffer = await audioBlob.arrayBuffer();
+    const audioBase64 = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = audioBlob.type || 'audio/webm';
 
-    const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${appConfig.apiKey.trim()}`
-      },
-      body: formData
+    const result = await ipcRenderer.invoke('transcribe-audio', {
+      audioBase64,
+      mimeType,
+      promptHint: promptHints || 'Wis ID & EN: Chrome, CorelDRAW, YouTube, WhatsApp, Word, iTrade, EsteraOne, telusuri, scroll, berhenti, zoom in, zoom out.'
     });
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error?.message || `HTTP error ${response.status}`);
+    if (!result || !result.ok) {
+      throw new Error(result?.message || 'Gagal mentranskripsi suara perintah');
     }
 
-    const result = await response.json();
     const rawTranscript = result.text ? result.text.trim() : '';
     const transcript = cleanWhisperTranscript(rawTranscript);
     const detectedLang = String(result.language || '').trim().toLowerCase();
