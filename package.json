@@ -26,7 +26,12 @@
           ]
         }
       ],
-      "icon": "icon.ico"
+      "icon": "icon.ico",
+      "signtoolOptions": {
+        "certificateFile": "certs/arss-codesign.pfx",
+        "certificatePassword": "arss123",
+        "publisherName": "ARSS"
+      }
     },
     "nsis": {
       "oneClick": false,
@@ -57,7 +62,7 @@
     "dictation",
     "groq"
   ],
-  "author": "",
+  "author": "ARSS",
   "license": "MIT",
   "devDependencies": {
     "electron": "^33.2.1",

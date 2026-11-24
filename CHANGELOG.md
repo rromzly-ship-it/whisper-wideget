@@ -6,6 +6,10 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ## [v1.2.0] - 2026-11-24 (Pembaruan Terkini)
 
+### 🏷️ Penandatanganan Digital Resmi Publisher "ARSS" (Authenticode Code Signing):
+- Mengonfigurasi tanda tangan digital resmi Authenticode dengan subject `CN=ARSS` pada binary instalasi Windows.
+- Dialog keamanan Windows (SmartScreen & UAC) kini menampilkan nama penerbit resmi: **Publisher: ARSS** (menggantikan status *"Unknown publisher"*).
+
 ### 🌐 Integrasi Universal AI Gateway & Dukungan Penuh GeminiX Gateway (`geminix.arss.fun`):
 - **Universal Provider Preset & Dynamic Model Selector:**
   - Menghubungkan Whisper Widget ke API Gateway kustom **GeminiX** (`https://geminix.arss.fun/v1`) buatan pengguna yang berbasis OpenAI-compatible API standar.
