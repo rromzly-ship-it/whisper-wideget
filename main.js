@@ -1600,10 +1600,6 @@ function enqueueVoiceCommand(payload) {
   processCommandQueue();
   return { queued: true, id: entry.id, queueLength: commandQueue.length };
 }
-  broadcastCommandLogs();
-  processCommandQueue();
-  return { queued: true, id: entry.id, queueLength: commandQueue.length };
-}
 
 ipcMain.on('record-whisper-usage', (event, payload) => {
   if (!appConfig?.apiKey) return;

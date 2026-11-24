@@ -4,7 +4,15 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.2.2] - 2026-11-24 (Pembaruan Terkini)
+## [v1.2.3] - 2026-11-24 (Pembaruan Terkini)
+
+### 🐛 Hotfix SyntaxError Main Process (Fix Error Line 1606):
+- Menghapus blok duplikasi baris kode pada fungsi `enqueueVoiceCommand` di [main.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/main.js) yang menyebabkan error fatal startup `SyntaxError: Unexpected token '}'`.
+- Seluruh file JavaScript telah diverifikasi lolos pengecekan sintaks `node -c` (0 error). Aplikasi kini berjalan mulus tanpa crash saat dibuka.
+
+---
+
+## [v1.2.2] - 2026-11-24
 
 ### 🎙️ Pemulihan Penuh Suara Mikrofon (Voice to Text Instan 150ms & Anti-Ngaco):
 - **Akar Penyebab Ditemukan & Diperbaiki:** Mengidentifikasi penyebab transkripsi suara menjadi salah/ngaco: parameter `baseUrl` sebelumnya sempat keliru jatuh ke gateway GeminiX saat konfigurasi menggunakan kunci Groq (`gsk_...`), sehingga audio rekaman terkirim ke LLM multimodal Gemini yang lambat dan berhalusinasi "bantuan teknis".
