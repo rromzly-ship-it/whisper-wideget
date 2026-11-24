@@ -34,13 +34,15 @@
       }
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Whisper Widget",
       "artifactName": "${productName}-Setup-${version}.${ext}",
-      "uninstallDisplayName": "Whisper Widget"
+      "uninstallDisplayName": "Whisper Widget",
+      "runAfterFinish": true
     },
     "files": [
       "**/*",

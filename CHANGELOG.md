@@ -11,13 +11,27 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 - Dialog keamanan Windows (SmartScreen & UAC) kini menampilkan nama penerbit resmi: **Publisher: ARSS** (menggantikan status *"Unknown publisher"*).
 - Menyediakan script launcher sekali klik `Install-Whisper.bat` yang secara otomatis melepas atribut Mark-of-the-Web (`Unblock-File`) sehingga file `.exe` dapat langsung berjalan mulus tanpa terhalang dialog peringatan SmartScreen.
 
-### 🎨 First-Run Onboarding Setup Wizard Khas Whisper (Modern Dark UI):
-- Jendela wizard sambutan dan setup awal bertema gelap (`onboarding.html`, `onboarding.css`, `onboarding.js`) dengan 4 langkah interaktif:
-  1. **Langkah 1 (Sambutan):** Avatar visual Wis menyala, ringkasan fitur asisten AI suara & dikte.
-  2. **Langkah 2 (Koneksi AI Gateway / GeminiX):** Input Base URL, API Key, dan pilihan model langsung dengan pengetesan koneksi interaktif.
-  3. **Langkah 3 (Preferensi Windows):** Opsi pintasan keyboard, buat shortcut di desktop, dan jalankan otomatis saat Windows startup.
-  4. **Langkah 4 (Selesai):** Ringkasan konfigurasi siap pakai, tombol langsung mulai ke widget melayang, dan sapaan suara selamat datang.
-- Otomatis aktif saat pertama kali aplikasi dibuka di komputer baru jika belum dikonfigurasi, dan dapat dibuka kembali kapan saja via tombol **"Setup Awal"** di menu Pengaturan.
+### 🎨 First-Run Onboarding Setup Wizard & Modern One-Click Installer:
+- **Bebas Layar Putih NSIS Kuno (Modern One-Click Installer):**
+  - Mengonfigurasi `oneClick: true` pada NSIS installer sehingga proses instalasi berjalan instan tanpa menampilkan wizard putih jadul Windows.
+  - Setelah instalasi selesai, aplikasi langsung membuka jendela setup bertema gelap khas Whisper.
+- **Wizard Sambutan & Setup Awal Khas Whisper (Modern Dark UI):**
+  - Jendela wizard sambutan dan setup awal bertema gelap (`onboarding.html`, `onboarding.css`, `onboarding.js`) dengan 4 langkah interaktif:
+    1. **Langkah 1 (Sambutan):** Avatar visual Wis menyala, ringkasan fitur asisten AI suara & dikte.
+    2. **Langkah 2 (Koneksi AI Gateway / GeminiX):** Input Base URL, API Key, dan pilihan model langsung dengan pengetesan koneksi interaktif.
+    3. **Langkah 3 (Preferensi Windows):** Opsi pintasan keyboard, buat shortcut di desktop, dan jalankan otomatis saat Windows startup.
+    4. **Langkah 4 (Selesai):** Ringkasan konfigurasi siap pakai, tombol langsung mulai ke widget melayang, dan sapaan suara selamat datang.
+  - Otomatis aktif saat pertama kali aplikasi dibuka di komputer baru atau via flag `--setup`, dan dapat dibuka kembali kapan saja via tombol **"Setup Awal"** di menu Pengaturan.
+
+### 🛡️ Keamanan Privasi GeminiX & Perbaikan UI Pengaturan:
+- **Penghapusan Link Dashboard GeminiX:**
+  - Menghapus tautan eksternal ke dashboard GeminiX dari menu Pengaturan dan Onboarding demi menjaga privasi dan keamanan gateway pribadi pengguna (provider lain seperti Groq dan OpenAI tetap memiliki link resmi).
+- **Perbaikan Bug Blank Biru di Menu Pembaruan:**
+  - Memperbaiki struktur elemen toggle switch pada halaman Pembaruan agar slider switch tidak meluap ke seluruh ukuran jendela (*full-viewport overflow*).
+- **Eliminasi Double Padding:**
+  - Menghilangkan margin ganda dan menyelaraskan padding area konten langsung ke batas garis sidebar menu sehingga tampilan konten lebih proporsional dan luas.
+- **Desain Minimalis Tombol Sticky Aksi:**
+  - Mengubah tombol aksi bawah (`Setup Awal`, `Restart`, `Keluar`, `Simpan`) menjadi ramping satu baris (tinggi 32px) dengan ikon SVG khusus (tongkat sihir, refresh, X, dan disket simpan) tanpa teks bertumpuk.
 
 ### 🌐 Integrasi Universal AI Gateway & Dukungan Penuh GeminiX Gateway (`geminix.arss.fun`):
 - **Universal Provider Preset & Dynamic Model Selector:**

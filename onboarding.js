@@ -57,7 +57,7 @@ const PROVIDER_PRESETS = {
       'claude-sonnet-4-6',
       'claude-opus-4-6-thinking'
     ],
-    dashboardUrl: 'https://geminix.arss.fun'
+    dashboardUrl: ''
   },
   groq: {
     name: 'Groq Cloud',

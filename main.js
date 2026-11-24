@@ -153,9 +153,6 @@ function loadConfig() {
     if (fs.existsSync(targetPath)) {
       const data = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
       // Backward compatibility auto-detection
-      if (data.apiKey && data.setupCompleted === undefined) {
-        data.setupCompleted = true;
-      }
       if (!data.baseUrl) {
         if (data.apiKey?.startsWith('sk-gx-')) {
           data.provider = 'geminix';
@@ -2029,7 +2026,8 @@ if (!gotTheLock) {
       console.warn('Could not register global shortcut:', e);
     }
 
-    const isFirstRun = !appConfig.apiKey || appConfig.setupCompleted === false;
+    const forceSetup = process.argv.includes('--setup') || process.argv.includes('--onboarding');
+    const isFirstRun = forceSetup || !appConfig.apiKey || appConfig.setupCompleted !== true;
     if (isFirstRun) {
       setTimeout(() => {
         createOnboardingWindow();

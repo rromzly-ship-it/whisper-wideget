@@ -167,8 +167,8 @@ const PROVIDER_PRESETS = {
     hint: 'Contoh: https://geminix.arss.fun/v1',
     keyPlaceholder: 'sk-gx-...',
     defaultModel: 'gemini-3.8-flash-high',
-    dashboardUrl: 'https://geminix.arss.fun',
-    dashboardLabel: 'Buka Dashboard GeminiX ↗',
+    dashboardUrl: '',
+    dashboardLabel: '',
     defaultModels: [
       { id: 'gemini-3.8-flash-high', desc: 'Penalaran Adaptif (~3.5s) - Rekomendasi' },
       { id: 'gemini-3-flash', desc: 'Super Cepat (~1.0s) - Respons Kilat' },
