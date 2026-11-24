@@ -4,7 +4,27 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.2.0] - 2026-11-24 (Pembaruan Terkini)
+## [v1.2.1] - 2026-11-24 (Pembaruan Terkini)
+
+### 🎙️ Perbaikan Transkripsi Mikrofon & STT Gateway GeminiX (Fix 404 Entity Error):
+- **Auto-Correction Model Audio GeminiX:** Mengatasi error `Antigravity API error 404: Requested entity was not found` yang muncul ketika menggunakan mikrofon. Endpoint GeminiX (`geminix.arss.fun`) tidak memiliki dedicated model Whisper (`whisper-large-v3-turbo`), sehingga sistem secara otomatis mengoreksi dan mengarahkan input audio ke model multimodal unggulan GeminiX: `gemini-3.8-flash-high`.
+- **Ekstraksi Bersih Bebas Reasoning/Thoughts:** Menambahkan instruksi sistem speech-to-text presisi serta regex pembersih rantai pemikiran (*chain-of-thought*) agar teks hasil dikte yang dimasukkan ke aplikasi selalu bersih murni tanpa teks pengantar atau pemikiran internal AI.
+- **Keselarasan Multi-Modul (STT, Vision, Planner):** Menyelaraskan seluruh modul internal di [main.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/main.js), [assistant.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/assistant.js), dan [vision.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/vision.js) agar memiliki fallback otomatis cerdas ke `gemini-3.8-flash-high` saat mendeteksi gateway GeminiX.
+
+### 🎨 Desain Presisi & Eliminasi Padding Sidebar:
+- **Konten Menempel Rapi ke Garis Sidebar (Flush Border):** Menghilangkan padding kiri ganda pada area konten pengaturan dan mengatur kartu agar menempel langsung rata (*flush*) ke garis pemisah menu sidebar kiri tanpa celah padding yang mengganggu.
+- **Perbaikan Dropdown Model (Fix Blank / Teks Tak Terlihat):** Menambahkan styling kontras tinggi `#202020` dengan warna teks putih terang `#ffffff` pada elemen `<select> option` di Pengaturan dan Onboarding, sehingga seluruh daftar model AI tampil jelas dan tidak lagi berwarna hitam kosong.
+
+### 🪄 Penyempurnaan Tampilan Setup Onboarding:
+- **Bebas Terpotong pada Layar Resolusi Tinggi / Skala Windows:** Memperluas dimensi jendela Onboarding menjadi `760x680` (min `640x580`), mengaktifkan `resizable: true`, dan menambahkan dukungan scrollbar responsif pada setiap tahapan setup agar tidak ada kartu informasi yang terpotong pada laptop dengan tampilan DPI tinggi (125%-150% scaling).
+
+### 🚀 Pengujian Langsung Fitur In-App Auto-Update (v1.2.0 ➔ v1.2.1):
+- Merilis paket resmi `v1.2.1` di GitHub Releases dengan file installer bertanda tangan `WhisperWidget-Setup-1.2.1.exe` dan arsip `WhisperAgent-v1.2.1.zip`.
+- Pengguna yang sedang membuka aplikasi `v1.2.0` dapat langsung menekan tombol **"Periksa Pembaruan Sekarang"** pada tab Pembaruan dan memperbarui aplikasi secara otomatis hanya dengan satu klik!
+
+---
+
+## [v1.2.0] - 2026-11-24
 
 ### 🏷️ Penandatanganan Digital Resmi Publisher "ARSS" (Authenticode Code Signing):
 - Mengonfigurasi tanda tangan digital resmi Authenticode dengan subject `CN=ARSS` pada binary instalasi Windows.

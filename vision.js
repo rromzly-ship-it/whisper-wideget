@@ -232,7 +232,16 @@ async function callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode = true,
   const activeBaseUrl = (baseUrl || 'https://geminix.arss.fun/v1').replace(/\/+$/, '');
   const chatEndpoint = activeBaseUrl.endsWith('/chat/completions') ? activeBaseUrl : `${activeBaseUrl}/chat/completions`;
   const isGeminix = activeBaseUrl.includes('geminix');
-  const activeModel = model || (isGeminix ? 'gemini-3.8-flash-high' : 'qwen/qwen3.8-27b');
+  let activeModel = model;
+  if (isGeminix) {
+    if (!activeModel || activeModel.toLowerCase().includes('whisper') || activeModel.startsWith('qwen/') || activeModel.startsWith('openai/')) {
+      activeModel = 'gemini-3.8-flash-high';
+    }
+  } else {
+    if (!activeModel) {
+      activeModel = 'qwen/qwen3.8-27b';
+    }
+  }
 
   const body = {
     model: activeModel,
@@ -252,7 +261,7 @@ async function callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode = true,
     body.response_format = { type: 'json_object' };
   }
 
-  const response = await fetch(chatEndpoint, {
+  let response = await fetch(chatEndpoint, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey.trim()}`,
@@ -260,6 +269,18 @@ async function callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode = true,
     },
     body: JSON.stringify(body)
   });
+
+  if (!response.ok && isGeminix && activeModel !== 'gemini-3.8-flash-high') {
+    body.model = 'gemini-3.8-flash-high';
+    response = await fetch(chatEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey.trim()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+  }
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));

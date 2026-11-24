@@ -325,7 +325,16 @@ async function callGroqChat({ apiKey, baseUrl, model, systemPrompt, userPrompt, 
   const chatEndpoint = activeBaseUrl.endsWith('/chat/completions') ? activeBaseUrl : `${activeBaseUrl}/chat/completions`;
   const isGeminix = activeBaseUrl.includes('geminix');
   const isGroq = activeBaseUrl.includes('groq.com');
-  const activeModel = model || (isGeminix ? 'gemini-3.8-flash-high' : 'openai/gpt-oss-20b');
+  let activeModel = model;
+  if (isGeminix) {
+    if (!activeModel || activeModel.toLowerCase().includes('whisper') || activeModel.startsWith('openai/')) {
+      activeModel = 'gemini-3.8-flash-high';
+    }
+  } else {
+    if (!activeModel) {
+      activeModel = 'openai/gpt-oss-20b';
+    }
+  }
 
   const body = {
     model: activeModel,
@@ -373,6 +382,9 @@ async function callGroqChat({ apiKey, baseUrl, model, systemPrompt, userPrompt, 
     }
     if (_attempt === 0 && isGroq && activeModel !== 'openai/gpt-oss-20b') {
       return await callGroqChat({ apiKey, baseUrl, model: 'openai/gpt-oss-20b', systemPrompt, userPrompt, jsonMode, maxTokens, _attempt: 1, onUsage, phase });
+    }
+    if (_attempt === 0 && isGeminix && activeModel !== 'gemini-3.8-flash-high') {
+      return await callGroqChat({ apiKey, baseUrl, model: 'gemini-3.8-flash-high', systemPrompt, userPrompt, jsonMode, maxTokens, _attempt: 1, onUsage, phase });
     }
     throw new Error(errMsg);
   }

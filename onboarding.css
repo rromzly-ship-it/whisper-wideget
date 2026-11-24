@@ -183,6 +183,8 @@ body {
   flex: 1;
   flex-direction: column;
   padding: 16px 36px 18px;
+  overflow-y: auto;
+  max-height: 100%;
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -367,6 +369,12 @@ body {
   font-size: 12.5px;
   outline: none;
   transition: all 0.15s ease;
+}
+
+select option {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+  padding: 8px 12px;
 }
 
 .custom-input:focus {

@@ -238,8 +238,8 @@ function updateProviderUi(providerKey) {
     linkProvider.classList.add('hidden');
   }
 
-  // Pre-populate default models if empty
-  if (activeModelsList.length === 0 && preset.defaultModels?.length > 0) {
+  // Populate models for the selected provider preset
+  if (preset.defaultModels?.length > 0) {
     populateModelOptions(preset.defaultModels, preset.defaultModel);
   }
 }
@@ -314,6 +314,7 @@ async function fetchApiModels(silent = false) {
 }
 
 apiProviderSelect.addEventListener('change', () => {
+  activeModelsList = [];
   updateProviderUi(apiProviderSelect.value);
   if (apiKeyInput.value.trim()) {
     fetchApiModels(false);
@@ -392,7 +393,10 @@ async function loadConfig() {
   }
   apiKeyInput.value = currentConfig.apiKey || '';
   
-  const savedModel = currentConfig.model || PROVIDER_PRESETS[prov]?.defaultModel || 'gemini-3.8-flash-high';
+  let savedModel = currentConfig.model || PROVIDER_PRESETS[prov]?.defaultModel || 'gemini-3.8-flash-high';
+  if (prov === 'geminix' && (savedModel.startsWith('whisper-') || !savedModel)) {
+    savedModel = 'gemini-3.8-flash-high';
+  }
   populateModelOptions(PROVIDER_PRESETS[prov]?.defaultModels || [], savedModel);
 
   languageSelect.value = currentConfig.language || 'auto';

@@ -741,17 +741,17 @@ function createOnboardingWindow() {
   }
 
   onboardingWindow = new BrowserWindow({
-    width: 720,
-    height: 620,
+    width: 760,
+    height: 680,
     minWidth: 640,
-    minHeight: 560,
-    title: 'Setup Whisper Agent · ARSS',
+    minHeight: 580,
+    title: 'Setup Whisper Agent',
     icon: path.join(__dirname, 'icon.ico'),
     show: false,
     frame: false,
     transparent: false,
     backgroundColor: '#141414',
-    resizable: false,
+    resizable: true,
     center: true,
     alwaysOnTop: true,
     webPreferences: {
@@ -1698,8 +1698,15 @@ ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audi
 
   const baseUrl = (appConfig.baseUrl || 'https://geminix.arss.fun/v1').replace(/\/+$/, '');
   const apiKey = (appConfig.apiKey || '').trim();
-  const selectedModel = appConfig.model || 'gemini-3.8-flash-high';
+  let selectedModel = appConfig.model || 'gemini-3.8-flash-high';
   const language = appConfig.language && appConfig.language !== 'auto' ? appConfig.language : null;
+
+  // Auto-correct model for GeminiX gateway (Whisper models are not supported on GeminiX)
+  if (baseUrl.includes('geminix') || appConfig.provider === 'geminix') {
+    if (!selectedModel || selectedModel.toLowerCase().includes('whisper') || selectedModel === '__custom__') {
+      selectedModel = 'gemini-3.8-flash-high';
+    }
+  }
 
   // 1. Try standard /audio/transcriptions endpoint (Groq, OpenAI, Whisper API gateways)
   const isDedicatedTranscribe = !baseUrl.includes('geminix');
@@ -1740,16 +1747,19 @@ ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audi
   try {
     const chatEndpoint = baseUrl.endsWith('/chat/completions') ? baseUrl : `${baseUrl}/chat/completions`;
     const format = mimeType.includes('wav') ? 'wav' : (mimeType.includes('mp3') ? 'mp3' : 'webm');
-    const promptText = `Transkripsikan rekaman audio berikut ke dalam teks bahasa Indonesia/Inggris secara persis apa adanya tanpa format markdown, tanpa tanda kutip, tanpa teks pembuka atau penutup, dan tanpa penjelasan apapun.\nPetunjuk konteks perintah: ${promptHint || 'navigasi komputer, browsing, youtube, aplikasi'}`;
 
     const body = {
       model: selectedModel || 'gemini-3.8-flash-high',
       temperature: 0.0,
       messages: [
         {
+          role: 'system',
+          content: 'You are an accurate, fast speech-to-text transcriber. Output ONLY the verbatim spoken words in Indonesian or English. Never output any thoughts, reasoning, explanations, prefixes, or markdown code blocks.'
+        },
+        {
           role: 'user',
           content: [
-            { type: 'text', text: promptText },
+            { type: 'text', text: `Transkripsikan rekaman audio berikut ke dalam teks bahasa Indonesia/Inggris secara persis apa adanya tanpa format markdown, tanpa tanda kutip, dan tanpa penjelasan apapun.${promptHint ? ' Petunjuk konteks: ' + promptHint : ''}` },
             {
               type: 'input_audio',
               input_audio: {
@@ -1762,7 +1772,7 @@ ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audi
       ]
     };
 
-    const resp = await fetch(chatEndpoint, {
+    let resp = await fetch(chatEndpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -1771,6 +1781,19 @@ ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audi
       body: JSON.stringify(body)
     });
 
+    if (!resp.ok && body.model !== 'gemini-3.8-flash-high') {
+      console.warn(`Model ${body.model} gagal (${resp.status}), mencoba fallback ke gemini-3.8-flash-high...`);
+      body.model = 'gemini-3.8-flash-high';
+      resp = await fetch(chatEndpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+    }
+
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       throw new Error(err.error?.message || `HTTP ${resp.status}`);
@@ -1778,6 +1801,11 @@ ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audi
 
     const data = await resp.json();
     let text = (data.choices?.[0]?.message?.content || '').trim();
+    // If response contains thought process separated by double newline, take the final transcription
+    if (text.includes('\n\n')) {
+      const parts = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+      text = parts[parts.length - 1];
+    }
     text = text.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/, '').replace(/^["']|["']$/g, '').trim();
 
     return {
