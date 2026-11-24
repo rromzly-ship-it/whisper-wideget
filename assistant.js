@@ -321,17 +321,19 @@ function parseRetryAfterMs(errMsg) {
 }
 
 async function callGroqChat({ apiKey, baseUrl, model, systemPrompt, userPrompt, jsonMode = false, maxTokens = 550, _attempt = 0, onUsage = null, phase = 'planner' }) {
-  const activeBaseUrl = (baseUrl || 'https://geminix.arss.fun/v1').replace(/\/+$/, '');
+  const isKeyGx = apiKey?.startsWith('sk-gx-');
+  const defaultUrl = isKeyGx ? 'https://geminix.arss.fun/v1' : 'https://api.groq.com/openai/v1';
+  const activeBaseUrl = (baseUrl || defaultUrl).replace(/\/+$/, '');
   const chatEndpoint = activeBaseUrl.endsWith('/chat/completions') ? activeBaseUrl : `${activeBaseUrl}/chat/completions`;
-  const isGeminix = activeBaseUrl.includes('geminix');
-  const isGroq = activeBaseUrl.includes('groq.com');
+  const isGeminix = activeBaseUrl.includes('geminix') || isKeyGx;
+  const isGroq = activeBaseUrl.includes('groq.com') || apiKey?.startsWith('gsk_');
   let activeModel = model;
   if (isGeminix) {
     if (!activeModel || activeModel.toLowerCase().includes('whisper') || activeModel.startsWith('openai/')) {
       activeModel = 'gemini-3.8-flash-high';
     }
   } else {
-    if (!activeModel) {
+    if (!activeModel || activeModel.toLowerCase().includes('whisper') || activeModel.startsWith('gemini-')) {
       activeModel = 'openai/gpt-oss-20b';
     }
   }
@@ -688,8 +690,28 @@ ${contextLines}`;
 
   logAssistant(`Plan: ${rawContent}`);
 
-  const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
-  const plan = JSON.parse(jsonMatch ? jsonMatch[0] : rawContent);
+  let plan = null;
+  try {
+    let cleanJson = String(rawContent || '').replace(/```(?:json)?\s*([\s\S]*?)\s*```/gi, '$1').trim();
+    const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      plan = JSON.parse(jsonMatch[0]);
+    } else {
+      plan = JSON.parse(cleanJson);
+    }
+  } catch (parseErr) {
+    console.warn('JSON parse warning in assistant:', parseErr.message);
+    const fallbackText = String(rawContent || '')
+      .replace(/[*#`_]/g, '')
+      .replace(/\{[\s\S]*\}/g, '')
+      .trim();
+    plan = {
+      steps: [],
+      summary: 'Respons asisten',
+      replyLang: 'id',
+      reply: fallbackText || 'Halo! Ada yang bisa Wis bantu?'
+    };
+  }
   return { plan, visibleWindows, installedApps, chromeTabs };
 }
 

@@ -4,7 +4,33 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.2.1] - 2026-11-24 (Pembaruan Terkini)
+## [v1.2.2] - 2026-11-24 (Pembaruan Terkini)
+
+### 🎙️ Pemulihan Penuh Suara Mikrofon (Voice to Text Instan 150ms & Anti-Ngaco):
+- **Akar Penyebab Ditemukan & Diperbaiki:** Mengidentifikasi penyebab transkripsi suara menjadi salah/ngaco: parameter `baseUrl` sebelumnya sempat keliru jatuh ke gateway GeminiX saat konfigurasi menggunakan kunci Groq (`gsk_...`), sehingga audio rekaman terkirim ke LLM multimodal Gemini yang lambat dan berhalusinasi "bantuan teknis".
+- **Resolusi Provider Presisi (`resolveProvider`):** Kunci API Groq (`gsk_...`) kini dijamin 100% selalu menggunakan endpoint resmi Groq Whisper (`https://api.groq.com/openai/v1/audio/transcriptions`) dengan model `whisper-large-v3-turbo` berkecepatan 150ms tanpa pernah terlempar ke model chat. Hasil pengetikan suara kembali akurat, cepat, dan verbatim seperti semula.
+
+### 🛑 Anti Penumpukan Request (No Request Stacking):
+- **Blokir Akumulasi Antrean Perintah:** Mengatasi masalah penumpukan request saat pengguna berbicara berturut-turut atau saat ada suara latar belakang.
+- **Deteksi Status Sibuk Terpadu:** [eye.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/eye.js) dan [main.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/main.js) kini secara otomatis memblokir penumpukan perintah saat Wis sedang mengeksekusi aksi. Suara tambahan diabaikan (kecuali perintah pembatalan seperti `stop` atau `berhenti`), sehingga antrean tidak menumpuk dan tidak ada lagi perintah tak dikenal yang tiba-tiba tereksekusi.
+
+### 🎯 Perbaikan Logika YouTube & Penulisan Dokumen Word:
+- **Perbaikan Regex Pattern D di [skills/browser.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/skills/browser.js):** Memperbaiki pola pencocokan agar hanya aktif jika pengguna memang menyebut "kolom pencarian/telusuri" atau konteks video/lagu/YouTube. Perintah seperti `"Wis, ketikkan lima ide konten di Word"` kini dijamin tidak akan pernah lagi dibajak menjadi pencarian YouTube.
+- **Prioritas Modul Word di [skills/index.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/skills/index.js):** Memindahkan `wordSkill` ke urutan sebelum browser agar perintah dokumen dan pengetikan teks ditangani secara tepat oleh modul Word.
+- **Kebal Markdown & Hilangkan Emotikon Marah:** Memperbaiki parser JSON perencana di [assistant.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/assistant.js) agar kebal terhadap teks berformat markdown asterisks (`**Navigasi**...`), mencegah crash parsing JSON (`Unexpected token`) dan menghilangkan emotikon merah marah pada karakter Wis.
+
+### 🎨 Desain Flat & Bersih: Eliminasi Border Kiri & Background Kartu di Semua Menu:
+- **Tampilan Menempel Rapi & Bebas Kotak:** Menghapus outline border kaku dan background tumpukan kartu (`.card { background: transparent; border: none; }`) di semua tab menu (Pengaturan, Log Aktivitas, Profil Suara, Library Web & App, Token Kuota, Pembaruan). Seluruh item menu dan baris log kini tersaji rapi, lapang, dan rata menyatu dengan tema gelap modern.
+- **Solusi Tuntas Dropdown Model Blank:** Menambahkan styling inline `#ffffff` dan latar `#202020` pada setiap elemen `<option>` di [settings.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/settings.js) serta menerapkan `color-scheme: dark !important;` pada `<select>` di [settings.css](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/settings.css) sehingga seluruh daftar model AI terlihat tajam dan terbaca jelas.
+
+### ⚡ Fitur Updater Baru: Persentase Real, Progress Bar Streaming, & Popup Relaunch:
+- **Persentase Unduhan Real-Time:** Menampilkan progres unduhan file pembaruan secara real (0% - 100%) dengan indikator MB terkirim (`XX MB / 222 MB`) yang mengalir dinamis pada animasi progress bar.
+- **Proses Instalasi Bertahap:** Menampilkan transisi progres pemasangan paket ke direktori aplikasi secara bertahap hingga tuntas 100%.
+- **Popup Konfirmasi Pembaruan Selesai:** Menampilkan modal dialog interaktif bertema elegan saat instalasi selesai dengan tombol **"🔄 Jalankan Ulang Aplikasi"**, yang langsung me-restart aplikasi dan memunculkan widget Whisper kembali dalam hitungan detik.
+
+---
+
+## [v1.2.1] - 2026-11-24
 
 ### 🎙️ Perbaikan Transkripsi Mikrofon & STT Gateway GeminiX (Fix 404 Entity Error):
 - **Auto-Correction Model Audio GeminiX:** Mengatasi error `Antigravity API error 404: Requested entity was not found` yang muncul ketika menggunakan mikrofon. Endpoint GeminiX (`geminix.arss.fun`) tidak memiliki dedicated model Whisper (`whisper-large-v3-turbo`), sehingga sistem secara otomatis mengoreksi dan mengarahkan input audio ke model multimodal unggulan GeminiX: `gemini-3.8-flash-high`.

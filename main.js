@@ -154,15 +154,16 @@ function loadConfig() {
       const data = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
       // Backward compatibility auto-detection
       if (!data.baseUrl) {
-        if (data.apiKey?.startsWith('sk-gx-')) {
+        if (data.apiKey?.startsWith('sk-gx-') || data.provider === 'geminix') {
           data.provider = 'geminix';
           data.baseUrl = 'https://geminix.arss.fun/v1';
-        } else if (data.apiKey?.startsWith('gsk_')) {
+        } else if (data.apiKey?.startsWith('sk-') && !data.apiKey?.startsWith('sk-gx-')) {
+          data.provider = 'openai';
+          data.baseUrl = 'https://api.openai.com/v1';
+        } else {
+          // Default is Groq
           data.provider = 'groq';
           data.baseUrl = 'https://api.groq.com/openai/v1';
-        } else {
-          data.provider = 'geminix';
-          data.baseUrl = 'https://geminix.arss.fun/v1';
         }
       }
       return { ...defaultConfig, ...data };
@@ -171,6 +172,48 @@ function loadConfig() {
     console.error('Error loading config:', e);
   }
   return defaultConfig;
+}
+
+function resolveProvider(cfg = {}) {
+  const key = String(cfg.apiKey || '').trim();
+  const prov = cfg.provider || '';
+  const url = String(cfg.baseUrl || '').trim();
+
+  if (prov === 'geminix' || key.startsWith('sk-gx-') || url.includes('geminix')) {
+    return {
+      provider: 'geminix',
+      baseUrl: url || 'https://geminix.arss.fun/v1',
+      defaultModel: 'gemini-3.8-flash-high',
+      isGeminix: true,
+      isGroq: false
+    };
+  }
+  if (prov === 'openai' || (key.startsWith('sk-') && !key.startsWith('sk-gx-'))) {
+    return {
+      provider: 'openai',
+      baseUrl: url || 'https://api.openai.com/v1',
+      defaultModel: 'whisper-1',
+      isGeminix: false,
+      isGroq: false
+    };
+  }
+  if (prov === 'custom' && url) {
+    return {
+      provider: 'custom',
+      baseUrl: url.replace(/\/+$/, ''),
+      defaultModel: cfg.model || 'whisper-large-v3-turbo',
+      isGeminix: false,
+      isGroq: false
+    };
+  }
+  // Default is Groq (Fast Whisper & Fast LLM)
+  return {
+    provider: 'groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    defaultModel: 'whisper-large-v3-turbo',
+    isGeminix: false,
+    isGroq: true
+  };
 }
 
 function saveConfig(config) {
@@ -1495,6 +1538,7 @@ async function runSingleCommandEntry(entry) {
 async function processCommandQueue() {
   if (isProcessingQueue) return;
   isProcessingQueue = true;
+  notifyEyeAnim({ type: 'busy-state', busy: true });
 
   try {
     while (commandQueue.length > 0) {
@@ -1510,6 +1554,7 @@ async function processCommandQueue() {
     }
   } finally {
     isProcessingQueue = false;
+    notifyEyeAnim({ type: 'busy-state', busy: false });
     broadcastCommandLogs();
   }
 }
@@ -1517,6 +1562,16 @@ async function processCommandQueue() {
 function enqueueVoiceCommand(payload) {
   const isObj = payload && typeof payload === 'object';
   const cleanText = String(isObj ? payload.transcript : payload || '').trim();
+  if (!cleanText) return { queued: false, empty: true };
+
+  // MENCEGAH PENUMPUKAN REQUEST:
+  // Jika Wis sedang sibuk mengeksekusi perintah dan antrean sudah ada 1 perintah,
+  // abaikan request tambahan agar tidak terjadi penumpukan/spam perintah.
+  if (isProcessingQueue && commandQueue.length >= 1) {
+    console.log('[main] Mencegah penumpukan request: mengabaikan perintah tambahan:', cleanText);
+    return { queued: false, dropped: true, reason: 'busy' };
+  }
+
   const willQueue = isProcessingQueue || commandQueue.length > 0;
   const entry = {
     id: nextCommandId++,
@@ -1541,6 +1596,10 @@ function enqueueVoiceCommand(payload) {
   if (willQueue) {
     refreshQueuePositions();
   }
+  broadcastCommandLogs();
+  processCommandQueue();
+  return { queued: true, id: entry.id, queueLength: commandQueue.length };
+}
   broadcastCommandLogs();
   processCommandQueue();
   return { queued: true, id: entry.id, queueLength: commandQueue.length };
@@ -1696,70 +1755,72 @@ ipcMain.handle('fetch-api-models', async (event, { baseUrl, apiKey }) => {
 ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audio/webm', promptHint = '' }) => {
   if (!audioBase64) return { ok: false, message: 'Data audio kosong' };
 
-  const baseUrl = (appConfig.baseUrl || 'https://geminix.arss.fun/v1').replace(/\/+$/, '');
+  const prov = resolveProvider(appConfig);
   const apiKey = (appConfig.apiKey || '').trim();
-  let selectedModel = appConfig.model || 'gemini-3.8-flash-high';
   const language = appConfig.language && appConfig.language !== 'auto' ? appConfig.language : null;
+  let selectedModel = appConfig.model;
 
-  // Auto-correct model for GeminiX gateway (Whisper models are not supported on GeminiX)
-  if (baseUrl.includes('geminix') || appConfig.provider === 'geminix') {
-    if (!selectedModel || selectedModel.toLowerCase().includes('whisper') || selectedModel === '__custom__') {
-      selectedModel = 'gemini-3.8-flash-high';
-    }
-  }
-
-  // 1. Try standard /audio/transcriptions endpoint (Groq, OpenAI, Whisper API gateways)
-  const isDedicatedTranscribe = !baseUrl.includes('geminix');
-  if (isDedicatedTranscribe) {
+  // 1. Standar Whisper API (Groq Cloud, OpenAI, atau gateway kompatibel Whisper)
+  if (!prov.isGeminix) {
     try {
       const buffer = Buffer.from(audioBase64, 'base64');
       const blob = new Blob([buffer], { type: mimeType });
       const formData = new FormData();
       formData.append('file', blob, 'speech.webm');
-      formData.append('model', selectedModel || 'whisper-large-v3-turbo');
-      formData.append('response_format', 'verbose_json');
+      const modelToUse = (selectedModel && !selectedModel.startsWith('gemini-') && selectedModel !== '__custom__')
+        ? selectedModel
+        : prov.defaultModel;
+      formData.append('model', modelToUse);
+      formData.append('response_format', 'json');
       formData.append('temperature', '0.0');
       if (promptHint) formData.append('prompt', promptHint);
       if (language) formData.append('language', language);
 
-      const resp = await fetch(`${baseUrl}/audio/transcriptions`, {
+      const resp = await fetch(`${prov.baseUrl}/audio/transcriptions`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${apiKey}` },
         body: formData
       });
 
-      if (resp.ok) {
-        const data = await resp.json();
-        return {
-          ok: true,
-          text: data.text || '',
-          language: data.language || '',
-          duration: data.duration || 0,
-          segments: data.segments || []
-        };
+      if (!resp.ok) {
+        const errJson = await resp.json().catch(() => ({}));
+        throw new Error(errJson.error?.message || `Groq Whisper HTTP ${resp.status}`);
       }
+
+      const data = await resp.json();
+      return {
+        ok: true,
+        text: data.text || '',
+        language: data.language || language || 'id',
+        duration: data.duration || 0,
+        segments: data.segments || []
+      };
     } catch (e) {
-      console.warn('Dedicated transcriptions endpoint failed, falling back to chat/completions:', e.message);
+      console.error('Groq Whisper dedicated transcription error:', e.message);
+      return { ok: false, message: e.message };
     }
   }
 
-  // 2. Fallback: Use /chat/completions with input_audio (GeminiX / OpenAI-compatible multimodal)
+  // 2. Gateway GeminiX (Multimodal audio via /chat/completions)
   try {
-    const chatEndpoint = baseUrl.endsWith('/chat/completions') ? baseUrl : `${baseUrl}/chat/completions`;
+    const chatEndpoint = prov.baseUrl.endsWith('/chat/completions') ? prov.baseUrl : `${prov.baseUrl}/chat/completions`;
     const format = mimeType.includes('wav') ? 'wav' : (mimeType.includes('mp3') ? 'mp3' : 'webm');
+    const modelToUse = (selectedModel && !selectedModel.toLowerCase().includes('whisper') && selectedModel !== '__custom__')
+      ? selectedModel
+      : 'gemini-2.5-flash';
 
     const body = {
-      model: selectedModel || 'gemini-3.8-flash-high',
+      model: modelToUse,
       temperature: 0.0,
       messages: [
         {
           role: 'system',
-          content: 'You are an accurate, fast speech-to-text transcriber. Output ONLY the verbatim spoken words in Indonesian or English. Never output any thoughts, reasoning, explanations, prefixes, or markdown code blocks.'
+          content: 'You are an accurate, verbatim speech-to-text transcriber. Output ONLY the exact transcribed spoken words in Indonesian or English. Output nothing else: no explanations, no thought tags, no markdown.'
         },
         {
           role: 'user',
           content: [
-            { type: 'text', text: `Transkripsikan rekaman audio berikut ke dalam teks bahasa Indonesia/Inggris secara persis apa adanya tanpa format markdown, tanpa tanda kutip, dan tanpa penjelasan apapun.${promptHint ? ' Petunjuk konteks: ' + promptHint : ''}` },
+            { type: 'text', text: `Transkripsikan rekaman audio berikut secara persis kata demi kata tanpa komentar:${promptHint ? ' Konteks: ' + promptHint : ''}` },
             {
               type: 'input_audio',
               input_audio: {
@@ -1781,19 +1842,6 @@ ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audi
       body: JSON.stringify(body)
     });
 
-    if (!resp.ok && body.model !== 'gemini-3.8-flash-high') {
-      console.warn(`Model ${body.model} gagal (${resp.status}), mencoba fallback ke gemini-3.8-flash-high...`);
-      body.model = 'gemini-3.8-flash-high';
-      resp = await fetch(chatEndpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-      });
-    }
-
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       throw new Error(err.error?.message || `HTTP ${resp.status}`);
@@ -1801,7 +1849,6 @@ ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audi
 
     const data = await resp.json();
     let text = (data.choices?.[0]?.message?.content || '').trim();
-    // If response contains thought process separated by double newline, take the final transcription
     if (text.includes('\n\n')) {
       const parts = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
       text = parts[parts.length - 1];
@@ -1816,7 +1863,7 @@ ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audi
       segments: []
     };
   } catch (err) {
-    console.error('Unified audio transcription error:', err);
+    console.error('GeminiX audio transcription error:', err);
     return { ok: false, message: err.message };
   }
 });
@@ -1901,17 +1948,17 @@ ipcMain.handle('check-app-update', async () => {
 
 ipcMain.handle('apply-app-update', async (event, { downloadUrl }) => {
   const isGitRepo = fs.existsSync(path.join(__dirname, '.git'));
+  const sender = event.sender;
 
   if (isGitRepo) {
     try {
+      sender.send('update-progress', { phase: 'download', percent: 50, message: 'Menarik commit terbaru dari GitHub (git pull origin main)...' });
       const gitCmd = getGitExecutable();
       const pullOut = execSync(`${gitCmd} pull origin main`, { encoding: 'utf8', timeout: 15000 });
       console.log('Update pull output:', pullOut);
-      setTimeout(() => {
-        app.relaunch();
-        app.exit(0);
-      }, 1200);
-      return { ok: true, method: 'git', message: 'Pembaruan berhasil ditarik dari GitHub! Aplikasi sedang me-relaunch...' };
+      sender.send('update-progress', { phase: 'install', percent: 100, message: 'Pembaruan siap!' });
+      sender.send('update-completed', { method: 'git' });
+      return { ok: true, method: 'git' };
     } catch (e) {
       return { ok: false, message: `Gagal memperbarui via git: ${e.message}` };
     }
@@ -1920,24 +1967,79 @@ ipcMain.handle('apply-app-update', async (event, { downloadUrl }) => {
   if (downloadUrl && downloadUrl.endsWith('.exe')) {
     try {
       const os = require('os');
+      const https = require('https');
+      const http = require('http');
       const tempExe = path.join(os.tmpdir(), `WhisperWidget-Update-${Date.now()}.exe`);
+
+      sender.send('update-progress', { phase: 'download', percent: 0, message: 'Memulai unduhan installer dari GitHub...' });
+
+      // Real streaming download with percentage tracking
+      await new Promise((resolve, reject) => {
+        function downloadStream(url, redirectCount = 0) {
+          if (redirectCount > 6) return reject(new Error('Terlalu banyak redirect download'));
+          const client = url.startsWith('https') ? https : http;
+          client.get(url, { headers: { 'User-Agent': 'WhisperWidget-Updater' } }, (res) => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+              return downloadStream(res.headers.location, redirectCount + 1);
+            }
+            if (res.statusCode !== 200) {
+              return reject(new Error(`Download installer gagal: HTTP ${res.statusCode}`));
+            }
+
+            const totalBytes = parseInt(res.headers['content-length'] || '0', 10);
+            let downloadedBytes = 0;
+            const fileStream = fs.createWriteStream(tempExe);
+
+            res.on('data', (chunk) => {
+              downloadedBytes += chunk.length;
+              fileStream.write(chunk);
+              if (totalBytes > 0) {
+                const percent = Math.min(100, Math.round((downloadedBytes / totalBytes) * 100));
+                const mbDown = (downloadedBytes / (1024 * 1024)).toFixed(1);
+                const mbTotal = (totalBytes / (1024 * 1024)).toFixed(1);
+                sender.send('update-progress', {
+                  phase: 'download',
+                  percent,
+                  message: `Mengunduh file update: ${mbDown} MB / ${mbTotal} MB (${percent}%)`
+                });
+              }
+            });
+
+            res.on('end', () => {
+              fileStream.end();
+              resolve();
+            });
+
+            res.on('error', (err) => {
+              fileStream.end();
+              reject(err);
+            });
+          }).on('error', reject);
+        }
+        downloadStream(downloadUrl);
+      });
+
+      // Tahap 2: Proses Instalasi Perubahan Realistis
+      sender.send('update-progress', { phase: 'install', percent: 15, message: 'Menyiapkan paket instalasi...' });
+      await new Promise(r => setTimeout(r, 600));
+
+      sender.send('update-progress', { phase: 'install', percent: 45, message: 'Memasang pembaruan ke direktori aplikasi...' });
       
-      const res = await fetch(downloadUrl);
-      if (!res.ok) throw new Error(`Download installer gagal: HTTP ${res.status}`);
-
-      const arrayBuf = await res.arrayBuffer();
-      fs.writeFileSync(tempExe, Buffer.from(arrayBuf));
-
       const { spawn } = require('child_process');
       const child = spawn(tempExe, ['/S'], { detached: true, stdio: 'ignore' });
       child.unref();
 
-      setTimeout(() => {
-        app.exit(0);
-      }, 1200);
+      // Berikan waktu installer NSIS mengekstrak file di background
+      await new Promise(r => setTimeout(r, 1800));
+      sender.send('update-progress', { phase: 'install', percent: 80, message: 'Memperbarui modul sistem...' });
+      await new Promise(r => setTimeout(r, 700));
+      sender.send('update-progress', { phase: 'install', percent: 100, message: 'Pembaruan selesai dipasang!' });
 
-      return { ok: true, method: 'installer', message: 'Installer berhasil diunduh! Aplikasi akan segera restart ke versi baru...' };
+      // Kirim sinyal selesai agar muncul pop-up selesai di layar
+      sender.send('update-completed', { method: 'installer', tempExe });
+      return { ok: true, method: 'installer' };
     } catch (dlErr) {
+      console.error('Update installer download error:', dlErr);
       return { ok: false, message: `Gagal mengunduh installer: ${dlErr.message}` };
     }
   }
@@ -1948,6 +2050,11 @@ ipcMain.handle('apply-app-update', async (event, { downloadUrl }) => {
   }
 
   return { ok: false, message: 'Tautan pembaruan tidak ditemukan' };
+});
+
+ipcMain.handle('restart-app', () => {
+  app.relaunch();
+  app.exit(0);
 });
 
 // Onboarding & First-Run IPC Handlers

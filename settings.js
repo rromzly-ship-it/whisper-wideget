@@ -258,6 +258,8 @@ function populateModelOptions(models, selectedModel) {
     const opt = document.createElement('option');
     opt.value = m.id;
     opt.textContent = m.desc ? `${m.id} — ${m.desc}` : m.id;
+    opt.style.backgroundColor = '#202020';
+    opt.style.color = '#ffffff';
     if (m.id === selectedModel) {
       opt.selected = true;
       hasMatch = true;
@@ -269,6 +271,8 @@ function populateModelOptions(models, selectedModel) {
   const customOpt = document.createElement('option');
   customOpt.value = '__custom__';
   customOpt.textContent = 'Custom / Ketik Model Lain...';
+  customOpt.style.backgroundColor = '#202020';
+  customOpt.style.color = '#ffffff';
   if (!hasMatch && selectedModel) {
     customOpt.selected = true;
     customModelInput.value = selectedModel;
@@ -1085,24 +1089,55 @@ async function checkForUpdates(manual = false) {
   }
 }
 
+const updateCompleteModal = document.getElementById('update-complete-modal');
+const btnRelaunchApp = document.getElementById('btn-relaunch-app');
+
+ipcRenderer.on('update-progress', (event, { phase, percent, message }) => {
+  if (updateProgressBarWrap) updateProgressBarWrap.classList.remove('hidden');
+  if (updateProgressFill) {
+    updateProgressFill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+  }
+  if (updateProgressText && message) {
+    updateProgressText.textContent = message;
+  }
+  if (phase === 'download') {
+    setUpdateStatus('success', `⬇️ Mengunduh (${percent}%)`);
+  } else if (phase === 'install') {
+    setUpdateStatus('success', `⚙️ Memasang (${percent}%)`);
+  }
+});
+
+ipcRenderer.on('update-completed', () => {
+  if (updateProgressFill) updateProgressFill.style.width = '100%';
+  setUpdateStatus('success', '🟢 Selesai!');
+  if (updateProgressText) updateProgressText.textContent = 'Pembaruan siap digunakan.';
+  if (updateCompleteModal) updateCompleteModal.classList.remove('hidden');
+});
+
+if (btnRelaunchApp) {
+  btnRelaunchApp.addEventListener('click', async () => {
+    btnRelaunchApp.disabled = true;
+    btnRelaunchApp.textContent = 'Memulai Ulang...';
+    await ipcRenderer.invoke('restart-app');
+  });
+}
+
 async function applyUpdate() {
   if (!latestUpdateInfo) return;
 
   if (btnApplyUpdate) {
     btnApplyUpdate.disabled = true;
-    btnApplyUpdate.textContent = '⏳ Memproses Pembaruan...';
+    btnApplyUpdate.textContent = '⏳ Mengunduh...';
   }
   if (btnCheckUpdate) btnCheckUpdate.disabled = true;
 
   if (updateProgressText) {
-    updateProgressText.textContent = latestUpdateInfo.isGit 
-      ? 'Sedang menarik kode terbaru dari GitHub (git pull origin main)...'
-      : 'Sedang mengunduh file update dari GitHub...';
+    updateProgressText.textContent = 'Menghubungi server pembaruan...';
   }
 
   if (updateProgressBarWrap) {
     updateProgressBarWrap.classList.remove('hidden');
-    if (updateProgressFill) updateProgressFill.style.width = '45%';
+    if (updateProgressFill) updateProgressFill.style.width = '2%';
   }
 
   try {
@@ -1110,7 +1145,9 @@ async function applyUpdate() {
     if (res && res.ok) {
       if (updateProgressFill) updateProgressFill.style.width = '100%';
       setUpdateStatus('success', '🟢 Berhasil!');
-      if (updateProgressText) updateProgressText.textContent = res.message || 'Pembaruan berhasil! Merestart aplikasi...';
+      if (updateCompleteModal) {
+        updateCompleteModal.classList.remove('hidden');
+      }
     } else {
       if (updateProgressBarWrap) updateProgressBarWrap.classList.add('hidden');
       setUpdateStatus('error', '🔴 Gagal');

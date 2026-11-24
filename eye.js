@@ -94,10 +94,14 @@ ipcRenderer.on('wis-reappear', () => {
   }, 260);
 });
 
+let isWisBusyExecuting = false;
+
 ipcRenderer.on('wis-eye-anim', (event, payload) => {
   if (!payload || !payload.type) return;
   const now = performance.now();
-  if (payload.type === 'scroll-single') {
+  if (payload.type === 'busy-state') {
+    isWisBusyExecuting = Boolean(payload.busy);
+  } else if (payload.type === 'scroll-single') {
     const dir = String(payload.direction || 'down').toLowerCase();
     const spin = Math.PI * 2;
     impulseSpin = {
@@ -1157,6 +1161,15 @@ async function processVoiceCommand(audioBlob, segPeak = 0) {
     if (!transcript || isNoiseHallucination) {
       dbgLog('ignored empty, foreign noise, or low-volume hallucination');
       return;
+    }
+
+    // Mencegah penumpukan request saat Wis sedang sibuk mengeksekusi perintah
+    if (isWisBusyExecuting) {
+      const isStopCmd = /^(berhenti|stop|cukup|batal|tahan|hold)\b/i.test(transcript.trim());
+      if (!isStopCmd) {
+        dbgLog(`[eye] Diabaikan untuk mencegah penumpukan request: "${transcript}"`);
+        return;
+      }
     }
 
     dbgLog(`enqueueing command="${transcript}"`);

@@ -282,14 +282,13 @@ h2 {
   color: #e5e5e5;
 }
 
-/* Cards & Layout - Flush to Sidebar Boundary */
+/* Cards & Layout - Flat & Borderless Modern Aesthetic */
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-left: none;
-  border-radius: 0 10px 10px 0;
-  padding: 18px 20px 20px 14px;
-  margin-bottom: 16px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 6px 20px 20px 14px;
+  margin-bottom: 20px;
 }
 
 .grid {
@@ -340,15 +339,22 @@ input, select {
   border: 1px solid var(--line-strong);
   border-radius: 8px;
   background: #191919;
-  color: var(--text);
+  color: #ffffff;
   font: inherit;
   font-size: 13px;
   transition: border-color 0.15s ease;
+  color-scheme: dark !important;
+}
+
+select {
+  color-scheme: dark !important;
+  background-color: #191919 !important;
+  color: #ffffff !important;
 }
 
 select option {
   background-color: #202020 !important;
-  color: #f3f3f3 !important;
+  color: #ffffff !important;
   padding: 8px 12px;
 }
 
@@ -1125,3 +1131,76 @@ input[type="range"] {
     grid-template-columns: 1fr;
   }
 }
+
+/* Update Completion Modal Popup */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-box {
+  background: #181818;
+  border: 1px solid #383838;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 440px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+  animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.modal-icon {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px;
+}
+
+.modal-desc {
+  font-size: 13.5px;
+  color: #a3a3a3;
+  line-height: 1.5;
+  margin: 0 0 22px;
+}
+
+.btn-primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 18px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn-primary-action:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+

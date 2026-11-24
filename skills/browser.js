@@ -73,7 +73,8 @@ module.exports = {
 
     // Pattern D: "di kolom pencarian carikan lagu X" / "tulis di kolom pencarian/telusuri X" / "carikan saya video X" / "carikan lagu X"
     if (!ytQuery) {
-      const m4 = clean.match(/^(?:(?:tolong|coba)\s+)?(?:di\s+kolom\s+(?:pencarian|telusuri)\s+)?(?:carikan(?:\s+saya)?|cari|searching|search|telusuri|tulis(?:\s+di\s+kolom\s+(?:pencarian|telusuri))?|ketik(?:\s+di\s+kolom\s+(?:pencarian|telusuri))?)\s*(?:kan)?\s*(?:saya\s+)?(?:video|lagu|musik)?\s*(.+)$/i);
+      const m4 = clean.match(/^(?:(?:tolong|coba)\s+)?di\s+kolom\s+(?:pencarian|telusuri)\s+(?:carikan(?:\s+saya)?|cari|searching|search|tulis|ketik)\s*(?:kan)?\s*(?:saya\s+)?(?:video|lagu|musik)?\s*(.+)$/i) ||
+                 clean.match(/^(?:(?:tolong|coba)\s+)?(?:carikan(?:\s+saya)?|cari|searching|search)\s+(?:video|lagu|musik|konten)\s+(.+)$/i);
       if (m4 && m4[1]) {
         ytQuery = m4[1];
       }

@@ -23,6 +23,7 @@ const appsKnowledgeSkill = require('./apps-knowledge');
 const SKILL_MODULES = [
   greetingSkill,
   appsKnowledgeSkill,
+  wordSkill,
   visionSkill,
   mediaSkill,
   browserSkill,
@@ -33,7 +34,6 @@ const SKILL_MODULES = [
   macroSkill,
   scrollZoomSkill,
   windowSkill,
-  wordSkill,
   memorySkill
 ];
 

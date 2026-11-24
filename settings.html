@@ -132,7 +132,7 @@
           <span id="badge-update-available" class="nav-badge update-badge hidden">Baru</span>
         </button>
       </nav>
-      <footer id="app-version-footer">Whisper Agent (Wis) · v1.2.1</footer>
+      <footer id="app-version-footer">Whisper Agent (Wis) · v1.2.2</footer>
     </aside>
 
     <!-- Main Content Area -->
@@ -601,7 +601,7 @@
             <div class="update-info-grid">
               <div class="metric-card">
                 <small>Versi Terpasang</small>
-                <strong id="update-current-version">v1.2.1</strong>
+                <strong id="update-current-version">v1.2.2</strong>
               </div>
               <div class="metric-card">
                 <small>Versi GitHub Terbaru</small>
@@ -658,6 +658,29 @@
         </section>
       </div>
     </main>
+  </div>
+
+  <!-- Modal Popup Pembaruan Selesai -->
+  <div id="update-complete-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <h2 class="modal-title">Pembaruan Selesai Dipasang!</h2>
+      <p class="modal-desc">Whisper Agent telah berhasil diperbarui ke versi terbaru. Silakan klik tombol di bawah untuk menjalankan ulang aplikasi sekarang.</p>
+      <div class="modal-actions">
+        <button type="button" id="btn-relaunch-app" class="btn-primary-action">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          Jalankan Ulang Aplikasi
+        </button>
+      </div>
+    </div>
   </div>
 
   <script src="settings.js"></script>

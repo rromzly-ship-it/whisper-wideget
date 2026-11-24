@@ -229,9 +229,11 @@ async function captureDesktopWithGrid(eyeWindow, widgetWindow) {
 }
 
 async function callGroqVision(prompt, griddedDataUrl, apiKey, { jsonMode = true, maxTokens = 320, onUsage = null, baseUrl = null, model = null } = {}) {
-  const activeBaseUrl = (baseUrl || 'https://geminix.arss.fun/v1').replace(/\/+$/, '');
+  const isKeyGx = apiKey?.startsWith('sk-gx-');
+  const defaultUrl = isKeyGx ? 'https://geminix.arss.fun/v1' : 'https://api.groq.com/openai/v1';
+  const activeBaseUrl = (baseUrl || defaultUrl).replace(/\/+$/, '');
   const chatEndpoint = activeBaseUrl.endsWith('/chat/completions') ? activeBaseUrl : `${activeBaseUrl}/chat/completions`;
-  const isGeminix = activeBaseUrl.includes('geminix');
+  const isGeminix = activeBaseUrl.includes('geminix') || isKeyGx;
   let activeModel = model;
   if (isGeminix) {
     if (!activeModel || activeModel.toLowerCase().includes('whisper') || activeModel.startsWith('qwen/') || activeModel.startsWith('openai/')) {
