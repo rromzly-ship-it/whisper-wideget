@@ -11,17 +11,21 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 - Dialog keamanan Windows (SmartScreen & UAC) kini menampilkan nama penerbit resmi: **Publisher: ARSS** (menggantikan status *"Unknown publisher"*).
 - Menyediakan script launcher sekali klik `Install-Whisper.bat` yang secara otomatis melepas atribut Mark-of-the-Web (`Unblock-File`) sehingga file `.exe` dapat langsung berjalan mulus tanpa terhalang dialog peringatan SmartScreen.
 
-### 🎨 First-Run Onboarding Setup Wizard & Modern One-Click Installer:
+### 🎨 First-Run Onboarding Setup Wizard (Modern Minimalist & Interactive Wis Face):
+- **Wajah Wis Interaktif Mengikuti Kursor (Canvas Interactive Face):**
+  - Menggantikan animasi lingkaran orb berdenyut dengan wajah asli **Wis** interaktif: sepasang mata putih di dalam avatar biru yang secara halus dan alami mengikuti arah pergerakan kursor mouse di dalam jendela setup (tanpa efek loncat-loncat, tanpa denyut berlebihan).
+  - Dilengkapi animasi kedipan mata natural berkala serta reaksi sapaan saat diklik.
+- **Ikon Vektor SVG Penuh (Zero Emoji):**
+  - Mengganti seluruh emotikon karakter (`🎙️`, `🧠`, `👁️`, `🖥️`, `⚡`, `🔄`, `💡`) dengan ikon vektor SVG yang modern, tajam, dan elegan di semua langkah setup dan tombol aksi.
+- **Desain Flat & Borderless (Eliminasi Kartu Tebal):**
+  - Merombak antarmuka agar tampil bersih, minimalis, dan lapang tanpa tumpukan kotak kartu bergaris tebal (*no clunky boxed outlines*).
+  - Menghapus badge *"ARSS Official"* dari header jendela atas.
 - **Bebas Layar Putih NSIS Kuno (Modern One-Click Installer):**
   - Mengonfigurasi `oneClick: true` pada NSIS installer sehingga proses instalasi berjalan instan tanpa menampilkan wizard putih jadul Windows.
   - Setelah instalasi selesai, aplikasi langsung membuka jendela setup bertema gelap khas Whisper.
-- **Wizard Sambutan & Setup Awal Khas Whisper (Modern Dark UI):**
-  - Jendela wizard sambutan dan setup awal bertema gelap (`onboarding.html`, `onboarding.css`, `onboarding.js`) dengan 4 langkah interaktif:
-    1. **Langkah 1 (Sambutan):** Avatar visual Wis menyala, ringkasan fitur asisten AI suara & dikte.
-    2. **Langkah 2 (Koneksi AI Gateway / GeminiX):** Input Base URL, API Key, dan pilihan model langsung dengan pengetesan koneksi interaktif.
-    3. **Langkah 3 (Preferensi Windows):** Opsi pintasan keyboard, buat shortcut di desktop, dan jalankan otomatis saat Windows startup.
-    4. **Langkah 4 (Selesai):** Ringkasan konfigurasi siap pakai, tombol langsung mulai ke widget melayang, dan sapaan suara selamat datang.
-  - Otomatis aktif saat pertama kali aplikasi dibuka di komputer baru atau via flag `--setup`, dan dapat dibuka kembali kapan saja via tombol **"Setup Awal"** di menu Pengaturan.
+
+### 📦 Paket Distribusi Siap Pakai (`WhisperAgent-v1.2.0.zip`):
+- Mengemas installer `.exe`, peluncur bebas SmartScreen `Install-Whisper.bat`, dan sertifikat `arss.cer` ke dalam satu file archive `.zip` resmi di GitHub Release untuk kemudahan distribusi langsung.
 
 ### 🛡️ Keamanan Privasi GeminiX & Perbaikan UI Pengaturan:
 - **Penghapusan Link Dashboard GeminiX:**

@@ -44,7 +44,7 @@ let isKeyVisible = false;
 // Provider Presets
 const PROVIDER_PRESETS = {
   geminix: {
-    name: 'GeminiX Gateway (ARSS)',
+    name: 'GeminiX Gateway',
     baseUrl: 'https://geminix.arss.fun/v1',
     hint: 'Endpoint default GeminiX: https://geminix.arss.fun/v1',
     keyPlaceholder: 'sk-gx-...',
@@ -69,7 +69,6 @@ const PROVIDER_PRESETS = {
       'whisper-large-v3',
       'whisper-large-v3-turbo',
       'openai/gpt-oss-20b',
-      'openai/gpt-oss-120b',
       'meta/llama-3.3-70b-versatile'
     ],
     dashboardUrl: 'https://console.groq.com/keys'
@@ -105,27 +104,21 @@ function goToStep(step) {
   if (step < 1 || step > 4) return;
   currentStep = step;
 
-  // Update Stepper Bar UI
-  stepItems.forEach(item => {
-    const itemStep = parseInt(item.getAttribute('data-step'), 10);
+  stepPages.forEach((page, idx) => {
+    page.classList.toggle('active', idx + 1 === step);
+  });
+
+  stepItems.forEach((item, idx) => {
+    const itemStep = idx + 1;
     item.classList.remove('active', 'completed');
-    if (itemStep === currentStep) {
+    if (itemStep === step) {
       item.classList.add('active');
-    } else if (itemStep < currentStep) {
+    } else if (itemStep < step) {
       item.classList.add('completed');
     }
   });
 
-  // Switch Active Step Page
-  stepPages.forEach(page => {
-    page.classList.remove('active');
-    if (page.id === `step-${currentStep}`) {
-      page.classList.add('active');
-    }
-  });
-
-  // Update Summary on Step 4
-  if (currentStep === 4) {
+  if (step === 4) {
     updateConfirmationSummary();
   }
 }
@@ -142,22 +135,18 @@ function updateConfirmationSummary() {
   sumIntegrations.textContent = intItems.length > 0 ? intItems.join(', ') : 'Standar (Manual)';
 }
 
-// Step Navigation Listeners
-btnNext1.addEventListener('click', () => goToStep(2));
-
-btnPrev2.addEventListener('click', () => goToStep(1));
-btnNext2.addEventListener('click', () => goToStep(3));
-
-btnPrev3.addEventListener('click', () => goToStep(2));
-btnNext3.addEventListener('click', () => goToStep(4));
-
-btnPrev4.addEventListener('click', () => goToStep(3));
+btnNext1?.addEventListener('click', () => goToStep(2));
+btnPrev2?.addEventListener('click', () => goToStep(1));
+btnNext2?.addEventListener('click', () => goToStep(3));
+btnPrev3?.addEventListener('click', () => goToStep(2));
+btnNext3?.addEventListener('click', () => goToStep(4));
+btnPrev4?.addEventListener('click', () => goToStep(3));
 
 // =========================================================================
 // STEP 2: PROVIDER & API LOGIC
 // =========================================================================
-function setApiStatus(type, text) {
-  obApiStatus.className = `api-status-badge status-${type}`;
+function setApiStatus(status, text) {
+  obApiStatus.className = `api-status-badge status-${status}`;
   obApiStatus.textContent = text;
 }
 
@@ -171,7 +160,7 @@ function updateProviderUi(provKey) {
   if (p.dashboardUrl) {
     obLinkProvider.style.display = 'inline-block';
     obLinkProvider.href = p.dashboardUrl;
-    obLinkProvider.textContent = provKey === 'geminix' ? 'Buka Dashboard ARSS ↗' : 'Ambil Kunci API ↗';
+    obLinkProvider.textContent = 'Ambil Kunci API ↗';
   } else {
     obLinkProvider.style.display = 'none';
   }
@@ -202,22 +191,20 @@ async function fetchApiModels() {
     return;
   }
 
-  setApiStatus('loading', '🟡 Mengambil model...');
-  obBtnFetchModels.textContent = '⏳ Mengambil...';
+  setApiStatus('loading', 'Mengambil model...');
   obBtnFetchModels.disabled = true;
 
   try {
     const res = await ipcRenderer.invoke('fetch-api-models', { baseUrl: rawBase, apiKey });
     if (res && res.ok && Array.isArray(res.models) && res.models.length > 0) {
       populateModelOptions(res.models, obModelSelect.value);
-      setApiStatus('success', `🟢 Terhubung (${res.models.length} Model)`);
+      setApiStatus('success', `Terhubung (${res.models.length} Model)`);
     } else {
-      setApiStatus('error', `🔴 ${res?.message || 'Gagal memuat model'}`);
+      setApiStatus('error', res?.message || 'Gagal memuat model');
     }
   } catch (err) {
-    setApiStatus('error', `🔴 ${err.message}`);
+    setApiStatus('error', err.message);
   } finally {
-    obBtnFetchModels.textContent = '🔄 Cek & Muat Model';
     obBtnFetchModels.disabled = false;
   }
 }
@@ -233,7 +220,8 @@ obBtnFetchModels.addEventListener('click', () => {
 obToggleKey.addEventListener('click', () => {
   isKeyVisible = !isKeyVisible;
   obApiKey.type = isKeyVisible ? 'text' : 'password';
-  obToggleKey.textContent = isKeyVisible ? '🙈' : '👁';
+  obToggleKey.style.opacity = isKeyVisible ? '1' : '0.6';
+  obToggleKey.title = isKeyVisible ? 'Sembunyikan Key' : 'Lihat Key';
 });
 
 obLinkProvider.addEventListener('click', (e) => {
@@ -249,7 +237,7 @@ obLinkProvider.addEventListener('click', (e) => {
 // =========================================================================
 btnFinishLaunch.addEventListener('click', async () => {
   btnFinishLaunch.disabled = true;
-  btnFinishLaunch.textContent = '⏳ Menyiapkan Whisper Widget...';
+  btnFinishLaunch.querySelector('span').textContent = 'Menyiapkan Whisper Widget...';
 
   const cleanBase = obBaseUrl.value.trim().replace(/\/+$/, '').replace(/\/chat\/completions$/i, '');
 
@@ -270,12 +258,12 @@ btnFinishLaunch.addEventListener('click', async () => {
     if (!res || !res.ok) {
       alert('Gagal menyelesaikan setup:\n' + (res?.message || 'Terjadi kesalahan sistem'));
       btnFinishLaunch.disabled = false;
-      btnFinishLaunch.textContent = '🚀 Selesaikan & Buka Whisper Widget';
+      btnFinishLaunch.querySelector('span').textContent = 'Selesaikan & Buka Whisper Widget';
     }
   } catch (err) {
     alert('Error setup: ' + err.message);
     btnFinishLaunch.disabled = false;
-    btnFinishLaunch.textContent = '🚀 Selesaikan & Buka Whisper Widget';
+    btnFinishLaunch.querySelector('span').textContent = 'Selesaikan & Buka Whisper Widget';
   }
 });
 
@@ -288,7 +276,90 @@ btnMinimizeWindow.addEventListener('click', () => {
   ipcRenderer.send('minimize-onboarding');
 });
 
+// =========================================================================
+// WIS INTERACTIVE FACE (Mouse-Tracking Eyes, No Jumping/Pulsing)
+// =========================================================================
+function initWisInteractiveFace() {
+  const canvas = document.getElementById('wis-face-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const pill = document.getElementById('wis-interactive-face');
+
+  let gaze = { x: 0, y: 0 };
+  let targetGaze = { x: 0, y: 0 };
+  let isBlinking = false;
+  let blinkProgress = 1;
+  let lastBlink = performance.now();
+
+  window.addEventListener('mousemove', (e) => {
+    if (!pill) return;
+    const rect = pill.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const dx = (e.clientX - centerX) / (window.innerWidth / 2);
+    const dy = (e.clientY - centerY) / (window.innerHeight / 2);
+    targetGaze.x = Math.max(-1, Math.min(1, dx));
+    targetGaze.y = Math.max(-1, Math.min(1, dy));
+  });
+
+  pill.addEventListener('click', () => {
+    isBlinking = true;
+    blinkProgress = 0;
+  });
+
+  function render(now) {
+    gaze.x += (targetGaze.x - gaze.x) * 0.12;
+    gaze.y += (targetGaze.y - gaze.y) * 0.12;
+
+    if (!isBlinking && now - lastBlink > 3500 + Math.random() * 2000) {
+      isBlinking = true;
+      blinkProgress = 0;
+      lastBlink = now;
+    }
+
+    if (isBlinking) {
+      blinkProgress += 0.085;
+      if (blinkProgress >= 1) {
+        blinkProgress = 1;
+        isBlinking = false;
+      }
+    }
+
+    const eyeOpen = isBlinking ? (blinkProgress < 0.5 ? 1 - blinkProgress * 2 : (blinkProgress - 0.5) * 2) : 1;
+    const eyeH = Math.max(3, 26 * Math.max(0.08, eyeOpen));
+    const eyeW = 14;
+
+    ctx.clearRect(0, 0, 136, 136);
+
+    const offsetX = gaze.x * 12;
+    const offsetY = gaze.y * 10;
+    const leftEyeX = 68 - 18 + offsetX;
+    const rightEyeX = 68 + 18 + offsetX;
+    const eyeY = 68 + offsetY;
+
+    ctx.fillStyle = '#FFFFFF';
+
+    drawRoundedPill(ctx, leftEyeX - eyeW / 2, eyeY - eyeH / 2, eyeW, eyeH, eyeW / 2);
+    drawRoundedPill(ctx, rightEyeX - eyeW / 2, eyeY - eyeH / 2, eyeW, eyeH, eyeW / 2);
+
+    requestAnimationFrame(render);
+  }
+
+  function drawRoundedPill(c, x, y, w, h, r) {
+    c.beginPath();
+    if (c.roundRect) {
+      c.roundRect(x, y, w, h, Math.min(r, h / 2, w / 2));
+    } else {
+      c.rect(x, y, w, h);
+    }
+    c.fill();
+  }
+
+  requestAnimationFrame(render);
+}
+
 // Initialize on Load
 window.addEventListener('DOMContentLoaded', () => {
   updateProviderUi('geminix');
+  initWisInteractiveFace();
 });
