@@ -132,7 +132,7 @@
           <span id="badge-update-available" class="nav-badge update-badge hidden">Baru</span>
         </button>
       </nav>
-      <footer id="app-version-footer">Whisper Agent (Wis) · v1.2.3</footer>
+      <footer id="app-version-footer">Whisper Agent (Wis) · v1.3.0</footer>
     </aside>
 
     <!-- Main Content Area -->
@@ -193,10 +193,15 @@
                   <span id="api-key-label">API Key</span>
                   <a href="#" id="link-provider" class="link-subtle hidden" target="_blank"></a>
                 </div>
-                <div class="input-password-wrap">
-                  <input type="password" id="api-key" placeholder="sk-gx-..." autocomplete="off">
-                  <button type="button" id="toggle-key-visibility" class="btn-subtle-icon"
-                    title="Lihat/Sembunyikan Kunci">👁</button>
+                <div class="api-key-row">
+                  <div class="input-password-wrap">
+                    <input type="password" id="api-key" placeholder="sk-gx-..." autocomplete="off">
+                    <button type="button" id="toggle-key-visibility" class="btn-subtle-icon"
+                      title="Lihat/Sembunyikan Kunci">👁</button>
+                  </div>
+                  <button type="button" id="btn-test-api" class="btn-test-connection" title="Uji Kunci & Muat Model Vendor">
+                    ⚡ Test API
+                  </button>
                 </div>
               </label>
 
@@ -601,7 +606,7 @@
             <div class="update-info-grid">
               <div class="metric-card">
                 <small>Versi Terpasang</small>
-                <strong id="update-current-version">v1.2.3</strong>
+                <strong id="update-current-version">v1.3.0</strong>
               </div>
               <div class="metric-card">
                 <small>Versi GitHub Terbaru</small>

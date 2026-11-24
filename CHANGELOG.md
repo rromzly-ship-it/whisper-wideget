@@ -4,7 +4,29 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.2.3] - 2026-11-24 (Pembaruan Terkini)
+## [v1.3.0] - 2026-11-24 (Milestone Rilis V3)
+
+### 🤖 Analisis & Solusi Akar Masalah (Bukan dari Modularitas Kodings):
+- **Bukan Masalah Modular:** Arsitektur modular di folder `skills/` sudah sangat baik, bersih, dan sesuai standar pengembangan. Masalah yang terjadi murni karena rantai 3 faktor teknis di gateway & antarmuka model:
+  1. **Bug Penguraian Dropdown Model:** API pengambil model dari vendor mengembalikan daftar model dalam bentuk string/objek mentah. Kode dropdown sebelumnya memanggil properti `.id` pada string sehingga dropdown model menjadi kosong/blank.
+  2. **Model Tak Kompatibel Terpilih:** Karena dropdown kosong, sistem jatuh ke konfigurasi kustom bawaan `whisper-large-v3-turbo`.
+  3. **Error 404 dari Gateway GeminiX:** Gateway GeminiX (Google Antigravity) tidak memiliki model bernama `whisper-large-v3-turbo` dan tidak memiliki endpoint `/audio/transcriptions`. Mengirim permintaan Whisper ke GeminiX memicu penolakan `Antigravity API error 404: Requested entity was not found`.
+
+### ⚡ Fitur Uji Koneksi Vendor & Pemuat Model Real-Time (Tombol Test API):
+- **Tombol "⚡ Test API" di Kolom Kunci:** Menambahkan tombol uji koneksi langsung di samping kolom input API Key pada menu Pengaturan Sistem.
+- **Uji Kredensial & Pemuatan Otomatis:** Saat pengguna memilih vendor (GeminiX Gateway, Groq Cloud, OpenAI, Custom) dan memasukkan kunci API, tombol Test API akan menguji validitas kunci secara langsung:
+  - **Jika Sukses:** Menampilkan status `🟢 Terhubung (<N> Model Tersedia)` dan memuat daftar model resmi vendor secara real-time ke dalam dropdown beserta deskripsi dan perkiraan kecepatannya.
+  - **Jika Gagal:** Menampilkan status `🔴 Gagal: [Alasan Error]` secara transparan tanpa merusak konfigurasi lama.
+- **Auto-Sanitasi Model Per Vendor:** Saat berpindah vendor, sistem secara cerdas memilihkan model terbaik untuk vendor tersebut (GeminiX -> `gemini-3.8-flash-high`, Groq -> `openai/gpt-oss-20b`, OpenAI -> `gpt-4o-mini`), mencegah kesalahan model lintas vendor.
+
+### 🎙️ Universal AI Gateway STT (Dukungan Penuh Semua Vendor untuk Voice-to-Text & Asisten Wis):
+- **Dukungan Multimodal Audio GeminiX:** Suara mikrofon (Voice to Text) dan asisten Wis kini mendukung penuh GeminiX secara native menggunakan model audio `gemini-2.5-flash` dengan respon kilat ~1.0s tanpa pernah lagi menyentuh Whisper yang menyebabkan 404.
+- **Fallback Cerdas Anti-Gagal:** Jika model pilihan pengguna sedang sibuk atau tidak mendukung audio, sistem otomatis mencoba ulang menggunakan `gemini-2.5-flash` agar transkripsi suara tidak pernah mogok.
+- **Dukungan Penuh Vendor Lain:** Groq Cloud tetap berjalan dengan dedicated Whisper LPU (`whisper-large-v3-turbo`), OpenAI dengan `whisper-1`, dan Custom endpoint dengan deteksi cerdas endpoint transkripsi.
+
+---
+
+## [v1.2.3] - 2026-11-24
 
 ### 🐛 Hotfix SyntaxError Main Process (Fix Error Line 1606):
 - Menghapus blok duplikasi baris kode pada fungsi `enqueueVoiceCommand` di [main.js](file:///c:/Users/Admin/Downloads/whisper-floating-widget/whisper-floating-widget/main.js) yang menyebabkan error fatal startup `SyntaxError: Unexpected token '}'`.

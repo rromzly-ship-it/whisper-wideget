@@ -16,6 +16,7 @@ const apiKeyLabel = document.getElementById('api-key-label');
 const linkProvider = document.getElementById('link-provider');
 const apiKeyInput = document.getElementById('api-key');
 const toggleKeyBtn = document.getElementById('toggle-key-visibility');
+const btnTestApi = document.getElementById('btn-test-api');
 const modelSelect = document.getElementById('model-select');
 const customModelInput = document.getElementById('custom-model-input');
 const btnFetchModels = document.getElementById('btn-fetch-models');
@@ -250,7 +251,16 @@ function setApiStatus(type, text) {
 }
 
 function populateModelOptions(models, selectedModel) {
-  activeModelsList = Array.isArray(models) ? models : [];
+  activeModelsList = (Array.isArray(models) ? models : []).map(m => {
+    if (typeof m === 'string') {
+      return { id: m, desc: '' };
+    }
+    return {
+      id: m.id || m.name || '',
+      desc: m.desc || m.description || ''
+    };
+  }).filter(m => m.id);
+
   modelSelect.innerHTML = '';
 
   let hasMatch = false;
@@ -290,28 +300,75 @@ function populateModelOptions(models, selectedModel) {
 async function fetchApiModels(silent = false) {
   const rawBase = (apiBaseUrlInput.value || '').trim();
   const apiKey = (apiKeyInput.value || '').trim();
+  const prov = apiProviderSelect.value;
 
   if (!rawBase) {
     if (!silent) setApiStatus('error', 'Base URL kosong');
     return;
   }
 
-  if (!silent) setApiStatus('loading', '🟡 Mengambil model...');
+  if (!silent) setApiStatus('loading', '🟡 Menguji koneksi & mengambil model...');
+  if (btnTestApi) {
+    btnTestApi.textContent = '⏳ Menguji...';
+    btnTestApi.disabled = true;
+  }
   btnFetchModels.textContent = '⏳ Mengambil...';
   btnFetchModels.disabled = true;
 
   try {
     const res = await ipcRenderer.invoke('fetch-api-models', { baseUrl: rawBase, apiKey });
     if (res && res.ok && Array.isArray(res.models) && res.models.length > 0) {
-      const currentSelected = modelSelect.value === '__custom__' ? customModelInput.value.trim() : modelSelect.value;
+      let currentSelected = modelSelect.value === '__custom__' ? customModelInput.value.trim() : modelSelect.value;
+      
+      // Auto-sanitize model when switching vendor
+      if (prov === 'geminix') {
+        if (!currentSelected || currentSelected.toLowerCase().includes('whisper') || currentSelected.startsWith('openai/')) {
+          currentSelected = 'gemini-3.8-flash-high';
+        }
+      } else if (prov === 'groq') {
+        if (!currentSelected || currentSelected.toLowerCase().includes('whisper') || currentSelected.startsWith('gemini-') || currentSelected.startsWith('claude-')) {
+          currentSelected = 'openai/gpt-oss-20b';
+        }
+      } else if (prov === 'openai') {
+        if (!currentSelected || currentSelected.toLowerCase().includes('whisper')) {
+          currentSelected = 'gpt-4o-mini';
+        }
+      }
+
       populateModelOptions(res.models, currentSelected);
-      setApiStatus('success', `🟢 Terhubung (${res.models.length} Model)`);
+      setApiStatus('success', `🟢 Terhubung (${res.models.length} Model Tersedia)`);
+      
+      if (btnTestApi) {
+        btnTestApi.textContent = '✓ Sukses';
+        btnTestApi.classList.add('btn-success');
+        setTimeout(() => {
+          btnTestApi.textContent = '⚡ Test API';
+          btnTestApi.classList.remove('btn-success');
+        }, 2200);
+      }
     } else {
       setApiStatus('error', `🔴 ${res?.message || 'Gagal mengambil model'}`);
+      if (btnTestApi) {
+        btnTestApi.textContent = '✕ Gagal';
+        btnTestApi.classList.add('btn-failed');
+        setTimeout(() => {
+          btnTestApi.textContent = '⚡ Test API';
+          btnTestApi.classList.remove('btn-failed');
+        }, 2200);
+      }
     }
   } catch (err) {
     setApiStatus('error', `🔴 ${err.message}`);
+    if (btnTestApi) {
+      btnTestApi.textContent = '✕ Gagal';
+      btnTestApi.classList.add('btn-failed');
+      setTimeout(() => {
+        btnTestApi.textContent = '⚡ Test API';
+        btnTestApi.classList.remove('btn-failed');
+      }, 2200);
+    }
   } finally {
+    if (btnTestApi) btnTestApi.disabled = false;
     btnFetchModels.textContent = '🔄 Cek & Muat Model';
     btnFetchModels.disabled = false;
   }
@@ -324,6 +381,12 @@ apiProviderSelect.addEventListener('change', () => {
     fetchApiModels(false);
   }
 });
+
+if (btnTestApi) {
+  btnTestApi.addEventListener('click', () => {
+    fetchApiModels(false);
+  });
+}
 
 btnFetchModels.addEventListener('click', () => {
   fetchApiModels(false);
@@ -428,9 +491,18 @@ async function loadConfig() {
 }
 
 btnSave.addEventListener('click', async () => {
-  const selectedModel = modelSelect.value === '__custom__' 
+  let selectedModel = modelSelect.value === '__custom__' 
     ? (customModelInput.value.trim() || 'gemini-3.8-flash-high') 
     : modelSelect.value;
+
+  const currentProv = apiProviderSelect.value;
+  if (currentProv === 'geminix' && (selectedModel.toLowerCase().includes('whisper') || !selectedModel)) {
+    selectedModel = 'gemini-3.8-flash-high';
+  } else if (currentProv === 'groq' && (selectedModel.startsWith('gemini-') || selectedModel.startsWith('claude-'))) {
+    selectedModel = 'openai/gpt-oss-20b';
+  } else if (currentProv === 'openai' && selectedModel.toLowerCase().includes('whisper')) {
+    selectedModel = 'gpt-4o-mini';
+  }
 
   const rawBase = apiBaseUrlInput.value.trim();
   const cleanBase = rawBase.replace(/\/+$/, '').replace(/\/chat\/completions$/i, '');

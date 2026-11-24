@@ -185,34 +185,37 @@ function resolveProvider(cfg = {}) {
       baseUrl: url || 'https://geminix.arss.fun/v1',
       defaultModel: 'gemini-3.8-flash-high',
       isGeminix: true,
-      isGroq: false
+      isGroq: false,
+      isOpenAi: false
     };
   }
-  if (prov === 'openai' || (key.startsWith('sk-') && !key.startsWith('sk-gx-'))) {
+  if (prov === 'groq' || key.startsWith('gsk_') || url.includes('groq.com')) {
+    return {
+      provider: 'groq',
+      baseUrl: url || 'https://api.groq.com/openai/v1',
+      defaultModel: 'openai/gpt-oss-20b',
+      isGeminix: false,
+      isGroq: true,
+      isOpenAi: false
+    };
+  }
+  if (prov === 'openai' || (key.startsWith('sk-') && !key.startsWith('sk-gx-')) || url.includes('api.openai.com')) {
     return {
       provider: 'openai',
       baseUrl: url || 'https://api.openai.com/v1',
-      defaultModel: 'whisper-1',
+      defaultModel: 'gpt-4o-mini',
       isGeminix: false,
-      isGroq: false
+      isGroq: false,
+      isOpenAi: true
     };
   }
-  if (prov === 'custom' && url) {
-    return {
-      provider: 'custom',
-      baseUrl: url.replace(/\/+$/, ''),
-      defaultModel: cfg.model || 'whisper-large-v3-turbo',
-      isGeminix: false,
-      isGroq: false
-    };
-  }
-  // Default is Groq (Fast Whisper & Fast LLM)
   return {
-    provider: 'groq',
-    baseUrl: 'https://api.groq.com/openai/v1',
-    defaultModel: 'whisper-large-v3-turbo',
+    provider: 'custom',
+    baseUrl: (url || 'https://api.groq.com/openai/v1').replace(/\/+$/, ''),
+    defaultModel: cfg.model || 'openai/gpt-oss-20b',
     isGeminix: false,
-    isGroq: true
+    isGroq: false,
+    isOpenAi: false
   };
 }
 
@@ -1736,11 +1739,14 @@ ipcMain.handle('fetch-api-models', async (event, { baseUrl, apiKey }) => {
     }
     const data = await resp.json();
     let models = [];
-    if (Array.isArray(data.data)) {
-      models = data.data.map(m => typeof m === 'string' ? m : (m.id || m.name)).filter(Boolean);
-    } else if (Array.isArray(data)) {
-      models = data.map(m => typeof m === 'string' ? m : (m.id || m.name)).filter(Boolean);
-    }
+    const rawList = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+    models = rawList.map(m => {
+      if (typeof m === 'string') return { id: m, desc: '' };
+      return {
+        id: m.id || m.name || '',
+        desc: m.description || m.desc || (m.owned_by ? `(${m.owned_by})` : '')
+      };
+    }).filter(m => m.id);
     return { ok: true, models };
   } catch (err) {
     return { ok: false, message: err.message };
@@ -1754,113 +1760,134 @@ ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audi
   const prov = resolveProvider(appConfig);
   const apiKey = (appConfig.apiKey || '').trim();
   const language = appConfig.language && appConfig.language !== 'auto' ? appConfig.language : null;
-  let selectedModel = appConfig.model;
+  let selectedModel = (appConfig.model || '').trim();
 
-  // 1. Standar Whisper API (Groq Cloud, OpenAI, atau gateway kompatibel Whisper)
-  if (!prov.isGeminix) {
+  // 1. Gateway GeminiX (Multimodal audio via /chat/completions)
+  if (prov.isGeminix) {
     try {
-      const buffer = Buffer.from(audioBase64, 'base64');
-      const blob = new Blob([buffer], { type: mimeType });
-      const formData = new FormData();
-      formData.append('file', blob, 'speech.webm');
-      const modelToUse = (selectedModel && !selectedModel.startsWith('gemini-') && selectedModel !== '__custom__')
-        ? selectedModel
-        : prov.defaultModel;
-      formData.append('model', modelToUse);
-      formData.append('response_format', 'json');
-      formData.append('temperature', '0.0');
-      if (promptHint) formData.append('prompt', promptHint);
-      if (language) formData.append('language', language);
+      const chatEndpoint = prov.baseUrl.endsWith('/chat/completions') 
+        ? prov.baseUrl 
+        : `${prov.baseUrl.replace(/\/+$/, '')}/chat/completions`;
+      const format = mimeType.includes('wav') ? 'wav' : (mimeType.includes('mp3') ? 'mp3' : 'webm');
+      
+      // Model guard: GeminiX requires Gemini models for audio STT (never whisper-*)
+      let modelToUse = 'gemini-2.5-flash';
+      if (selectedModel && selectedModel.startsWith('gemini-') && !selectedModel.toLowerCase().includes('whisper') && selectedModel !== '__custom__') {
+        modelToUse = selectedModel;
+      }
 
-      const resp = await fetch(`${prov.baseUrl}/audio/transcriptions`, {
+      const body = {
+        model: modelToUse,
+        temperature: 0.0,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an accurate, verbatim speech-to-text transcriber. Output ONLY the exact transcribed spoken words in Indonesian or English. Output nothing else: no explanations, no thought tags, no markdown.'
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: `Transkripsikan rekaman audio berikut secara persis kata demi kata tanpa komentar:${promptHint ? ' Konteks: ' + promptHint : ''}` },
+              {
+                type: 'input_audio',
+                input_audio: {
+                  data: audioBase64,
+                  format: format
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      let resp = await fetch(chatEndpoint, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${apiKey}` },
-        body: formData
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
       });
 
+      // If selected model failed, retry once with standard gemini-2.5-flash
+      if (!resp.ok && modelToUse !== 'gemini-2.5-flash') {
+        body.model = 'gemini-2.5-flash';
+        resp = await fetch(chatEndpoint, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+      }
+
       if (!resp.ok) {
-        const errJson = await resp.json().catch(() => ({}));
-        throw new Error(errJson.error?.message || `Groq Whisper HTTP ${resp.status}`);
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${resp.status}`);
       }
 
       const data = await resp.json();
+      let text = (data.choices?.[0]?.message?.content || '').trim();
+      if (text.includes('\n\n')) {
+        const parts = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+        text = parts[parts.length - 1];
+      }
+      text = text.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/, '').replace(/^["']|["']$/g, '').trim();
+
       return {
         ok: true,
-        text: data.text || '',
-        language: data.language || language || 'id',
-        duration: data.duration || 0,
-        segments: data.segments || []
+        text,
+        language: language || 'id',
+        duration: 0,
+        segments: []
       };
-    } catch (e) {
-      console.error('Groq Whisper dedicated transcription error:', e.message);
-      return { ok: false, message: e.message };
+    } catch (err) {
+      console.error('GeminiX audio transcription error:', err);
+      return { ok: false, message: err.message };
     }
   }
 
-  // 2. Gateway GeminiX (Multimodal audio via /chat/completions)
+  // 2. Standar Whisper API (Groq Cloud, OpenAI, atau gateway kompatibel Whisper)
   try {
-    const chatEndpoint = prov.baseUrl.endsWith('/chat/completions') ? prov.baseUrl : `${prov.baseUrl}/chat/completions`;
-    const format = mimeType.includes('wav') ? 'wav' : (mimeType.includes('mp3') ? 'mp3' : 'webm');
-    const modelToUse = (selectedModel && !selectedModel.toLowerCase().includes('whisper') && selectedModel !== '__custom__')
-      ? selectedModel
-      : 'gemini-2.5-flash';
+    const buffer = Buffer.from(audioBase64, 'base64');
+    const blob = new Blob([buffer], { type: mimeType });
+    const formData = new FormData();
+    formData.append('file', blob, 'speech.webm');
+    
+    let modelToUse = prov.isGroq ? 'whisper-large-v3-turbo' : (prov.isOpenAi ? 'whisper-1' : (selectedModel || 'whisper-1'));
+    if (modelToUse.startsWith('gemini-') || modelToUse.startsWith('claude-')) {
+      modelToUse = prov.isGroq ? 'whisper-large-v3-turbo' : 'whisper-1';
+    }
+    
+    formData.append('model', modelToUse);
+    formData.append('response_format', 'json');
+    formData.append('temperature', '0.0');
+    if (promptHint) formData.append('prompt', promptHint);
+    if (language) formData.append('language', language);
 
-    const body = {
-      model: modelToUse,
-      temperature: 0.0,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an accurate, verbatim speech-to-text transcriber. Output ONLY the exact transcribed spoken words in Indonesian or English. Output nothing else: no explanations, no thought tags, no markdown.'
-        },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: `Transkripsikan rekaman audio berikut secara persis kata demi kata tanpa komentar:${promptHint ? ' Konteks: ' + promptHint : ''}` },
-            {
-              type: 'input_audio',
-              input_audio: {
-                data: audioBase64,
-                format: format
-              }
-            }
-          ]
-        }
-      ]
-    };
-
-    let resp = await fetch(chatEndpoint, {
+    const resp = await fetch(`${prov.baseUrl.replace(/\/+$/, '')}/audio/transcriptions`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: formData
     });
 
     if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+      const errJson = await resp.json().catch(() => ({}));
+      throw new Error(errJson.error?.message || `Whisper HTTP ${resp.status}`);
     }
 
     const data = await resp.json();
-    let text = (data.choices?.[0]?.message?.content || '').trim();
-    if (text.includes('\n\n')) {
-      const parts = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-      text = parts[parts.length - 1];
-    }
-    text = text.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/, '').replace(/^["']|["']$/g, '').trim();
-
     return {
       ok: true,
-      text,
-      language: language || 'id',
-      duration: 0,
-      segments: []
+      text: data.text || '',
+      language: data.language || language || 'id',
+      duration: data.duration || 0,
+      segments: data.segments || []
     };
-  } catch (err) {
-    console.error('GeminiX audio transcription error:', err);
-    return { ok: false, message: err.message };
+  } catch (e) {
+    console.error('Whisper dedicated transcription error:', e.message);
+    return { ok: false, message: e.message };
   }
 });
 
