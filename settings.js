@@ -254,13 +254,13 @@ function updateProviderUi(providerKey) {
   
   if (providerDescNote) {
     if (providerKey === 'groq') {
-      providerDescNote.textContent = '⚡ Penyedia Resmi Whisper: Dedicated LPU untuk transkripsi suara 150ms instan & akurat + LLM Cerdas.';
+      providerDescNote.textContent = 'Penyedia Resmi Whisper: Dedicated LPU untuk transkripsi suara 150ms instan & akurat + LLM Cerdas.';
     } else if (providerKey === 'geminix') {
-      providerDescNote.textContent = '✨ Otak Asisten (LLM & Vision): Pemrosesan teks, penalaran, & mata visual (Vision). Transkripsi suara mikrofon otomatis memakai Whisper Groq jika kunci Groq tersedia.';
+      providerDescNote.textContent = 'Otak Asisten (LLM & Vision): Pemrosesan teks, penalaran, & mata visual (Vision). Transkripsi suara mikrofon otomatis memakai Whisper Groq jika kunci Groq tersedia.';
     } else if (providerKey === 'openai') {
-      providerDescNote.textContent = '🤖 OpenAI: Endpoint resmi ChatGPT dan Whisper-1.';
+      providerDescNote.textContent = 'OpenAI: Endpoint resmi ChatGPT dan Whisper-1.';
     } else {
-      providerDescNote.textContent = '🌐 Custom Endpoint kompatibel OpenAI.';
+      providerDescNote.textContent = 'Custom Endpoint kompatibel OpenAI.';
     }
   }
 
@@ -339,34 +339,34 @@ async function fetchApiModels(silent = false) {
   if (prov === 'groq' && apiKey.startsWith('sk-gx-')) {
     setApiStatus('error', '🔴 Kunci Salah: Anda memasukkan Kunci GeminiX (sk-gx-...) pada Groq Cloud. Masukkan kunci Groq (gsk_...).');
     if (btnTestApi) {
-      btnTestApi.textContent = '✕ Kunci Salah';
+      btnTestApi.textContent = 'x Kunci Salah';
       btnTestApi.classList.add('btn-failed');
       setTimeout(() => {
-        btnTestApi.textContent = '⚡ Test API';
+        btnTestApi.textContent = 'Test API';
         btnTestApi.classList.remove('btn-failed');
       }, 3000);
     }
     return;
   }
   if (prov === 'geminix' && apiKey.startsWith('gsk_')) {
-    setApiStatus('error', '🔴 Kunci Salah: Anda memasukkan Kunci Groq (gsk_...) pada GeminiX. Masukkan kunci GeminiX (sk-gx-...).');
+    setApiStatus('error', 'Kunci Salah: Anda memasukkan Kunci Groq (gsk_...) pada GeminiX. Masukkan kunci GeminiX (sk-gx-...).');
     if (btnTestApi) {
-      btnTestApi.textContent = '✕ Kunci Salah';
+      btnTestApi.textContent = 'x Kunci Salah';
       btnTestApi.classList.add('btn-failed');
       setTimeout(() => {
-        btnTestApi.textContent = '⚡ Test API';
+        btnTestApi.textContent = 'Test API';
         btnTestApi.classList.remove('btn-failed');
       }, 3000);
     }
     return;
   }
 
-  if (!silent) setApiStatus('loading', '🟡 Menguji koneksi & mengambil model...');
+  if (!silent) setApiStatus('loading', 'Menguji koneksi & mengambil model...');
   if (btnTestApi) {
-    btnTestApi.textContent = '⏳ Menguji...';
+    btnTestApi.textContent = 'Menguji...';
     btnTestApi.disabled = true;
   }
-  btnFetchModels.textContent = '⏳ Mengambil...';
+  btnFetchModels.textContent = 'Mengambil...';
   btnFetchModels.disabled = true;
 
   try {
@@ -393,37 +393,39 @@ async function fetchApiModels(silent = false) {
       setApiStatus('success', `🟢 Terhubung (${res.models.length} Model Tersedia)`);
       
       if (btnTestApi) {
-        btnTestApi.textContent = '✓ Sukses';
+        btnTestApi.textContent = '✓ Tersimpan!';
         btnTestApi.classList.add('btn-success');
+        // Auto-save config immediately when test succeeds
+        btnSave.click();
         setTimeout(() => {
-          btnTestApi.textContent = '⚡ Test API';
+          btnTestApi.textContent = 'Test API';
           btnTestApi.classList.remove('btn-success');
         }, 2200);
       }
     } else {
-      setApiStatus('error', `🔴 ${res?.message || 'Gagal mengambil model'}`);
+      setApiStatus('error', `${res?.message || 'Gagal mengambil model'}`);
       if (btnTestApi) {
-        btnTestApi.textContent = '✕ Gagal';
+        btnTestApi.textContent = 'Gagal';
         btnTestApi.classList.add('btn-failed');
         setTimeout(() => {
-          btnTestApi.textContent = '⚡ Test API';
+          btnTestApi.textContent = 'Test API';
           btnTestApi.classList.remove('btn-failed');
         }, 2200);
       }
     }
   } catch (err) {
-    setApiStatus('error', `🔴 ${err.message}`);
+    setApiStatus('error', `${err.message}`);
     if (btnTestApi) {
-      btnTestApi.textContent = '✕ Gagal';
+      btnTestApi.textContent = 'Gagal';
       btnTestApi.classList.add('btn-failed');
       setTimeout(() => {
-        btnTestApi.textContent = '⚡ Test API';
+        btnTestApi.textContent = 'Test API';
         btnTestApi.classList.remove('btn-failed');
       }, 2200);
     }
   } finally {
     if (btnTestApi) btnTestApi.disabled = false;
-    btnFetchModels.textContent = '🔄 Cek & Muat Model';
+    btnFetchModels.textContent = 'Cek & Muat Model';
     btnFetchModels.disabled = false;
   }
 }
@@ -1293,17 +1295,40 @@ ipcRenderer.on('update-progress', (event, { phase, percent, message }) => {
   }
 });
 
-ipcRenderer.on('update-completed', () => {
+ipcRenderer.on('update-completed', (event, info) => {
   if (updateProgressFill) updateProgressFill.style.width = '100%';
   setUpdateStatus('success', '🟢 Selesai!');
-  if (updateProgressText) updateProgressText.textContent = 'Pembaruan siap digunakan.';
+
+  // For installer method: NSIS needs time to fully write files before we quit
+  const method = info?.method || 'unknown';
+  if (updateProgressText) {
+    if (method === 'installer') {
+      updateProgressText.textContent = 'Installer sedang memasang — klik Jalankan Ulang setelah selesai.';
+    } else {
+      updateProgressText.textContent = 'Pembaruan siap digunakan.';
+    }
+  }
   if (updateCompleteModal) updateCompleteModal.classList.remove('hidden');
+
+  // Store method so relaunch handler knows what to do
+  if (btnRelaunchApp) {
+    btnRelaunchApp.dataset.updateMethod = method;
+  }
 });
 
 if (btnRelaunchApp) {
   btnRelaunchApp.addEventListener('click', async () => {
     btnRelaunchApp.disabled = true;
     btnRelaunchApp.textContent = 'Memulai Ulang...';
+    const method = btnRelaunchApp.dataset.updateMethod || 'unknown';
+
+    if (method === 'installer') {
+      // For NSIS installer: give it extra time to finish, then quit.
+      // NSIS /R flag will relaunch the app automatically.
+      btnRelaunchApp.textContent = 'Menunggu installer selesai...';
+      await new Promise(r => setTimeout(r, 3000));
+    }
+
     await ipcRenderer.invoke('restart-app');
   });
 }

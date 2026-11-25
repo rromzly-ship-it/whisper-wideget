@@ -4,7 +4,24 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.3.1] - 2026-11-25 (Pembaruan Terkini)
+## [v1.3.2] - 2026-11-25 (Pembaruan Terkini)
+
+### 🐛 Critical Bugfix: STT Model Salah — Groq Voice-to-Text Gagal
+
+**Root Cause Ditemukan:**
+- **Bug:** Fungsi `transcribeWithGroq` di `main.js` mengirimkan `appConfig.model` (model LLM chat yang dipilih pengguna, misal `openai/gpt-oss-20b`) ke endpoint audio Groq (`/audio/transcriptions`).
+- **Akibat:** Groq menolak dengan error: `The model 'openai/gpt-oss-20b' does not support 'transcribe'` — Voice-to-Text tidak bekerja sama sekali.
+- **Fix:** Model untuk STT sekarang selalu di-hardcode ke daftar model Whisper resmi (`whisper-large-v3-turbo`, `whisper-large-v3`, `distil-whisper-large-v3-en`). Model LLM chat sama sekali tidak dikirimkan ke endpoint transkripsi audio.
+- **Arsitektur:** Model LLM (otak penalaran asisten, misal `openai/gpt-oss-20b`) dan model STT (pendengar suara, selalu `whisper-large-v3-turbo`) kini sepenuhnya terpisah dan tidak saling mengganggu.
+
+### ✨ UI/UX Peningkatan Antarmuka Pengaturan:
+- **Test API → Auto-Simpan saat Sukses:** Tombol "Test API" setelah sukses menampilkan "✓ Tersimpan!" dan langsung menyimpan konfigurasi secara otomatis — tidak perlu klik "Simpan" terpisah lagi.
+- **Hapus Icon Emoji dari Sidebar Menu:** Semua icon SVG dan emoji dari menu navigasi kiri (Pengaturan, Profil Suara, Library, Log, Token & Kuota, Panduan, Pembaruan) dihapus — tampilan lebih bersih dan minimalis.
+- **Tombol Tanpa Emoji:** Semua teks tombol (Test API, Cek & Muat Model, status loading/error) dibersihkan dari emoji/simbol — teks murni.
+
+---
+
+## [v1.3.1] - 2026-11-25
 
 ### 🛡️ Pemulihan Penuh Groq Whisper & Isolasi Total Backend Per-Provider:
 - **Penyimpanan Kunci Terpisah Per-Vendor:** Mengatasi masalah `HTTP 401 Invalid API Key` pada Groq Cloud. Antarmuka pengaturan kini menyimpan kunci API masing-masing vendor secara mandiri (`savedProviderConfigs`). Saat berpindah dari GeminiX ke Groq, kunci Groq (`gsk_...`) otomatis dipulihkan ke kolom input dan tidak akan pernah lagi tertimpa oleh kunci GeminiX (`sk-gx-...`).

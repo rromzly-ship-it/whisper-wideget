@@ -963,8 +963,9 @@ function restartApp() {
   try {
     app.releaseSingleInstanceLock();
   } catch {}
-  app.relaunch();
-  app.exit(0);
+  app.relaunch({ args: process.argv.slice(1).concat(['--relaunched']) });
+  // Delay so app.relaunch() fully registers before we exit
+  setTimeout(() => app.exit(0), 400);
 }
 
 function toggleWidgetsVisibility() {
@@ -1790,7 +1791,10 @@ async function transcribeWithGroq({ audioBase64, mimeType, promptHint, language,
   const blob = new Blob([buffer], { type: mimeType });
   const formData = new FormData();
   formData.append('file', blob, 'speech.webm');
-  formData.append('model', (model && !model.startsWith('gemini-') && !model.startsWith('claude-') && model !== '__custom__') ? model : 'whisper-large-v3-turbo');
+  // STT endpoint only accepts whisper-* models. Never pass LLM chat models here.
+  const WHISPER_MODELS = ['whisper-large-v3-turbo', 'whisper-large-v3', 'distil-whisper-large-v3-en'];
+  const sttModel = (model && WHISPER_MODELS.includes(model)) ? model : 'whisper-large-v3-turbo';
+  formData.append('model', sttModel);
   formData.append('response_format', 'json');
   formData.append('temperature', '0.0');
   if (promptHint) formData.append('prompt', promptHint);
@@ -1874,7 +1878,7 @@ ipcMain.handle('transcribe-audio', async (event, { audioBase64, mimeType = 'audi
         promptHint,
         language,
         apiKey: keyToUse,
-        model: appConfig.model || 'whisper-large-v3-turbo'
+        model: 'whisper-large-v3-turbo'  // STT model always Whisper, NOT the LLM chat model
       });
     } catch (e) {
       console.error('Groq transcription error:', e.message);
@@ -2087,7 +2091,8 @@ ipcMain.handle('apply-app-update', async (event, { downloadUrl }) => {
       sender.send('update-progress', { phase: 'install', percent: 45, message: 'Memasang pembaruan ke direktori aplikasi...' });
       
       const { spawn } = require('child_process');
-      const child = spawn(tempExe, ['/S'], { detached: true, stdio: 'ignore' });
+      // Pass /R flag so NSIS relaunches the app after installation completes
+      const child = spawn(tempExe, ['/S', '/R'], { detached: true, stdio: 'ignore' });
       child.unref();
 
       // Berikan waktu installer NSIS mengekstrak file di background
@@ -2114,8 +2119,9 @@ ipcMain.handle('apply-app-update', async (event, { downloadUrl }) => {
 });
 
 ipcMain.handle('restart-app', () => {
-  app.relaunch();
-  app.exit(0);
+  // Delay exit so app.relaunch() can register the new process before we terminate
+  app.relaunch({ args: process.argv.slice(1).concat(['--relaunched']) });
+  setTimeout(() => app.exit(0), 400);
 });
 
 // Onboarding & First-Run IPC Handlers
