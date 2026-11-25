@@ -2076,8 +2076,7 @@ ipcMain.handle('apply-app-update', async (event, { downloadUrl }) => {
             });
 
             res.on('end', () => {
-              fileStream.end();
-              resolve();
+              fileStream.end(() => resolve());
             });
 
             res.on('error', (err) => {
@@ -2089,26 +2088,19 @@ ipcMain.handle('apply-app-update', async (event, { downloadUrl }) => {
         downloadStream(downloadUrl);
       });
 
-      // Tahap 2: Proses Instalasi Perubahan Realistis
-      sender.send('update-progress', { phase: 'install', percent: 15, message: 'Menyiapkan paket instalasi...' });
-      await new Promise(r => setTimeout(r, 600));
+      // Tahap 2: Simpan path installer & beri tahu UI agar siap dipasang saat relaunch
+      sender.send('update-progress', { phase: 'install', percent: 85, message: 'Memverifikasi paket instalasi...' });
+      const stat = fs.statSync(tempExe);
+      if (!stat || stat.size < 1024 * 1024) {
+        throw new Error('File installer terunduh tidak lengkap atau rusak.');
+      }
 
-      sender.send('update-progress', { phase: 'install', percent: 45, message: 'Memasang pembaruan ke direktori aplikasi...' });
-      
-      const { spawn } = require('child_process');
-      // Pass /R flag so NSIS relaunches the app after installation completes
-      const child = spawn(tempExe, ['/S', '/R'], { detached: true, stdio: 'ignore' });
-      child.unref();
-
-      // Berikan waktu installer NSIS mengekstrak file di background
-      await new Promise(r => setTimeout(r, 1800));
-      sender.send('update-progress', { phase: 'install', percent: 80, message: 'Memperbarui modul sistem...' });
-      await new Promise(r => setTimeout(r, 700));
-      sender.send('update-progress', { phase: 'install', percent: 100, message: 'Pembaruan selesai dipasang!' });
+      global.__pendingUpdateInstaller = tempExe;
+      sender.send('update-progress', { phase: 'install', percent: 100, message: 'Paket pembaruan siap dipasang!' });
 
       // Kirim sinyal selesai agar muncul pop-up selesai di layar
       sender.send('update-completed', { method: 'installer', tempExe });
-      return { ok: true, method: 'installer' };
+      return { ok: true, method: 'installer', tempExe };
     } catch (dlErr) {
       console.error('Update installer download error:', dlErr);
       return { ok: false, message: `Gagal mengunduh installer: ${dlErr.message}` };
@@ -2124,7 +2116,45 @@ ipcMain.handle('apply-app-update', async (event, { downloadUrl }) => {
 });
 
 ipcMain.handle('restart-app', () => {
-  // Delay exit so app.relaunch() can register the new process before we terminate
+  const pendingExe = global.__pendingUpdateInstaller;
+  try {
+    app.releaseSingleInstanceLock();
+  } catch {}
+
+  if (pendingExe && fs.existsSync(pendingExe)) {
+    const os = require('os');
+    const { spawn } = require('child_process');
+    const psPath = path.join(os.tmpdir(), `whisper-update-${Date.now()}.ps1`);
+    const currentPid = process.pid;
+    const currentExe = process.execPath;
+    const fallbackExe = path.join(process.env.LOCALAPPDATA || '', 'Programs', 'WhisperWidget', 'WhisperWidget.exe');
+
+    const psScript = [
+      `try { Wait-Process -Id ${currentPid} -Timeout 15 -ErrorAction SilentlyContinue } catch {}`,
+      `Start-Sleep -Milliseconds 400`,
+      `try { Start-Process -FilePath '${pendingExe.replace(/'/g, "''")}' -ArgumentList '/S' -Wait } catch {}`,
+      `Start-Sleep -Milliseconds 500`,
+      `$target = '${currentExe.replace(/'/g, "''")}'`,
+      `if (-not (Test-Path $target)) { $target = '${fallbackExe.replace(/'/g, "''")}' }`,
+      `if (Test-Path $target) { Start-Process -FilePath $target }`,
+      `Remove-Item -Path '${pendingExe.replace(/'/g, "''")}' -Force -ErrorAction SilentlyContinue`,
+      `Remove-Item -Path $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue`
+    ].join('\r\n');
+
+    fs.writeFileSync(psPath, psScript, 'utf8');
+    const child = spawn('powershell.exe', [
+      '-NoProfile',
+      '-ExecutionPolicy', 'Bypass',
+      '-WindowStyle', 'Hidden',
+      '-File', psPath
+    ], { detached: true, stdio: 'ignore' });
+    child.unref();
+
+    setTimeout(() => app.exit(0), 250);
+    return;
+  }
+
+  // Normal / git-pull restart
   app.relaunch({ args: process.argv.slice(1).concat(['--relaunched']) });
   setTimeout(() => app.exit(0), 400);
 });

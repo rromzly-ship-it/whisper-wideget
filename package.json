@@ -1,6 +1,6 @@
 {
   "name": "whisper-floating-widget",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Floating Voice-to-Text widget powered by Whisper & Groq API",
   "main": "main.js",
   "scripts": {
@@ -14,6 +14,7 @@
   "build": {
     "appId": "com.whisper.floatingwidget",
     "productName": "WhisperWidget",
+    "asar": false,
     "directories": {
       "output": "dist"
     },

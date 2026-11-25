@@ -1348,20 +1348,16 @@ ipcRenderer.on('update-progress', (event, { phase, percent, message }) => {
 
 ipcRenderer.on('update-completed', (event, info) => {
   if (updateProgressFill) updateProgressFill.style.width = '100%';
-  setUpdateStatus('success', '🟢 Selesai!');
+  setUpdateStatus('success', 'Siap Dipasang');
 
-  // For installer method: NSIS needs time to fully write files before we quit
   const method = info?.method || 'unknown';
   if (updateProgressText) {
-    if (method === 'installer') {
-      updateProgressText.textContent = 'Installer sedang memasang — klik Jalankan Ulang setelah selesai.';
-    } else {
-      updateProgressText.textContent = 'Pembaruan siap digunakan.';
-    }
+    updateProgressText.textContent = method === 'installer'
+      ? 'Paket pembaruan siap dipasang. Klik Jalankan Ulang untuk memasang & membuka versi baru.'
+      : 'Pembaruan siap digunakan.';
   }
   if (updateCompleteModal) updateCompleteModal.classList.remove('hidden');
 
-  // Store method so relaunch handler knows what to do
   if (btnRelaunchApp) {
     btnRelaunchApp.dataset.updateMethod = method;
   }
@@ -1370,16 +1366,8 @@ ipcRenderer.on('update-completed', (event, info) => {
 if (btnRelaunchApp) {
   btnRelaunchApp.addEventListener('click', async () => {
     btnRelaunchApp.disabled = true;
-    btnRelaunchApp.textContent = 'Memulai Ulang...';
     const method = btnRelaunchApp.dataset.updateMethod || 'unknown';
-
-    if (method === 'installer') {
-      // For NSIS installer: give it extra time to finish, then quit.
-      // NSIS /R flag will relaunch the app automatically.
-      btnRelaunchApp.textContent = 'Menunggu installer selesai...';
-      await new Promise(r => setTimeout(r, 3000));
-    }
-
+    btnRelaunchApp.textContent = method === 'installer' ? 'Memasang & Memulai Ulang...' : 'Memulai Ulang...';
     await ipcRenderer.invoke('restart-app');
   });
 }

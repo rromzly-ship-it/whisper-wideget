@@ -4,7 +4,17 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.3.3] - 2026-11-25 (Pembaruan Terkini)
+## [v1.3.4] - 2026-11-25 (Pembaruan Terkini)
+
+### 🛡️ Critical Fix: Hilangkan Korupsi `app.asar` (`SyntaxError: Unexpected token '}'` di `vision.js`)
+- **Root Cause Ditemukan:** `electron-builder` v26.18.0 mengalami pergeseran offset byte saat mengemas `app.asar`, menyebabkan isi akhir file `usage.js` bocor ke awal file `vision.js` (dan merusak beberapa file `.js` lain di dalam `app.asar`) sehingga aplikasi gagal start dengan `SyntaxError: Unexpected token '}'`.
+- **Solusi Permanen:** Menonaktifkan pengemasan `app.asar` (`"asar": false` di `package.json`) agar seluruh file `.js`, `.html`, `.css`, `skills/`, `injector.exe`, dan `piper/` disalin utuh ke `resources/app/` tanpa risiko korupsinya offset byte arsip.
+- **Verifikasi Build:** Setiap file `.js` di `dist/win-unpacked/resources/app/` lolos uji sintaks `node -c` 100% sebelum installer dirilis.
+- **Fix Permanen Auto-Relaunch Setelah Update:** Mengganti mekanisme spawn installer saat aplikasi masih berjalan (yang menyebabkan konflik kunci file & gagal relaunch) dengan *detached updater runner* di PowerShell (`Wait-Process` hingga aplikasi lama keluar -> `Start-Process Setup.exe /S -Wait` -> langsung menjalankan `WhisperWidget.exe` versi terbaru secara otomatis).
+
+---
+
+## [v1.3.3] - 2026-11-25
 
 ### 📊 Monitoring Kuota Token Groq & Perombakan UI Bersih Native:
 - **Bar Kuota Token Groq (%) di Pengaturan:** Menambahkan indikator persentase penggunaan token Groq harian (`Terpakai X% · Sisa Y%`) beserta progress bar dan jumlah panggilan Whisper STT langsung di halaman Pengaturan. Juga memperbaiki sinkronisasi event real-time `usage-updated` dan pembacaan properti `primaryTokensUsed` / `dailyTokenLimit` agar angka kuota akurat.
