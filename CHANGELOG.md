@@ -4,7 +4,18 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.3.2] - 2026-11-25 (Pembaruan Terkini)
+## [v1.3.3] - 2026-11-25 (Pembaruan Terkini)
+
+### 📊 Monitoring Kuota Token Groq & Perombakan UI Bersih Native:
+- **Bar Kuota Token Groq (%) di Pengaturan:** Menambahkan indikator persentase penggunaan token Groq harian (`Terpakai X% · Sisa Y%`) beserta progress bar dan jumlah panggilan Whisper STT langsung di halaman Pengaturan. Juga memperbaiki sinkronisasi event real-time `usage-updated` dan pembacaan properti `primaryTokensUsed` / `dailyTokenLimit` agar angka kuota akurat.
+- **Pembersihan Total Mojibake / Simbol Rusak:** Menghapus seluruh karakter emoji rusak (`âš¡`, `ðŸ‘`, `Â·`, dll.) di `settings.html` dan `settings.js` serta memastikan pengkodean UTF-8 bersih.
+- **Ikon SVG Modern & Simpel:** Mengganti tombol lihat/sembunyikan API Key dengan ikon SVG Eye / Eye-Off yang tajam dan minimalis.
+- **Logo Whisper Senyum:** Mengganti ikon mikrofon di kiri atas sidebar dengan karakter bola biru **Wis yang sedang tersenyum**.
+- **UI Native Tanpa Gaya "AI Slop":** Menghapus gaya kapsul hijau mencolok pada status `Terhubung` dan menyesuaikan tombol `Test API` agar menyatu dengan tema flat gelap bawaan aplikasi.
+
+---
+
+## [v1.3.2] - 2026-11-25
 
 ### 🐛 Critical Bugfix: STT Model Salah — Groq Voice-to-Text Gagal
 

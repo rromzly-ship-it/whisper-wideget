@@ -251,7 +251,7 @@ function updateProviderUi(providerKey) {
   const preset = PROVIDER_PRESETS[providerKey] || PROVIDER_PRESETS.custom;
   endpointHint.textContent = preset.hint || 'Format: https://domain/v1';
   apiKeyInput.placeholder = preset.keyPlaceholder || 'Masukkan API Key...';
-  
+
   if (providerDescNote) {
     if (providerKey === 'groq') {
       providerDescNote.textContent = 'Penyedia Resmi Whisper: Dedicated LPU untuk transkripsi suara 150ms instan & akurat + LLM Cerdas.';
@@ -373,7 +373,7 @@ async function fetchApiModels(silent = false) {
     const res = await ipcRenderer.invoke('fetch-api-models', { baseUrl: rawBase, apiKey });
     if (res && res.ok && Array.isArray(res.models) && res.models.length > 0) {
       let currentSelected = modelSelect.value === '__custom__' ? customModelInput.value.trim() : modelSelect.value;
-      
+
       // Auto-sanitize model when switching vendor
       if (prov === 'geminix') {
         if (!currentSelected || currentSelected.toLowerCase().includes('whisper') || currentSelected.startsWith('openai/')) {
@@ -390,8 +390,8 @@ async function fetchApiModels(silent = false) {
       }
 
       populateModelOptions(res.models, currentSelected);
-      setApiStatus('success', `🟢 Terhubung (${res.models.length} Model Tersedia)`);
-      
+      setApiStatus('success', `Terhubung (${res.models.length} Model Tersedia)`);
+
       if (btnTestApi) {
         btnTestApi.textContent = '✓ Tersimpan!';
         btnTestApi.classList.add('btn-success');
@@ -432,7 +432,7 @@ async function fetchApiModels(silent = false) {
 
 apiProviderSelect.addEventListener('change', () => {
   const newProv = apiProviderSelect.value;
-  
+
   // 1. Save outgoing provider's current inputs
   if (activeProvider && savedProviderConfigs[activeProvider]) {
     savedProviderConfigs[activeProvider].apiKey = apiKeyInput.value.trim();
@@ -493,7 +493,8 @@ linkProvider.addEventListener('click', (e) => {
 toggleKeyBtn.addEventListener('click', () => {
   isKeyVisible = !isKeyVisible;
   apiKeyInput.type = isKeyVisible ? 'text' : 'password';
-  toggleKeyBtn.textContent = isKeyVisible ? '🙈' : '👁';
+  const iconId = isKeyVisible ? '#eye-off-icon' : '#eye-icon';
+  toggleKeyBtn.innerHTML = `<svg class="svg-icon-sm" aria-hidden="true"><use href="${iconId}" /></svg>`;
 });
 
 noiseGateThreshold.addEventListener('input', () => {
@@ -519,7 +520,7 @@ async function loadMicrophoneDevices(selectedId) {
 
 async function loadConfig() {
   currentConfig = await ipcRenderer.invoke('get-config') || {};
-  
+
   // Merge saved credentials from currentConfig.providers
   if (currentConfig.providers) {
     savedProviderConfigs = {
@@ -596,8 +597,8 @@ async function loadConfig() {
 }
 
 btnSave.addEventListener('click', async () => {
-  let selectedModel = modelSelect.value === '__custom__' 
-    ? (customModelInput.value.trim() || 'gemini-3.8-flash-high') 
+  let selectedModel = modelSelect.value === '__custom__'
+    ? (customModelInput.value.trim() || 'gemini-3.8-flash-high')
     : modelSelect.value;
 
   const currentProv = apiProviderSelect.value;
@@ -1035,30 +1036,76 @@ ipcRenderer.on('command-logs-updated', (e, logs) => {
 // =========================================================================
 // 6. TOKEN & KUOTA GROQ API
 // =========================================================================
-async function loadUsageSummary() {
-  const summary = await ipcRenderer.invoke('get-usage-summary');
+async function loadUsageSummary(overrideSummary = null) {
+  const summary = overrideSummary || await ipcRenderer.invoke('get-usage-summary');
   if (!summary) return;
 
-  const used = summary.todayTokens || 0;
-  const limit = summary.dailyLimit || 200000;
-  const pct = Math.min(100, Math.round((used / limit) * 100));
+  const used = Number(summary.primaryTokensUsed ?? summary.totalTokensToday ?? 0);
+  const limit = Number(summary.dailyTokenLimit || 200000);
+  const pct = Math.min(100, Math.max(0, Math.round((used / limit) * 100)));
+  const remPct = Math.max(0, 100 - pct);
+  const remTokens = Math.max(0, limit - used);
 
-  usageProgressFill.style.width = `${pct}%`;
-  usagePctLabel.textContent = `${pct}%`;
-  metricUsedTokens.textContent = used.toLocaleString('id-ID');
-  metricRemTokens.textContent = Math.max(0, limit - used).toLocaleString('id-ID');
-  metricRpd.textContent = summary.rpd ? `${summary.rpdRemaining || '-'} / ${summary.rpdLimit || '-'}` : '-';
-  metricTpm.textContent = summary.tpmLimit ? summary.tpmLimit.toLocaleString('id-ID') : '-';
+  // Update dedicated Token & Kuota tab
+  if (usageProgressFill) usageProgressFill.style.width = `${pct}%`;
+  if (usagePctLabel) usagePctLabel.textContent = `${pct}%`;
+  if (metricUsedTokens) metricUsedTokens.textContent = used.toLocaleString('id-ID');
+  if (metricRemTokens) metricRemTokens.textContent = remTokens.toLocaleString('id-ID');
+  if (metricRpd) {
+    metricRpd.textContent = (summary.rpdLimit !== null && summary.rpdLimit !== undefined)
+      ? `${summary.rpdRemaining ?? '-'} / ${summary.rpdLimit}`
+      : '-';
+  }
+  if (metricTpm) metricTpm.textContent = summary.tpmLimit ? summary.tpmLimit.toLocaleString('id-ID') : '-';
 
-  if (summary.avgTokensPerTask) {
+  if (metricAvgTask && summary.avgTokensPerTask) {
     metricAvgTask.textContent = `${summary.avgTokensPerTask.toLocaleString('id-ID')} tkn`;
   }
-  if (summary.dailyCapacityTasks) {
-    metricDayCap.textContent = `${summary.dailyCapacityTasks} tugas`;
+  if (metricDayCap && summary.estimatedTasksPerDay !== null && summary.estimatedTasksPerDay !== undefined) {
+    metricDayCap.textContent = `${summary.estimatedTasksPerDay} tugas`;
   }
-  if (summary.remainingTasksToday !== undefined) {
-    metricDayRem.textContent = `${summary.remainingTasksToday} tugas`;
+  if (metricDayRem && summary.estimatedRemainingTasksToday !== null && summary.estimatedRemainingTasksToday !== undefined) {
+    metricDayRem.textContent = `${summary.estimatedRemainingTasksToday} tugas`;
   }
+
+  // Update inline Groq Token Quota bar inside Pengaturan page
+  const settingsQuotaPct = document.getElementById('settings-quota-pct-text');
+  const settingsQuotaBar = document.getElementById('settings-quota-bar-fill');
+  const settingsQuotaDetail = document.getElementById('settings-quota-detail');
+  const settingsQuotaWhisper = document.getElementById('settings-quota-whisper');
+
+  if (settingsQuotaPct) {
+    settingsQuotaPct.textContent = `Terpakai ${pct}% · Sisa ${remPct}%`;
+  }
+  if (settingsQuotaBar) {
+    settingsQuotaBar.style.width = `${pct}%`;
+    settingsQuotaBar.classList.remove('quota-warn', 'quota-danger');
+    if (pct >= 90) settingsQuotaBar.classList.add('quota-danger');
+    else if (pct >= 75) settingsQuotaBar.classList.add('quota-warn');
+  }
+  if (settingsQuotaDetail) {
+    settingsQuotaDetail.textContent = `${used.toLocaleString('id-ID')} / ${limit.toLocaleString('id-ID')} token terpakai hari ini`;
+  }
+  if (settingsQuotaWhisper) {
+    const wCalls = Number(summary.whisperCallsToday || 0);
+    const wSecs = Math.round(Number(summary.whisperSecondsToday || 0));
+    settingsQuotaWhisper.textContent = `Whisper STT: ${wCalls} panggilan (${wSecs}d)`;
+  }
+}
+
+const btnSettingsCheckQuota = document.getElementById('btn-settings-check-quota');
+if (btnSettingsCheckQuota) {
+  btnSettingsCheckQuota.addEventListener('click', async () => {
+    btnSettingsCheckQuota.disabled = true;
+    btnSettingsCheckQuota.textContent = 'Memeriksa...';
+    try {
+      await ipcRenderer.invoke('probe-api-quota');
+      await loadUsageSummary();
+    } finally {
+      btnSettingsCheckQuota.disabled = false;
+      btnSettingsCheckQuota.textContent = 'Cek Kuota';
+    }
+  });
 }
 
 btnProbeQuota.addEventListener('click', async () => {
@@ -1082,6 +1129,10 @@ btnSetLimit.addEventListener('click', async () => {
     await loadUsageSummary();
     inputCustomLimit.value = '';
   }
+});
+
+ipcRenderer.on('usage-updated', (event, summary) => {
+  loadUsageSummary(summary);
 });
 
 ipcRenderer.on('usage-summary-updated', () => {

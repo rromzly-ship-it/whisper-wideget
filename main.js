@@ -1368,9 +1368,14 @@ function broadcastCommandLogs() {
   }
 }
 
+function getGroqUsageKey() {
+  if (appConfig?.apiKey && String(appConfig.apiKey).startsWith('gsk_')) return appConfig.apiKey;
+  return appConfig?.providers?.groq?.apiKey || appConfig?.groqApiKey || appConfig?.apiKey || '';
+}
+
 function broadcastUsageSummary() {
   if (settingsWindow && !settingsWindow.isDestroyed() && settingsWindow.webContents) {
-    settingsWindow.webContents.send('usage-updated', usage.getSummary(appConfig?.apiKey));
+    settingsWindow.webContents.send('usage-updated', usage.getSummary(getGroqUsageKey(), appConfig?.model || 'openai/gpt-oss-20b'));
   }
 }
 
@@ -1643,7 +1648,7 @@ ipcMain.on('record-whisper-usage', (event, payload) => {
 });
 
 ipcMain.handle('get-usage-summary', () => {
-  return usage.getSummary(appConfig?.apiKey);
+  return usage.getSummary(getGroqUsageKey(), appConfig?.model || 'openai/gpt-oss-20b');
 });
 
 ipcMain.handle('get-memory-overview', () => {
@@ -1656,20 +1661,20 @@ ipcMain.handle('get-memory-overview', () => {
 });
 
 ipcMain.handle('probe-api-quota', async (event, overrideKey) => {
-  const targetKey = (overrideKey && String(overrideKey).trim()) || appConfig?.apiKey;
+  const targetKey = (overrideKey && String(overrideKey).trim()) || getGroqUsageKey();
   const res = await probeApiQuota(targetKey);
   broadcastUsageSummary();
   return res;
 });
 
 ipcMain.handle('set-custom-daily-limit', (event, limitVal) => {
-  const res = usage.setCustomDailyTokenLimit(appConfig?.apiKey, limitVal);
+  const res = usage.setCustomDailyTokenLimit(getGroqUsageKey(), limitVal);
   broadcastUsageSummary();
   return res;
 });
 
 ipcMain.handle('reset-today-usage', () => {
-  const res = usage.resetTodayUsage(appConfig?.apiKey);
+  const res = usage.resetTodayUsage(getGroqUsageKey());
   broadcastUsageSummary();
   return res;
 });

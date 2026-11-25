@@ -72,14 +72,30 @@
       <path d="m4 14 1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z" />
       <path d="M10 10 2 18l4 4 8-8" />
     </symbol>
+    <symbol id="eye-icon" viewBox="0 0 24 24">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </symbol>
+    <symbol id="eye-off-icon" viewBox="0 0 24 24">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-6.5 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94" />
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19" />
+      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+      <line x1="2" y1="2" x2="22" y2="22" />
+    </symbol>
+    <symbol id="wis-smile-logo" viewBox="0 0 32 32">
+      <circle cx="16" cy="16" r="14" fill="#2563eb" stroke="none" />
+      <path d="M9.5 13.5c.7-1.4 2.3-1.4 3 0" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" fill="none" />
+      <path d="M19.5 13.5c.7-1.4 2.3-1.4 3 0" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" fill="none" />
+      <path d="M11 19.5c1.5 2.4 8.5 2.4 10 0" stroke="#ffffff" stroke-width="2.1" stroke-linecap="round" fill="none" />
+    </symbol>
   </svg>
 
   <div class="shell">
     <!-- Left Sidebar Menu -->
     <aside>
       <div class="brand">
-        <span class="mark"><svg aria-hidden="true">
-            <use href="#mic" />
+        <span class="mark wis-mark"><svg aria-hidden="true">
+            <use href="#wis-smile-logo" />
           </svg></span>
         <span class="brand-text">Whisper Agent</span>
       </div>
@@ -111,7 +127,7 @@
           <span id="badge-update-available" class="nav-badge update-badge hidden">Baru</span>
         </button>
       </nav>
-      <footer id="app-version-footer">Whisper Agent (Wis) Â· v1.3.2</footer>
+      <footer id="app-version-footer">Whisper Agent (Wis) &middot; v1.3.3</footer>
     </aside>
 
     <!-- Main Content Area -->
@@ -152,10 +168,10 @@
               <label class="full">
                 Penyedia AI (Provider)
                 <select id="api-provider">
-                  <option value="groq">âš¡ Groq Cloud (Dedicated Whisper 150ms &amp; LLM Cepat) â€” Rekomendasi Utama</option>
-                  <option value="geminix">âœ¨ GeminiX Gateway (Otak Asisten Gemini 3.8 &amp; Vision)</option>
-                  <option value="openai">ðŸ¤– OpenAI Resmi (ChatGPT &amp; Whisper)</option>
-                  <option value="custom">ðŸŒ Custom OpenAI-Compatible Endpoint</option>
+                  <option value="groq">Groq Cloud (Dedicated Whisper 150ms &amp; LLM Cepat) &mdash; Rekomendasi Utama</option>
+                  <option value="geminix">GeminiX Gateway (Otak Asisten Gemini 3.8 &amp; Vision)</option>
+                  <option value="openai">OpenAI Resmi (ChatGPT &amp; Whisper)</option>
+                  <option value="custom">Custom OpenAI-Compatible Endpoint</option>
                 </select>
                 <small id="provider-desc-note" class="model-hint" style="color: #94a3b8; display: block; margin-top: 5px;"></small>
               </label>
@@ -176,19 +192,34 @@
                 <div class="api-key-row">
                   <div class="input-password-wrap">
                     <input type="password" id="api-key" placeholder="sk-gx-..." autocomplete="off">
-                    <button type="button" id="toggle-key-visibility" class="btn-subtle-icon"
-                      title="Lihat/Sembunyikan Kunci">ðŸ‘</button>
+                    <button type="button" id="toggle-key-visibility" class="btn-subtle-icon" title="Lihat/Sembunyikan Kunci" aria-label="Lihat/Sembunyikan Kunci"><svg class="svg-icon-sm" aria-hidden="true"><use href="#eye-icon" /></svg></button>
                   </div>
-                  <button type="button" id="btn-test-api" class="btn-test-connection" title="Uji Kunci & Muat Model Vendor">
-                    âš¡ Test API
-                  </button>
+                  <button type="button" id="btn-test-api" class="btn-test-connection" title="Uji Kunci &amp; Muat Model Vendor">Test API</button>
                 </div>
               </label>
+
+              <!-- Ringkasan Kuota Token Groq Harian (Persentase Terpakai & Tersisa) -->
+              <div class="full groq-quota-inline" id="settings-groq-quota-box">
+                <div class="groq-quota-header">
+                  <span class="groq-quota-title">Kuota Token Groq Harian</span>
+                  <div class="groq-quota-actions">
+                    <span id="settings-quota-pct-text" class="groq-quota-pct">Terpakai 0% &middot; Sisa 100%</span>
+                    <button type="button" id="btn-settings-check-quota" class="btn-mini-action">Cek Kuota</button>
+                  </div>
+                </div>
+                <div class="progress-bar-track groq-quota-track">
+                  <div id="settings-quota-bar-fill" class="progress-bar-fill" style="width: 0%;"></div>
+                </div>
+                <div class="groq-quota-meta">
+                  <span id="settings-quota-detail">0 / 200.000 token terpakai hari ini</span>
+                  <span id="settings-quota-whisper">Whisper STT: 0 panggilan</span>
+                </div>
+              </div>
 
               <label class="full">
                 <div class="label-with-link">
                   <span>Pilihan Model AI (Otak Asisten Wis)</span>
-                  <button type="button" id="btn-fetch-models" class="btn-mini-action">ðŸ”„ Cek &amp; Muat Model</button>
+                  <button type="button" id="btn-fetch-models" class="btn-mini-action">Cek &amp; Muat Model</button>
                 </div>
                 <div class="model-select-wrap">
                   <select id="model-select">
@@ -297,7 +328,7 @@
           </div>
 
           <div class="actions-sticky">
-            <span class="shortcut-tip">Pintasan: <code>Alt+Shift+V</code> Dikte Â· <code>Alt+Shift+C</code> Asisten
+            <span class="shortcut-tip">Pintasan: <code>Alt+Shift+V</code> Dikte &middot; <code>Alt+Shift+C</code> Asisten
               Wis</span>
             <div class="actions-right">
               <button type="button" id="btn-open-onboarding" class="secondary"
@@ -337,7 +368,7 @@
           <!-- Status & Lock Switch -->
           <div class="card">
             <div class="status-banner" id="voice-status-banner">
-              <div class="status-icon" id="voice-status-icon">âšª</div>
+              <div class="status-icon" id="voice-status-icon"></div>
               <div class="status-text">
                 <strong id="voice-status-title">Memeriksa status profil suara...</strong>
                 <span id="voice-status-subtitle">Membaca data sidik suara lokal...</span>
@@ -380,9 +411,7 @@
             </blockquote>
 
             <div class="enroll-action-box">
-              <button type="button" id="btn-record-voice" class="primary btn-enroll">
-                â— Mulai Rekam Sampel Suara (5 Detik)
-              </button>
+              <button type="button" id="btn-record-voice" class="primary btn-enroll">Mulai Rekam Sampel Suara (5 Detik)</button>
               <button type="button" id="btn-delete-voice" class="secondary danger-btn" hidden>
                 Hapus Profil Suara
               </button>
@@ -408,9 +437,7 @@
             </p>
 
             <div class="enroll-action-box">
-              <button type="button" id="btn-test-voice" class="secondary">
-                ðŸŽ¤ Uji Suara Sekarang (3 Detik)
-              </button>
+              <button type="button" id="btn-test-voice" class="secondary">Uji Suara Sekarang (3 Detik)</button>
             </div>
 
             <div id="test-result-box" class="test-result-box hidden">
@@ -586,7 +613,7 @@
             <div class="update-info-grid">
               <div class="metric-card">
                 <small>Versi Terpasang</small>
-                <strong id="update-current-version">v1.3.2</strong>
+                <strong id="update-current-version">v1.3.3</strong>
               </div>
               <div class="metric-card">
                 <small>Versi GitHub Terbaru</small>
@@ -600,12 +627,8 @@
 
             <div class="actions"
               style="margin-top: 18px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <button type="button" id="btn-check-update" class="secondary">
-                ðŸ”„ Periksa Pembaruan Sekarang
-              </button>
-              <button type="button" id="btn-apply-update" class="primary hidden">
-                ðŸš€ Perbarui Otomatis &amp; Relaunch
-              </button>
+              <button type="button" id="btn-check-update" class="secondary">Periksa Pembaruan Sekarang</button>
+              <button type="button" id="btn-apply-update" class="primary hidden">Perbarui Otomatis &amp; Relaunch</button>
               <span id="update-progress-text" class="subtle-hint"></span>
             </div>
 
