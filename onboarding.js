@@ -64,12 +64,11 @@ const PROVIDER_PRESETS = {
     baseUrl: 'https://api.groq.com/openai/v1',
     hint: 'Endpoint resmi Groq Cloud: https://api.groq.com/openai/v1',
     keyPlaceholder: 'gsk_...',
-    defaultModel: 'whisper-large-v3',
+    defaultModel: 'openai/gpt-oss-20b',
     defaultModels: [
-      'whisper-large-v3',
-      'whisper-large-v3-turbo',
       'openai/gpt-oss-20b',
-      'meta/llama-3.3-70b-versatile'
+      'llama-3.3-70b-versatile',
+      'openai/gpt-oss-120b'
     ],
     dashboardUrl: 'https://console.groq.com/keys'
   },
@@ -241,16 +240,20 @@ btnFinishLaunch.addEventListener('click', async () => {
 
   const cleanBase = obBaseUrl.value.trim().replace(/\/+$/, '').replace(/\/chat\/completions$/i, '');
 
+  const prov = obProvider.value;
+  const apiKey = obApiKey.value.trim();
   const configData = {
-    provider: obProvider.value,
+    provider: prov,
     baseUrl: cleanBase,
-    apiKey: obApiKey.value.trim(),
-    model: obModelSelect.value || 'gemini-3.8-flash-high',
+    apiKey,
+    model: obModelSelect.value || (prov === 'groq' ? 'openai/gpt-oss-20b' : 'gemini-3.8-flash-high'),
     language: obPrefLanguage.value,
     autoStart: obPrefAutostart.checked,
     voiceAssistant: obPrefVoiceAssistant.checked,
     createShortcut: obPrefShortcut.checked,
-    setupCompleted: true
+    setupCompleted: true,
+    ...(prov === 'groq' && apiKey ? { groqApiKey: apiKey } : {}),
+    ...(prov === 'geminix' && apiKey ? { geminixApiKey: apiKey } : {})
   };
 
   try {
@@ -360,6 +363,6 @@ function initWisInteractiveFace() {
 
 // Initialize on Load
 window.addEventListener('DOMContentLoaded', () => {
-  updateProviderUi('geminix');
+  updateProviderUi('groq');
   initWisInteractiveFace();
 });

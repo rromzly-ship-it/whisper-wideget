@@ -1209,6 +1209,9 @@ ipcMain.on('quit-app', () => {
 
 ipcMain.handle('save-config', (event, newConfig) => {
   appConfig = { ...appConfig, ...newConfig };
+  if (appConfig.apiKey || appConfig.groqApiKey || appConfig.providers?.groq?.apiKey || appConfig.providers?.geminix?.apiKey) {
+    appConfig.setupCompleted = true;
+  }
   saveConfig(appConfig);
   if (appConfig.autoStart !== undefined) {
     setAutoStart(appConfig.autoStart);
@@ -2264,7 +2267,13 @@ if (!gotTheLock) {
     }
 
     const forceSetup = process.argv.includes('--setup') || process.argv.includes('--onboarding');
-    const isFirstRun = forceSetup || !appConfig.apiKey || appConfig.setupCompleted !== true;
+    const hasConfiguredKey = Boolean(
+      (appConfig.apiKey && String(appConfig.apiKey).trim()) ||
+      (appConfig.groqApiKey && String(appConfig.groqApiKey).trim()) ||
+      (appConfig.providers?.groq?.apiKey && String(appConfig.providers.groq.apiKey).trim()) ||
+      (appConfig.providers?.geminix?.apiKey && String(appConfig.providers.geminix.apiKey).trim())
+    );
+    const isFirstRun = forceSetup || (!hasConfiguredKey && appConfig.setupCompleted !== true);
     if (isFirstRun) {
       setTimeout(() => {
         createOnboardingWindow();

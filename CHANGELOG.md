@@ -4,7 +4,15 @@ Dokumen ini mencatat seluruh riwayat pembaruan sistem **Whisper Floating Widget*
 
 ---
 
-## [v1.3.4] - 2026-11-25 (Pembaruan Terkini)
+## [v1.3.5] - 2026-11-28 (Pembaruan Terkini)
+
+### 🐛 Perbaikan Startup & Default Provider:
+- **Stop Setup Wizard Muncul Ulang Saat Restart:** Di `main.js`, pengecekan `isFirstRun` kini mengenali konfigurasi yang sudah memiliki API Key (`apiKey`, `groqApiKey`, atau `providers`) dan `save-config` otomatis menandai `setupCompleted: true`. Dengan demikian, setelah laptop di-restart, hanya widget dan asisten Wis yang aktif — jendela **Whisper Agent Setup** tidak lagi muncul berulang-ulang.
+- **Groq Cloud Sebagai Rekomendasi Utama di Setup Awal:** Mengubah default & rekomendasi utama pada `onboarding.html` dan `onboarding.js` dari GeminiX menjadi **Groq Cloud** (`https://api.groq.com/openai/v1`, model `openai/gpt-oss-20b`).
+
+---
+
+## [v1.3.4] - 2026-11-25
 
 ### 🛡️ Critical Fix: Hilangkan Korupsi `app.asar` (`SyntaxError: Unexpected token '}'` di `vision.js`)
 - **Root Cause Ditemukan:** `electron-builder` v26.18.0 mengalami pergeseran offset byte saat mengemas `app.asar`, menyebabkan isi akhir file `usage.js` bocor ke awal file `vision.js` (dan merusak beberapa file `.js` lain di dalam `app.asar`) sehingga aplikasi gagal start dengan `SyntaxError: Unexpected token '}'`.

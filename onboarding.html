@@ -71,7 +71,7 @@
           <h1>Selamat Datang di Whisper Agent</h1>
           <p class="hero-subtitle">Asisten Suara Mengambang Cerdas &amp; Pengetikan Suara Otomatis</p>
           <div class="hero-author-pill">
-            <span>Versi v1.3.4</span>
+            <span>Versi v1.3.5</span>
           </div>
         </div>
 
@@ -90,8 +90,8 @@
               <svg class="feat-svg"><use href="#brain-icon"/></svg>
             </div>
             <div class="feat-text">
-              <strong>Otak AI GeminiX Gateway</strong>
-              <small>Terhubung langsung ke API Gateway GeminiX dengan model penalaran super cepat.</small>
+              <strong>Otak AI &amp; Whisper Groq Cloud</strong>
+              <small>Transkripsi suara 150ms instan &amp; penalaran cepat dengan Groq Cloud.</small>
             </div>
           </div>
           <div class="feature-item">
@@ -113,19 +113,19 @@
         </div>
       </section>
 
-      <!-- STEP 2: PENYEDIA AI & MODEL (GEMINIX GATEWAY) -->
+      <!-- STEP 2: PENYEDIA AI & MODEL (GROQ CLOUD) -->
       <section class="step-page" id="step-2">
         <div class="step-header">
           <h2>Koneksi AI Gateway &amp; Model</h2>
-          <p>Konfigurasi endpoint API Anda. Secara default terhubung ke <strong>GeminiX Gateway</strong>.</p>
+          <p>Konfigurasi endpoint API Anda. Secara default terhubung ke <strong>Groq Cloud</strong>.</p>
         </div>
 
         <div class="clean-form-container">
           <div class="form-row">
             <label for="ob-provider">Penyedia AI (Gateway)</label>
             <select id="ob-provider" class="custom-input">
-              <option value="geminix" selected>GeminiX Gateway (geminix.arss.fun) — Rekomendasi</option>
-              <option value="groq">Groq Cloud (Whisper &amp; LLaMA)</option>
+              <option value="groq" selected>Groq Cloud (Dedicated Whisper 150ms &amp; LLM Cepat) &mdash; Rekomendasi</option>
+              <option value="geminix">GeminiX Gateway (geminix.arss.fun)</option>
               <option value="openai">OpenAI Official</option>
               <option value="custom">Custom OpenAI-Compatible Gateway</option>
             </select>
@@ -133,17 +133,17 @@
 
           <div class="form-row">
             <label for="ob-base-url">Base URL / Endpoint API</label>
-            <input type="text" id="ob-base-url" class="custom-input" value="https://geminix.arss.fun/v1" placeholder="https://geminix.arss.fun/v1">
-            <small class="field-hint" id="ob-endpoint-hint">Endpoint default GeminiX: https://geminix.arss.fun/v1</small>
+            <input type="text" id="ob-base-url" class="custom-input" value="https://api.groq.com/openai/v1" placeholder="https://api.groq.com/openai/v1">
+            <small class="field-hint" id="ob-endpoint-hint">Endpoint resmi Groq Cloud: https://api.groq.com/openai/v1</small>
           </div>
 
           <div class="form-row">
             <div class="label-flex">
-              <label for="ob-api-key" id="ob-api-key-label">API Key GeminiX</label>
+              <label for="ob-api-key" id="ob-api-key-label">API Key Groq Cloud</label>
               <a href="#" id="ob-link-provider" target="_blank" class="subtle-link" style="display:none"></a>
             </div>
             <div class="key-input-wrapper">
-              <input type="password" id="ob-api-key" class="custom-input" placeholder="sk-gx-...">
+              <input type="password" id="ob-api-key" class="custom-input" placeholder="gsk_...">
               <button type="button" id="ob-toggle-key" class="btn-icon-addon" title="Lihat/Sembunyikan Key">
                 <svg class="addon-svg"><use href="#eye-icon"/></svg>
               </button>
